@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import sys
 import subprocess
 from optparse import OptionParser
 
@@ -17,21 +18,21 @@ def main():
                       help="the database name")
     parser.add_option("-w", "--workspace", dest="workspace",
                       help="the workspace")
-    options, args = parser.parse_args()
+    options, _ = parser.parse_args()
     
-    output,_ = call_command('cd %s' % options.oe_home)
-    output,_ = call_command('createdb %s --encoding=unicode' % options.database)
+    _, _ = call_command('cd %s' % options.oe_home)
+    _, _ = call_command('createdb %s --encoding=unicode' % options.database)
     
     addons = 'addons,'
     for addon in options.addons.split(','):
         addons += '../../' + addon + ','
     addons += 'web/addons'
     
-    output,_ = call_command('server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init > %s/openerp.log' % (addons, options.database, options.install, options.workspace))
+    _, _ = call_command('server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init > %s/openerp.log' % (addons, options.database, options.install, options.workspace))
     
-    output,_ = call_command('dropdb %s' % options.database)
+    _, _ = call_command('dropdb %s' % options.database)
     
-    output,_ = call_command('cat %s/openerp.log' % options.workspace)
+    _, _ = call_command('cat %s/openerp.log' % options.workspace)
     if 'ERROR' in open('%s/openerp.log' % options.workspace).read():
         sys.exit(1)
     
