@@ -51,19 +51,16 @@ def main():
         install += '%s,' % (addon)
     install = install.rstrip(',')
     
-    cmd = 'server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init > %s/openerp.log' % (addons_path, 
-                                                                                                                      config['database'], 
-                                                                                                                      install, 
-                                                                                                                      options.workspace.rstrip('/'))
+    cmd = 'server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init' % (addons_path, 
+                                                                                                     config['database'], 
+                                                                                                     install)
     logging.info(cmd)
-    output, _ = call_command(cmd, stdout=None, stderr=None)
-    if output:
-        logging.info(output)
+    openerp_output, _  = call_command(cmd, stdout=None, stderr=None)
     
     _, _ = call_command('dropdb %s' % config['database'])
-    
-    _, _ = call_command('cat %s/openerp.log' % options.workspace)
-    if 'ERROR' in open('%s/openerp.log' % options.workspace).read():
+
+    print openerp_output
+    if 'ERROR' in openerp_output:
         sys.exit(1)
     
     sys.exit(0)
