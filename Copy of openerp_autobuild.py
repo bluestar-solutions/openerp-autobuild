@@ -32,29 +32,28 @@ def main():
         elif source['scm'] == 'git':
             git_clone(options.workspace, source)
     
-    cmd = 'cd %s' % config['openerp-path']
-    _, _ = call_command(cmd)
-    os.chdir('%s/%s' % (options.workspace.rstrip('/'), config['openerp-path']))
     cmd = 'createdb %s --encoding=unicode' % config['database']
     logging.info(cmd)
     output, _ = call_command(cmd)
     if output:
         logging.info(output)
     
-    addons_path = 'addons,'
+    addons_path = '%s/%s/%s,' % (options.workspace.rstrip('/'), config['openerp-path'].rstrip('/'), 'addons')
     for addon in config['addons']:
         addons_path += '%s/%s,' % (options.workspace.rstrip('/'), addon)
-    addons_path += 'web/addons'
+    addons_path += '%s/%s/%s' % (options.workspace.rstrip('/'), config['openerp-path'].rstrip('/'), 'web/addons')
     
     install = ''
     for addon in config['install']:
         install += '%s,' % (addon)
     install = install.rstrip(',')
     
-    cmd = 'server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init > %s/openerp.log' % (addons_path, 
-                                                                                                                      config['database'], 
-                                                                                                                      install, 
-                                                                                                                      options.workspace.rstrip('/'))
+    cmd = '%s/%s/server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init > %s/openerp.log' % (options.workspace.rstrip('/'),
+                                                                                                                            config['openerp-path'], 
+                                                                                                                         addons_path, 
+                                                                                                                         config['database'], 
+                                                                                                                         install, 
+                                                                                                                         options.workspace.rstrip('/'))
     logging.info(cmd)
     output, _ = call_command(cmd, stdout=None, stderr=None)
     if output:
