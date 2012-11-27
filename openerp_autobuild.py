@@ -42,7 +42,7 @@ def main():
     
     addons_path = 'addons,'
     for addon in config['addons']:
-        addons_path += '../%s/%s,' % (options.workspace.rstrip('/'), addon)
+        addons_path += '%s/%s,' % (options.workspace.rstrip('/'), addon)
     addons_path += 'web/addons'
     
     install = ''
