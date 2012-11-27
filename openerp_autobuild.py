@@ -12,7 +12,8 @@ import logging
 from git import Repo
 
 load_plugins()
-logging.basicConfig(format='%(asctime)-15s %(message)s', level=logging.INFO)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(message)s')
 
 def main():
     usage = "usage: %prog [options]"
@@ -31,19 +32,17 @@ def main():
             bzr_clone(options.workspace, source)
         elif source['scm'] == 'git':
             git_clone(options.workspace, source)
+
+    os.chdir('%s/%s' % (options.workspace.rstrip('/'), config['openerp-path'].rstrip('/')))
     
-    cmd = 'cd %s' % config['openerp-path']
-    _, _ = call_command(cmd)
-    os.chdir('%s/%s' % (options.workspace.rstrip('/'), config['openerp-path']))
-    cmd = 'createdb %s --encoding=unicode' % config['database']
-    logging.info(cmd)
-    output, _ = call_command(cmd)
-    if output:
-        logging.info(output)
+    _, err = call_command('dropdb %s' % config['database'], log_err=False)
+    if err:
+        logging.info('dropdb : database doesn''t exist, nothing to frop')
+    call_command('createdb %s --encoding=unicode' % config['database'])
     
     addons_path = 'addons,'
     for addon in config['addons']:
-        addons_path += '%s/%s,' % (options.workspace.rstrip('/'), addon)
+        addons_path += '../%s/%s,' % (options.workspace.rstrip('/'), addon)
     addons_path += 'web/addons'
     
     install = ''
@@ -51,15 +50,12 @@ def main():
         install += '%s,' % (addon)
     install = install.rstrip(',')
     
-    cmd = 'server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init' % (addons_path, 
-                                                                                                     config['database'], 
-                                                                                                     install)
-    logging.info(cmd)
-    openerp_output, _  = call_command(cmd, stdout=None, stderr=None)
+    openerp_output, _  = call_command('server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --stop-after-init' % (addons_path, 
+                                                                                                                                 config['database'], 
+                                                                                                                                 install))
     
-    _, _ = call_command('dropdb %s' % config['database'])
+    call_command('dropdb %s' % config['database'])
 
-    print openerp_output
     if 'ERROR' in openerp_output:
         sys.exit(1)
     
@@ -103,12 +99,19 @@ def git_clone(workspace, source):
         logging.info('Pull %s from %s...' % (path, source['url']))
         logging.info(local.git.pull())
 
-def call_command(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
-    process = subprocess.Popen(command.split(' '),
+def call_command(command, log_in=True, log_out=True, log_err=True):
+    if log_in : 
+        logging.info(command)
+    process = subprocess.Popen(command,
                                shell=True,
-                               stdout=stdout,
-                               stderr=stderr)
-    return process.communicate()
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    out, err = process.communicate()
+    if log_err and err:
+        logging.error(err)
+    if log_out and out:
+        logging.info(out)
+    return (out, err)
 
 if __name__ == "__main__":
     main()
