@@ -51,8 +51,8 @@ def main():
     install = install.rstrip(',')
     
     openerp_output, _  = call_command('server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --test-commit --stop-after-init' % (addons_path, 
-                                                                                                                                 config['database'], 
-                                                                                                                                 install))
+                                                                                                                                               config['database'], 
+                                                                                                                                               install))
     
     call_command('dropdb %s' % config['database'])
 
