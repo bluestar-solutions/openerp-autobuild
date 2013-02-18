@@ -4,6 +4,7 @@
 import sys
 import subprocess
 from optparse import OptionParser
+from argparse import ArgumentParser
 import json 
 from bzrlib.plugin import load_plugins
 from bzrlib.branch import Branch
@@ -16,6 +17,41 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 
 def main():
+#    usage = "usage: %prog [options]"
+#    parser = OptionParser(usage)
+#    parser.add_option("-g","--goal", dest="goal",
+#                      choices=['run','test','debug'], default="run",
+#                      help="Goal for the script")
+#    
+#    
+#    
+#    parser.add_option("-c", "--config_file", dest="config_file",
+#                      help="the autobuild config file")
+#    parser.add_option("-w", "--workspace", dest="workspace",
+#                      help="the workspace")
+#    options, _ = parser.parse_args()
+#    
+#    eval("%s_mode()" % options.goal)
+    parser = ArgumentParser(description="Autobuild script for openERP.")
+    subparsers = parser.add_subparsers(metavar="ACTION")
+    
+    parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)")
+    parser_run.set_defaults(func=run_mode)
+    
+    parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results")
+    parser_test.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_test.set_defaults(func=test_mode)
+    
+    parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages")
+    parser_debug.set_defaults(func=debug_mode)
+    
+    args = parser.parse_args()
+    
+    #check_openerp_install()
+    
+    args.func(args)
+
+def dummy():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
     parser.add_option("-c", "--config_file", dest="config_file",
@@ -37,7 +73,7 @@ def main():
     
     _, err = call_command('dropdb %s' % config['database'], log_err=False)
     if err:
-        logging.info('dropdb : database doesn''t exist, nothing to frop')
+        logging.info('dropdb : database doesn''t exist, nothing to drop')
     call_command('createdb %s --encoding=unicode' % config['database'])
     
     addons_path = 'addons,'
@@ -60,6 +96,33 @@ def main():
         sys.exit(1)
     
     sys.exit(0)
+    
+def test_mode(args):
+    logging.info('Entering test mode')
+    if len(args.modules) == 0:
+        logging.info('Using all mods')
+        for directory in os.listdir("../openerp-bss-addons/src"):
+            logging.info("    %s" % directory)
+    else:
+        logging.info('Using mods : %s' % args.modules)
+    sys.exit(0)
+    
+def run_mode(args):
+    logging.info('Entering run mode')
+    sys.exit(0)
+    
+def debug_mode(args):
+    logging.info('Entering debug mode')
+    
+def check_openerp_install():
+    with open(".openerp-sources","r") as source_file:
+        sources = json.load(source_file)['sources']
+    
+    for source in sources:
+        if source['scm'] == 'bzr':
+            bzr_clone(".", source)
+        elif source['scm'] == 'git':
+            git_clone(".", source)
 
 def bzr_clone(workspace, source):
     path = '%s/%s' % (workspace.rstrip('/'), source['destination'])
@@ -85,7 +148,7 @@ def git_clone(workspace, source):
     if not os.path.exists(path):
         os.makedirs(path)  
         logging.info('Clone %s from %s...' % (path, source['url']))
-        local = Repo.clone_from(source['url'], path) 
+        local = Repo.clone_from(source['url'], path)
         logging.info('Checkout branch %s...' % (source['branch']))
         res = local.git.checkout(source['branch'])
         if res:
