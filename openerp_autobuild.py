@@ -69,17 +69,17 @@ def main():
     subparsers = parser.add_subparsers(metavar="ACTION")
     
     parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)")
-    parser_run.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_run.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
     parser_run.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
     parser_run.set_defaults(func="run")
     
     parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results")
-    parser_test.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_test.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
     parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
     parser_test.set_defaults(func="test")
     
     parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages")
-    parser_debug.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_debug.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
     parser_debug.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
     parser_debug.set_defaults(func="debug")
     
@@ -91,8 +91,6 @@ def main():
     
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
-    
-    addons = args.modules
     
     db_name = "openerp_%s_db" % args.func
         
@@ -106,7 +104,7 @@ def run_openerp(args):
         openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=src,openerp/addons,openerp/web/addons -d %s --db_user=openerp --db_password=openerp -i %s --log-level=test --test-%s --stop-after-init' %
                                          (
                                           db_name,
-                                          'all' if len(addons) == 0 else ','.join(addons),
+                                          args.modules,
                                           'commit' if args.commit else 'enable'
                                           ))
     else:
@@ -114,7 +112,7 @@ def run_openerp(args):
                                           (
                                           db_name,
                                           'i' if args.install else 'u',
-                                          'all' if len(addons) == 0 else ','.join(addons),
+                                          args.modules,
                                           'info' if args.func == "run" else 'debug',
                                           ':INFO' if args.func == "run" else ':DEBUG'
                                           ))
