@@ -85,9 +85,9 @@ def main():
     
     args = parser.parse_args()
     
-    #check_openerp_install()
+    check_openerp_install()
     
-    run_openerp(args)
+    #run_openerp(args)
     
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
@@ -133,9 +133,9 @@ def check_openerp_install():
     
     for source in sources:
         if source['scm'] == 'bzr':
-            bzr_clone(".", source)
+            bzr_clone(os.getcwd(), source)
         elif source['scm'] == 'git':
-            git_clone(".", source)
+            git_clone(os.getcwd(), source)
 
 def bzr_clone(workspace, source):
     path = '%s/%s' % (workspace.rstrip('/'), source['destination'])
@@ -149,8 +149,8 @@ def bzr_clone(workspace, source):
     else:
         logging.info('Pull %s from %s...' % (path, source['url']))
         remote = Branch.open(source['url'])
-        local = Branch.open(path)
-        res = local.pull(remote)
+        local = Branch.open("file:///%s" % path)
+        res = local.pull(remote, overwrite=True)
         if res.old_revno == res.new_revno:
             logging.info('Already up-to-date.')
         else:
