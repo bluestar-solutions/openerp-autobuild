@@ -1,3 +1,4 @@
 *.pyc
 /.settings
-/openerp-7.0
+/openerp
+/src

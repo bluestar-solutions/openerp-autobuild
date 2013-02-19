@@ -16,41 +16,6 @@ load_plugins()
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 
-def main():
-#    usage = "usage: %prog [options]"
-#    parser = OptionParser(usage)
-#    parser.add_option("-g","--goal", dest="goal",
-#                      choices=['run','test','debug'], default="run",
-#                      help="Goal for the script")
-#    
-#    
-#    
-#    parser.add_option("-c", "--config_file", dest="config_file",
-#                      help="the autobuild config file")
-#    parser.add_option("-w", "--workspace", dest="workspace",
-#                      help="the workspace")
-#    options, _ = parser.parse_args()
-#    
-#    eval("%s_mode()" % options.goal)
-    parser = ArgumentParser(description="Autobuild script for openERP.")
-    subparsers = parser.add_subparsers(metavar="ACTION")
-    
-    parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)")
-    parser_run.set_defaults(func=run_mode)
-    
-    parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results")
-    parser_test.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
-    parser_test.set_defaults(func=test_mode)
-    
-    parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages")
-    parser_debug.set_defaults(func=debug_mode)
-    
-    args = parser.parse_args()
-    
-    #check_openerp_install()
-    
-    args.func(args)
-
 def dummy():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage)
@@ -71,7 +36,7 @@ def dummy():
 
     os.chdir('%s/%s' % (options.workspace.rstrip('/'), config['openerp-path'].rstrip('/')))
     
-    _, err = call_command('dropdb %s' % config['database'], log_err=False)
+    _, err = call_command('dropdb -w %s' % config['database'], log_err=False)
     if err:
         logging.info('dropdb : database doesn''t exist, nothing to drop')
     call_command('createdb %s --encoding=unicode' % config['database'])
@@ -97,22 +62,70 @@ def dummy():
     
     sys.exit(0)
     
-def test_mode(args):
-    logging.info('Entering test mode')
-    if len(args.modules) == 0:
-        logging.info('Using all mods')
-        for directory in os.listdir("../openerp-bss-addons/src"):
-            logging.info("    %s" % directory)
+    
+    
+def main():
+    parser = ArgumentParser(description="Autobuild script for openERP.")
+    subparsers = parser.add_subparsers(metavar="ACTION")
+    
+    parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)")
+    parser_run.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_run.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
+    parser_run.set_defaults(func="run")
+    
+    parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results")
+    parser_test.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
+    parser_test.set_defaults(func="test")
+    
+    parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages")
+    parser_debug.add_argument("-m", "--modules", nargs='*', dest="modules", default=[], help="Modules to use. If omitted, all modules will be used.")
+    parser_debug.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
+    parser_debug.set_defaults(func="debug")
+    
+    args = parser.parse_args()
+    
+    #check_openerp_install()
+    
+    run_openerp(args)
+    
+def run_openerp(args):
+    logging.info('Entering %s mode' % args.func)
+    
+    addons = args.modules
+    
+    db_name = "openerp_%s_db" % args.func
+        
+    if args.func == "test" or args.install:
+        _, err = call_command('dropdb -U openerp %s' % db_name)
+        if err:
+            logging.info('dropdb : database doesn''t exist, nothing to drop')
+        call_command('createdb -U openerp %s --encoding=unicode' % db_name)
+    
+    if args.func == "test":
+        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=src,openerp/addons,openerp/web/addons -d %s --db_user=openerp --db_password=openerp -i %s --log-level=test --test-%s --stop-after-init' %
+                                         (
+                                          db_name,
+                                          'all' if len(addons) == 0 else ','.join(addons),
+                                          'commit' if args.commit else 'enable'
+                                          ))
     else:
-        logging.info('Using mods : %s' % args.modules)
-    sys.exit(0)
+        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s' % 
+                                          (
+                                          db_name,
+                                          'i' if args.install else 'u',
+                                          'all' if len(addons) == 0 else ','.join(addons),
+                                          'info' if args.func == "run" else 'debug',
+                                          ':INFO' if args.func == "run" else ':DEBUG'
+                                          ))
+
+    if args.func == "test":
+        call_command('dropdb -U openerp %s' % db_name)
+
+    if 'ERROR' in openerp_output:
+        sys.exit(1)
     
-def run_mode(args):
-    logging.info('Entering run mode')
     sys.exit(0)
-    
-def debug_mode(args):
-    logging.info('Entering debug mode')
     
 def check_openerp_install():
     with open(".openerp-sources","r") as source_file:
