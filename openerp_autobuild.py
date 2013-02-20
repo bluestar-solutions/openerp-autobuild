@@ -65,29 +65,29 @@ def dummy():
     
     
 def main():
+    shared_parser = ArgumentParser(add_help=False)
+    shared_parser.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
+    shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="5069", help="TCP server port (default:5069).")
+    
     parser = ArgumentParser(description="Autobuild script for openERP.")
     subparsers = parser.add_subparsers(metavar="ACTION")
     
-    parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)")
-    parser_run.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
+    parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)", parents=[shared_parser])
     parser_run.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
     parser_run.set_defaults(func="run")
     
-    parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results")
-    parser_test.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
+    parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results", parents=[shared_parser])
     parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
     parser_test.set_defaults(func="test")
     
-    parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages")
-    parser_debug.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
-    parser_debug.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
+    parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
     parser_debug.set_defaults(func="debug")
     
     args = parser.parse_args()
     
     check_openerp_install()
     
-    #run_openerp(args)
+    run_openerp(args)
     
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
@@ -108,13 +108,14 @@ def run_openerp(args):
                                           'commit' if args.commit else 'enable'
                                           ))
     else:
-        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s' % 
+        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
                                           (
                                           db_name,
                                           'i' if args.install else 'u',
                                           args.modules,
                                           'info' if args.func == "run" else 'debug',
-                                          ':INFO' if args.func == "run" else ':DEBUG'
+                                          ':INFO' if args.func == "run" else ':DEBUG',
+                                          args.tcp_port
                                           ))
 
     if args.func == "test":
