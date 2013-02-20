@@ -3,7 +3,6 @@
 
 import sys
 import subprocess
-from optparse import OptionParser
 from argparse import ArgumentParser
 import json 
 from bzrlib.plugin import load_plugins
@@ -15,59 +14,12 @@ from git import Repo
 load_plugins()
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
-
-def dummy():
-    usage = "usage: %prog [options]"
-    parser = OptionParser(usage)
-    parser.add_option("-c", "--config_file", dest="config_file",
-                      help="the autobuild config file")
-    parser.add_option("-w", "--workspace", dest="workspace",
-                      help="the workspace")
-    options, _ = parser.parse_args()
-    config_file = open(options.config_file)
-    config = json.load(config_file)
-    config_file.close()
-    
-    for source in config['sources']:
-        if source['scm'] == 'bzr':
-            bzr_clone(options.workspace, source)
-        elif source['scm'] == 'git':
-            git_clone(options.workspace, source)
-
-    os.chdir('%s/%s' % (options.workspace.rstrip('/'), config['openerp-path'].rstrip('/')))
-    
-    _, err = call_command('dropdb -w %s' % config['database'], log_err=False)
-    if err:
-        logging.info('dropdb : database doesn''t exist, nothing to drop')
-    call_command('createdb %s --encoding=unicode' % config['database'])
-    
-    addons_path = 'addons,'
-    for addon in config['addons']:
-        addons_path += '%s/%s,' % (options.workspace.rstrip('/'), addon)
-    addons_path += 'web/addons'
-    
-    install = ''
-    for addon in config['install']:
-        install += '%s,' % (addon)
-    install = install.rstrip(',')
-    
-    openerp_output, _  = call_command('server/openerp-server --addons-path=%s -d %s -i %s --log-level=test --test-commit --stop-after-init' % (addons_path, 
-                                                                                                                                               config['database'], 
-                                                                                                                                               install))
-    
-    call_command('dropdb %s' % config['database'])
-
-    if 'ERROR' in openerp_output:
-        sys.exit(1)
-    
-    sys.exit(0)
-    
-    
     
 def main():
     shared_parser = ArgumentParser(add_help=False)
     shared_parser.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
-    shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="5069", help="TCP server port (default:5069).")
+    shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
+    shared_parser.add_argument("--parse-log", dest="parse_log", action="store_true", help="Parse log in one time (Jenkins).")
     
     parser = ArgumentParser(description="Autobuild script for openERP.")
     subparsers = parser.add_subparsers(metavar="ACTION")
@@ -85,10 +37,24 @@ def main():
     
     args = parser.parse_args()
     
-    check_openerp_install()
+    check_project_dependencies()
+    
+    kill_old_openerp()
     
     run_openerp(args)
     
+def kill_old_openerp():
+    if os.path.exists("openerp-pid") and os.path.isfile("openerp-pid"):
+        with open("openerp-pid","r") as f:
+            pid = int(f.read())
+        if pid != 0:
+            try:
+                os.kill(pid,9)
+            except:
+                pass
+            with open("openerp-pid","w") as f:
+                f.write("%d" % 0)
+
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
     
@@ -106,7 +72,7 @@ def run_openerp(args):
                                           db_name,
                                           args.modules,
                                           'commit' if args.commit else 'enable'
-                                          ))
+                                          ), parse_log=args.parse_log, register_pid="openerp-pid")
     else:
         openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
                                           (
@@ -115,22 +81,23 @@ def run_openerp(args):
                                           args.modules,
                                           'info' if args.func == "run" else 'debug',
                                           ':INFO' if args.func == "run" else ':DEBUG',
-                                          args.tcp_port
-                                          ))
+                                          args.tcp_port,
+                                          ), parse_log=args.parse_log, register_pid="openerp-pid")
 
     if args.func == "test":
         call_command('dropdb -U openerp %s' % db_name)
 
-    if 'ERROR' in openerp_output:
-        sys.exit(1)
+    if args.parse_log:
+        if 'ERROR' in openerp_output:
+            sys.exit(1)
+        
+        sys.exit(0)
     
-    sys.exit(0)
+def check_project_dependencies():
+    with open(".project-dependencies","r") as source_file:
+        deps = json.load(source_file)
     
-def check_openerp_install():
-    with open(".openerp-sources","r") as source_file:
-        sources = json.load(source_file)['sources']
-    
-    for source in sources:
+    for source in deps['sources']:
         if source['scm'] == 'bzr':
             bzr_clone(os.getcwd(), source)
         elif source['scm'] == 'git':
@@ -174,19 +141,29 @@ def git_clone(workspace, source):
         logging.info('Pull %s from %s...' % (path, source['url']))
         logging.info(local.git.pull())
 
-def call_command(command, log_in=True, log_out=True, log_err=True):
+def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
     if log_in : 
         logging.info(command)
     process = subprocess.Popen(command,
                                shell=True,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    out, err = process.communicate()
-    if log_err and err:
-        logging.error(err)
-    if log_out and out:
-        logging.info(out)
-    return (out, err)
+                               stderr=subprocess.STDOUT)
+    
+    if register_pid is not None:
+        with open(register_pid,"w") as f:
+            f.write("%d" % (process.pid+1)) # pid + 1 : shell=True -> pid of spawned shell
+    
+    if parse_log:
+        out, err = process.communicate()
+        if log_err and err:
+            logging.error(err)
+        if log_out and out:
+            logging.info(out)
+        return (out, err)
+    else:
+        for l in iter(process.stdout.readline, b''):
+            print(l.rstrip('\n'))
+        return (None, None)
 
 if __name__ == "__main__":
     main()
