@@ -19,13 +19,14 @@ def main():
     shared_parser = ArgumentParser(add_help=False)
     shared_parser.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
-    shared_parser.add_argument("--parse-log", dest="parse_log", action="store_true", help="Parse log in one time (Jenkins).")
+    shared_parser.add_argument("--parse-log", dest="parse_log", action="store_true", help="Parse log in one time (e.g. Jenkins).")
+    shared_parser.add_argument("--update", dest="udeps", action="store_true", help="Update server and dependencies.")
+    shared_parser.add_argument("--force-install", action="store_true", dest="install", help="Force new install.")
     
     parser = ArgumentParser(description="Autobuild script for openERP.")
     subparsers = parser.add_subparsers(metavar="ACTION")
     
     parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)", parents=[shared_parser])
-    parser_run.add_argument("--install", action="store_true", dest="install", help="Specify if addons should be installed. Update them if omitted.")
     parser_run.set_defaults(func="run")
     
     parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results", parents=[shared_parser])
@@ -37,7 +38,8 @@ def main():
     
     args = parser.parse_args()
     
-    check_project_dependencies()
+    if args.udeps:
+        check_project_dependencies()
     
     kill_old_openerp()
     
@@ -46,7 +48,8 @@ def main():
 def kill_old_openerp():
     if os.path.exists("openerp-pid") and os.path.isfile("openerp-pid"):
         with open("openerp-pid","r") as f:
-            pid = int(f.read())
+            pid = f.read()
+            pid = int(pid) if pid != '' else 0
         if pid != 0:
             try:
                 os.kill(pid,9)
@@ -59,17 +62,21 @@ def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
     
     db_name = "openerp_%s_db" % args.func
+    db_exists, _ = call_command("psql -U openerp -l | grep %s | wc -l" % db_name)
+    update_or_install = "u"
         
-    if args.func == "test" or args.install:
+    if db_exists == '0' or args.install:
         _, err = call_command('dropdb -U openerp %s' % db_name)
         if err:
             logging.info('dropdb : database doesn''t exist, nothing to drop')
         call_command('createdb -U openerp %s --encoding=unicode' % db_name)
+        update_or_install = "i"
     
     if args.func == "test":
-        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=src,openerp/addons,openerp/web/addons -d %s --db_user=openerp --db_password=openerp -i %s --log-level=test --test-%s --stop-after-init' %
+        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=src,openerp/addons,openerp/web/addons -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-%s --stop-after-init' %
                                          (
                                           db_name,
+                                          update_or_install,
                                           args.modules,
                                           'commit' if args.commit else 'enable'
                                           ), parse_log=args.parse_log, register_pid="openerp-pid")
@@ -77,15 +84,12 @@ def run_openerp(args):
         openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
                                           (
                                           db_name,
-                                          'i' if args.install else 'u',
+                                          update_or_install,
                                           args.modules,
                                           'info' if args.func == "run" else 'debug',
                                           ':INFO' if args.func == "run" else ':DEBUG',
                                           args.tcp_port,
                                           ), parse_log=args.parse_log, register_pid="openerp-pid")
-
-    if args.func == "test":
-        call_command('dropdb -U openerp %s' % db_name)
 
     if args.parse_log:
         if 'ERROR' in openerp_output:
@@ -147,7 +151,7 @@ def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=Tru
     process = subprocess.Popen(command,
                                shell=True,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+                               stderr=subprocess.PIPE if parse_log else subprocess.STDOUT)
     
     if register_pid is not None:
         with open(register_pid,"w") as f:
