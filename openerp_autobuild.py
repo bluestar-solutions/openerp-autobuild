@@ -21,8 +21,7 @@ def main():
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
     shared_parser.add_argument("--parse-log", dest="parse_log", action="store_true", help="Parse log in one time (e.g. Jenkins).")
     shared_parser.add_argument("--update", dest="udeps", action="store_true", help="Update server and dependencies.")
-    shared_parser.add_argument("--force-install", action="store_true", dest="install", help="Force new install.")
-    
+
     parser = ArgumentParser(description="Autobuild script for openERP.")
     subparsers = parser.add_subparsers(metavar="ACTION")
     
@@ -31,6 +30,8 @@ def main():
     
     parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results", parents=[shared_parser])
     parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
+    parser_test.add_argument("--db-name", dest="db_name", help="Database name for tests.", default="openerp_autobuild_test")
+    parser_test.add_argument("--force-install", action="store_true", dest="install", help="Force new install.")
     parser_test.set_defaults(func="test")
     
     parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
@@ -61,31 +62,44 @@ def kill_old_openerp():
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
     
-    db_name = "openerp_%s_db" % args.func
-    db_exists, _ = call_command("psql -U openerp -l | grep %s | wc -l" % db_name)
-    update_or_install = "u"
+    if args.modules == "all":
+        modules = ""
+        for module in os.listdir("./src"):
+            modules = "%s,%s" % (module,modules)
+        modules = modules.rstrip(",")
+    else:
+        modules = args.modules
         
-    if db_exists == '0' or args.install:
-        _, err = call_command('dropdb -U openerp %s' % db_name)
-        if err:
-            logging.info('dropdb : database doesn''t exist, nothing to drop')
-        call_command('createdb -U openerp %s --encoding=unicode' % db_name)
-        update_or_install = "i"
+    addons_path = "src,openerp/addons,openerp/web/addons"
+        
+    if os.path.isdir("./deps"):
+        for addon in os.listdir("./deps"):
+            addons_path = "%s,deps/%s/src" % (addons_path,addon)
     
     if args.func == "test":
-        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=src,openerp/addons,openerp/web/addons -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-%s --stop-after-init' %
+        update_or_install = "u"
+        db_exists, _ = call_command("psql -U openerp -l | grep %s | wc -l" % args.db_name)
+        
+        if db_exists == '0' or args.install:
+            _, err = call_command('dropdb -U openerp %s' % args.db_name)
+            if err:
+                logging.info('dropdb : database doesn''t exist, nothing to drop')
+            call_command('createdb -U openerp %s --encoding=unicode' % args.db_name)
+            update_or_install = "i"
+        
+        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=%s -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-%s --stop-after-init' %
                                          (
-                                          db_name,
+                                          addons_path,
+                                          args.db_name,
                                           update_or_install,
-                                          args.modules,
+                                          modules,
                                           'commit' if args.commit else 'enable'
                                           ), parse_log=args.parse_log, register_pid="openerp-pid")
     else:
-        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default -d %s -%s %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
+        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default --addons-path=%s -u %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
                                           (
-                                          db_name,
-                                          update_or_install,
-                                          args.modules,
+                                          addons_path,
+                                          modules,
                                           'info' if args.func == "run" else 'debug',
                                           ':INFO' if args.func == "run" else ':DEBUG',
                                           args.tcp_port,
