@@ -70,11 +70,12 @@ def run_openerp(args):
     else:
         modules = args.modules
         
-    addons_path = "src,openerp/addons,openerp/web/addons"
+    addons_path = "openerp/addons,src"
         
     if os.path.isdir("./deps"):
         for addon in os.listdir("./deps"):
             addons_path = "%s,deps/%s/src" % (addons_path,addon)
+    addons_path = "%s,openerp/web/addons" % addons_path
     
     if args.func == "test":
         update_or_install = "u"
