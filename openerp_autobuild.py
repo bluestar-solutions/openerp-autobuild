@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO,
     
 def main():
     shared_parser = ArgumentParser(add_help=False)
-    shared_parser.add_argument("-m", "--modules", dest="modules", default="all", help="Modules to use. If omitted, all modules will be used.")
+    shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
     shared_parser.add_argument("--parse-log", dest="parse_log", action="store_true", help="Parse log in one time (e.g. Jenkins).")
     shared_parser.add_argument("--update", dest="udeps", action="store_true", help="Update server and dependencies.")
@@ -39,7 +39,7 @@ def main():
     
     args = parser.parse_args()
     
-    if args.udeps:
+    if args.udeps or not os.path.exists("./openerp"):
         check_project_dependencies()
     
     kill_old_openerp()
@@ -62,20 +62,20 @@ def kill_old_openerp():
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
     
-#    if args.modules == "all":
-#        modules = ""
-#        for module in os.listdir("./src"):
-#            modules = "%s,%s" % (module,modules)
-#        modules = modules.rstrip(",")
-#    else:
-    modules = args.modules
+    if args.modules == "def-all":
+        modules = ""
+        for module in os.listdir("./src"):
+            modules = "%s,%s" % (module,modules)
+        modules = modules.rstrip(",")
+    else:
+        modules = args.modules
         
-    addons_path = "openerp/addons,src"
+    addons_path = "openerp/addons"
         
     if os.path.isdir("./deps"):
         for addon in os.listdir("./deps"):
             addons_path = "%s,deps/%s/src" % (addons_path,addon)
-    addons_path = "%s,openerp/web/addons" % addons_path
+    addons_path = "%s,src,openerp/web/addons" % addons_path
     
     if args.func == "test":
         update_or_install = "u"
@@ -109,7 +109,6 @@ def run_openerp(args):
     if args.parse_log:
         if 'ERROR' in openerp_output:
             sys.exit(1)
-        
         sys.exit(0)
     
 def check_project_dependencies():
