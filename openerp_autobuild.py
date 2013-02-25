@@ -62,13 +62,13 @@ def kill_old_openerp():
 def run_openerp(args):
     logging.info('Entering %s mode' % args.func)
     
-    if args.modules == "all":
-        modules = ""
-        for module in os.listdir("./src"):
-            modules = "%s,%s" % (module,modules)
-        modules = modules.rstrip(",")
-    else:
-        modules = args.modules
+#    if args.modules == "all":
+#        modules = ""
+#        for module in os.listdir("./src"):
+#            modules = "%s,%s" % (module,modules)
+#        modules = modules.rstrip(",")
+#    else:
+    modules = args.modules
         
     addons_path = "openerp/addons,src"
         
@@ -180,8 +180,9 @@ def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=Tru
             logging.info(out)
         return (out, err)
     else:
-        for l in iter(process.stdout.readline, b''):
+        for l in iter(process.stdout.readline, None):
             print(l.rstrip('\n'))
+            process.stdout.flush()
         return (None, None)
 
 if __name__ == "__main__":
