@@ -1,0 +1,15 @@
+Source: openerp-autobuild
+Section: python
+Priority: optional
+Maintainer: Bluestar Solutions Sàrl, <info@blues2.ch>
+Build-Depends: debhelper (>= 7),
+               python (>= 2.7)
+Standards-Version: 3.9.2
+X-Python-Version: >= 2.7
+
+
+Package: openerp-autobuild
+Architecture: all
+Section: python
+Depends: python-appindicator, ${misc:Depends}, ${python:Depends}
+Description: A script to automatically run openerp
