@@ -11,7 +11,7 @@ X-Python-Version: >= 2.7
 Package: openerp-autobuild
 Architecture: all
 Section: python
-Depends: python-appindicator, ${misc:Depends}, ${python:Depends}, python-git, python-bzrlib,
+Depends: python-appindicator, ${misc:Depends}, ${python:Depends}, python-bzrlib,
 		 python-dateutil, python-feedparser, python-gdata, python-ldap, python-libxslt1,
 		 python-lxml, python-mako, python-openid, python-psycopg2, python-pybabel, python-pychart,
 		 python-pydot, python-pyparsing, python-reportlab, python-simplejson, python-tz, python-vatnumber,
