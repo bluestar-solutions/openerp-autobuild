@@ -11,5 +11,10 @@ X-Python-Version: >= 2.7
 Package: openerp-autobuild
 Architecture: all
 Section: python
-Depends: python-appindicator, ${misc:Depends}, ${python:Depends}
+Depends: python-appindicator, ${misc:Depends}, ${python:Depends}, python-git, python-bzrlib,
+		 python-dateutil, python-feedparser, python-gdata, python-ldap, python-libxslt1,
+		 python-lxml, python-mako, python-openid, python-psycopg2, python-pybabel, python-pychart,
+		 python-pydot, python-pyparsing, python-reportlab, python-simplejson, python-tz, python-vatnumber,
+		 python-vobject, python-webdav, python-werkzeug, python-xlwt, python-yaml, python-zsi, python-docutils
+		 python-psutil, bzr, wget, python-unittest2, python-mock, python-jinja2
 Description: A script to automatically run openerp
