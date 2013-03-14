@@ -79,7 +79,8 @@ def run_openerp(args):
     
     if args.func == "test":
         update_or_install = "u"
-        db_exists = call_command("psql -U openerp -d postgres --tuples-only --command \"select * from pg_database where datname = '%s';\" | awk '{print $1}'" % args.db_name)[0] == args.db_name
+        out, _ = call_command("psql -U openerp -d postgres --tuples-only --command \"select * from pg_database where datname = '%s';\" | awk '{print $1}'" % args.db_name)
+        db_exists = (out == args.db_name)
         
         if db_exists or args.install:
             if not db_exists:
