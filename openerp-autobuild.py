@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import sys
+import re
 import subprocess
 from argparse import ArgumentParser
 import json 
@@ -81,12 +82,17 @@ def run_openerp(args):
         update_or_install = "u"
         out, _ = call_command("psql -U openerp -d postgres --tuples-only --command \"select * from pg_database where datname = '%s';\" | awk '{print $1}'" % args.db_name)
         db_exists = (out == args.db_name)
+        if db_exists:
+            logging.info('Database %s exists' % args.db_name)
+        else:
+            logging.info('Database %s does not exists' % args.db_name)
         
-        if db_exists or args.install:
-            if not db_exists:
+        if not db_exists or args.install:
+            if db_exists:
                 _, err = call_command('dropdb -U openerp %s' % args.db_name)
             call_command('createdb -U openerp %s --encoding=unicode' % args.db_name)
             update_or_install = "i"
+
         
         openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=%s -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-enable%s%s' %
                                          (
