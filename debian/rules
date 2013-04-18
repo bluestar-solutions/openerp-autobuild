@@ -2,6 +2,3 @@
 
 %:
 	dh $@ --with python2
-	
-build:
-	ln -s /usr/bin/openerp-autobuild /usr/bin/oebuild
