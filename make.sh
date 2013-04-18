@@ -1,7 +1,7 @@
 #/bin/sh
 
 TARGET_DIR=target
-VERSION=$(git describe --exact-match --abbrev=0)
+VERSION=$(git describe --abbrev=0 --tags)
 
 rm -Rf $TARGET_DIR
 mkdir -p $TARGET_DIR/openerp-autobuild
