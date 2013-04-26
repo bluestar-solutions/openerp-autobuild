@@ -88,7 +88,7 @@ def assembly(with_oe=False):
     for path in deps_addons_path:
         full_path = '%s/%s' % (DEPS_PATH.rstrip('/'), path[5:])
         for addon in os.listdir(full_path):
-            if os.path.isdir('%s/%s' % (full_path, addon)):
+            if os.path.isdir('%s/%s' % (full_path, addon)) and addon not in ['.bzr', '.git']:
                 shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
     
     os.chdir(TARGET_PATH)
