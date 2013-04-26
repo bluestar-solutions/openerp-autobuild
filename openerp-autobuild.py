@@ -92,7 +92,7 @@ def assembly(with_oe=False):
                 shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
     
     os.chdir(TARGET_PATH)
-    tar = tarfile.open('%s.tar.gz' % ('full-install' if with_oe else 'custom-addons'), "w:gz")
+    tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
     tar.add('custom-addons')
     
     if with_oe:
