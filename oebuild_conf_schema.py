@@ -17,15 +17,25 @@ OPENERP_TYPE = {
     BZR_REV: {"type": "string", "pattern": "^[0-9]+$", "required": False},
 }
 }
-DEPENDENCY_TYPE = {
+DEPENDENCY_GIT = {
     "type": "object",
     "properties": {
-        SCM: {"type": "string", "enum": (SCM_GIT, SCM_BZR)},
+        SCM: {"type": "string", "pattern": SCM_GIT},
         URL: {"type": "string", "format": "uri"},
-        GIT_BRANCH: {"type": "string"},
+        GIT_BRANCH: {"type": "string", "required": True},
         DESTINATION: {"type": "string", "format": "uri"},
         ADDONS_PATH: {"type": "string", "format": "uri", "required": False},
-    }
+    },
+}
+DEPENDENCY_BZR = {
+    "type": "object",
+    "properties": {
+        SCM: {"type": "string", "pattern": SCM_BZR},
+        URL: {"type": "string", "format": "uri"},
+        BZR_REV: {"type": "string", "pattern": "^[0-9]+$", "required": True},
+        DESTINATION: {"type": "string", "format": "uri"},
+        ADDONS_PATH: {"type": "string", "format": "uri", "required": False},
+    },
 }
 OEBUILD_SCHEMA = {
     "type": "object",
@@ -36,7 +46,7 @@ OEBUILD_SCHEMA = {
         "openerp-web": OPENERP_TYPE,
         DEPENDENCIES: {
             "type": "array",
-            "items": DEPENDENCY_TYPE
+            "items": {"type": [DEPENDENCY_GIT, DEPENDENCY_BZR]}
         }
     }
 }
