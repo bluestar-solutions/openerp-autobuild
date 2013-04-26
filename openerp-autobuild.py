@@ -60,6 +60,7 @@ def main():
     parser_debug.set_defaults(func="debug")
     
     parser_assembly = subparsers.add_parser('assembly', help="Prepare all files to deploy in target folder", parents=[shared_parser])
+    parser_assembly.add_argument("--with-oe", action="store_true", dest="with_oe", help="Include OpenERP files")
     parser_assembly.set_defaults(func="assembly")
     
     args = parser.parse_args()
@@ -87,7 +88,8 @@ def assembly():
     for path in deps_addons_path:
         full_path = '%s/%s' % (DEPS_PATH.rstrip('/'), path[5:])
         for addon in os.listdir(full_path):
-            shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
+            if os.path.isdir('%s/%s' % (full_path, addon)):
+                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
             
     os.chdir(TARGET_PATH)
     tar = tarfile.open('custom-addons.tar.gz', "w:gz")
