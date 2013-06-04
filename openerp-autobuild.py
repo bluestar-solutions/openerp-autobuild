@@ -60,6 +60,7 @@ def main():
     parser_debug.set_defaults(func="debug")
     
     parser_assembly = subparsers.add_parser('assembly', help="Prepare all files to deploy in target folder", parents=[shared_parser])
+    parser_assembly.add_argument("--with-oe", action="store_true", dest="with_oe", help="Include OpenERP files")
     parser_assembly.set_defaults(func="assembly")
     
     args = parser.parse_args()
@@ -73,25 +74,31 @@ def main():
     logger.info('Entering %s mode' % args.func)
     
     if args.func == "assembly":
-        assembly()
+        assembly(args.with_oe)
     else:  
         kill_old_openerp()
         run_openerp(args)
         
     logger.info('Terminate %s mode' % args.func)
     
-def assembly():
+def assembly(with_oe=False):
     if os.path.exists(TARGET_PATH):
         shutil.rmtree(TARGET_PATH)
     shutil.copytree(SRC_PATH, TARGET_ADDONS_PATH)
     for path in deps_addons_path:
         full_path = '%s/%s' % (DEPS_PATH.rstrip('/'), path[5:])
         for addon in os.listdir(full_path):
-            shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
-            
+            if os.path.isdir('%s/%s' % (full_path, addon)) and addon not in ['.bzr', '.git']:
+                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
+    
     os.chdir(TARGET_PATH)
-    tar = tarfile.open('custom-addons.tar.gz', "w:gz")
+    tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
     tar.add('custom-addons')
+    
+    if with_oe:
+        for oe in ['server','web','addons']:
+            tar.add('%s/%s' % (OPENERP_PATH, oe), arcname=oe)
+            
     tar.close()
     
 def kill_old_openerp():
