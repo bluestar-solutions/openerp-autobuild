@@ -9,6 +9,7 @@ GIT_BRANCH = "git-branch"
 DESTINATION = "destination"
 OEBUILD_VERSION = "oebuild-version"
 ADDONS_PATH = "addons-path"
+PROJECT = "project"
 
 OPENERP_TYPE = {
 "type": "object",
@@ -40,7 +41,8 @@ DEPENDENCY_BZR = {
 OEBUILD_SCHEMA = {
     "type": "object",
     "properties": {
-        OEBUILD_VERSION: {"type": "string", "pattern": "^[0-9]+|.[0-9]+$"},
+        OEBUILD_VERSION: {"type": "string", "pattern": "^[0-9]+|.[0-9]+$", "required": True},
+        PROJECT: {"type": "string", "pattern": "^[a-z|0-9|-]+$"},
         "openerp-server": OPENERP_TYPE,
         "openerp-addons": OPENERP_TYPE,
         "openerp-web": OPENERP_TYPE,
