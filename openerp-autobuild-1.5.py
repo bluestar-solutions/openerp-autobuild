@@ -18,44 +18,21 @@ import tempfile
 import validictory
 import shutil
 import oebuild_logger
-import oebuild_conf_schema as c_s
+import oebuild_conf_schema_1_5 as c_s
 import tarfile
-import lxml.etree
-import lxml.builder
 
 load_plugins()
 
-HOME = os.path.expanduser("~")
-CONFIG_PATH = '%s/.config' % HOME
-CONFIG_FILE_PATH = '%s/openerp-autobuild' % CONFIG_PATH
-CONFIG_FILE = '%s/oebuild_config.py' % CONFIG_FILE_PATH
-if not os.path.exists(CONFIG_PATH):
-    os.makedirs(CONFIG_PATH)
-if not os.path.exists(CONFIG_FILE_PATH):
-    os.makedirs(CONFIG_FILE_PATH)
-if not os.path.exists(CONFIG_FILE):
-    f = open(CONFIG_FILE, "w")
-    f.write("# coding: utf-8\nWORKSPACE='%s/openerp-autobuild'\n\n" % HOME)
-    f.close()
-    
-sys.path.insert(0, '%s/.config/openerp-autobuild' % HOME)
-import oebuild_config
-WORKSPACE = oebuild_config.WORKSPACE
-
-if not os.path.exists(WORKSPACE):
-    os.makedirs(WORKSPACE)
-
-VERSION = '1.6'
-SUPPORTED_VERSIONS = ('1.6')
+VERSION = '1.5'
+SUPPORTED_VERSIONS = ('1.4', '1.5')
 PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
-CONF_FILENAME = 'oebuild.conf'
+CONF_FILE = 'oebuild.conf'
 DEPRECATED_FILES = ('.project-dependencies',)
-
-openerp_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'openerp')
-deps_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'deps')
-target_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'target')
-target_addons_path = lambda project: '%s/%s' % (target_path(project), 'custom-addons')
-src_path = os.path.curdir
+OPENERP_PATH = '%s/%s' % (os.getcwd().rstrip('/'), 'openerp')
+DEPS_PATH = '%s/%s' % (os.getcwd().rstrip('/'), 'deps')
+TARGET_PATH = '%s/%s' % (os.getcwd().rstrip('/'), 'target')
+TARGET_ADDONS_PATH = '%s/%s' % (TARGET_PATH, 'custom-addons')
+SRC_PATH = '%s/%s' % (os.getcwd().rstrip('/'), 'src')
 
 logger = oebuild_logger.getLogger()
 deps_addons_path = []
@@ -86,96 +63,44 @@ def main():
     parser_assembly.add_argument("--with-oe", action="store_true", dest="with_oe", help="Include OpenERP files")
     parser_assembly.set_defaults(func="assembly")
     
-    parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
-    parser_eclipse_init.set_defaults(func="init-eclipse")
-    
     args = parser.parse_args()
     
     for file in DEPRECATED_FILES:
         if os.path.exists(file):
             logger.warning('File %s is deprecated, you can remove it from the project' % file)
     
-    conf = load_config_file()
-    get_deps(conf)
+    load_config_file()
     
     logger.info('Entering %s mode' % args.func)
     
-    if args.func == "init-eclipse":
-        init_eclipse(conf)
-    elif args.func == "assembly":
-        assembly(conf, args.with_oe)
+    if args.func == "assembly":
+        assembly(args.with_oe)
     else:  
         kill_old_openerp()
-        run_openerp(conf, args)
+        run_openerp(args)
         
     logger.info('Terminate %s mode' % args.func)
     
-def assembly(conf, with_oe=False):
-    project = conf[c_s.PROJECT]
-    if os.path.exists(target_path(project)):
-        shutil.rmtree(target_path(project))
-    
-    full_path = src_path
-    print str(full_path)
-    for addon in os.listdir(full_path):
-        if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.':
-            shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon))
-            print str(('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon)))
-                    
+def assembly(with_oe=False):
+    if os.path.exists(TARGET_PATH):
+        shutil.rmtree(TARGET_PATH)
+    shutil.copytree(SRC_PATH, TARGET_ADDONS_PATH)
     for path in deps_addons_path:
-        full_path = '%s/%s' % (deps_path(project), path.rstrip('/'))
+        full_path = '%s/%s' % (DEPS_PATH.rstrip('/'), path[5:])
         for addon in os.listdir(full_path):
-            if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.':
-                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon))
-                print str(('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon)))
+            if os.path.isdir('%s/%s' % (full_path, addon)) and addon not in ['.bzr', '.git']:
+                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (TARGET_ADDONS_PATH, addon))
     
-    os.chdir(target_path(project))
+    os.chdir(TARGET_PATH)
     tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
     tar.add('custom-addons')
     
     if with_oe:
         for oe in ['server','web','addons']:
-            tar.add('%s/%s' % (openerp_path(project), oe), arcname=oe)
+            tar.add('%s/%s' % (OPENERP_PATH, oe), arcname=oe)
             
     tar.close()
     
-def init_eclipse(conf):
-    create_eclipse_project(conf)
-    create_eclipse_pydev_project(conf)
-        
-def create_eclipse_project(conf):
-    EM = lxml.builder.ElementMaker()
-    
-    doc = EM.projectDescription (
-        EM.name(conf[c_s.PROJECT])
-    )
-    
-    lxml.etree.ElementTree(doc).write(".project", pretty_print=True, 
-                                      xml_declaration=True, encoding='UTF-8')
-    
-def create_eclipse_pydev_project(conf):
-    project = conf[c_s.PROJECT]
-    EM = lxml.builder.ElementMaker()
-    
-    ext_path = EM.pydev_pathproperty(name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH')
-    ext_path.append(EM.path(openerp_path(project) + '/server'))
-    
-    doc = EM.pydev_project (
-        EM.pydev_property('Default', name='org.python.pydev.PYTHON_PROJECT_INTERPRETER'),
-        EM.pydev_property(name='org.python.pydev.PYTHON_PROJECT_VERSION'),
-        
-        EM.pydev_pathproperty(
-            EM.path(os.path.curdir),
-            name='org.python.pydev.PROJECT_SOURCE_PATH'
-        ),
-        
-        ext_path
-    )
-    doc.addprevious(lxml.etree.ProcessingInstruction('eclipse-pydev', 'version="1.0"'))
-    
-    lxml.etree.ElementTree(doc).write(".pydevproject", pretty_print=True, 
-                                      xml_declaration=True, encoding='UTF-8', standalone=False)
-       
 def kill_old_openerp():
     if os.path.exists(PID_FILE) and os.path.isfile(PID_FILE):
         with open(PID_FILE,"r") as f:
@@ -189,21 +114,20 @@ def kill_old_openerp():
             with open(PID_FILE,"w") as f:
                 f.write("%d" % 0)
 
-def run_openerp(conf, args):
-    project = conf[c_s.PROJECT]
+def run_openerp(args):
         
     if args.modules == "def-all":
         modules = ""
-        for module in os.listdir("."):
+        for module in os.listdir("./src"):
             modules = "%s,%s" % (module,modules)
         modules = modules.rstrip(",")
     else:
         modules = args.modules
         
-    addons_path = '%s/%s' % (openerp_path(project), 'addons')
+    addons_path = "openerp/addons"
     for path in deps_addons_path:
-        addons_path = "%s,%s" % (addons_path, '%s/%s' % (deps_path(project), path))
-    addons_path = "%s,.,%s" % (addons_path, '%s/%s' % (openerp_path(project), 'web/addons'))
+        addons_path = "%s,%s" % (addons_path, path)
+    addons_path = "%s,src,openerp/web/addons" % addons_path
     
     if args.func == "test":
         update_or_install = "u"
@@ -221,9 +145,8 @@ def run_openerp(conf, args):
             update_or_install = "i"
 
         
-        openerp_output, _ = call_command('%s --addons-path=%s -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-enable%s%s' %
+        openerp_output, _ = call_command('openerp/server/openerp-server --addons-path=%s -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-enable%s%s' %
                                          (
-                                          '%s/%s' % (openerp_path(project), 'server/openerp-server'),
                                           addons_path,
                                           args.db_name,
                                           update_or_install,
@@ -232,14 +155,13 @@ def run_openerp(conf, args):
                                           ' --stop-after-init' if args.analyze else '',
                                           ), parse_log=args.analyze, register_pid=PID_FILE)
     else:
-        openerp_output, _ = call_command('%s -c .openerp-dev-default --addons-path=%s -u %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
+        openerp_output, _ = call_command('openerp/server/openerp-server -c .openerp-dev-default --addons-path=%s -u %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
                                           (
-                                           '%s/%s' % (openerp_path(project), 'server/openerp-server'),
-                                           addons_path,
-                                           modules,
-                                           'info' if args.func == "run" else 'debug',
-                                           ':INFO' if args.func == "run" else ':DEBUG',
-                                           args.tcp_port,
+                                          addons_path,
+                                          modules,
+                                          'info' if args.func == "run" else 'debug',
+                                          ':INFO' if args.func == "run" else ':DEBUG',
+                                          args.tcp_port,
                                           ), parse_log=False, register_pid=PID_FILE)
 
     if args.func == "test" and args.analyze:
@@ -250,77 +172,40 @@ def run_openerp(conf, args):
     sys.exit(0)
     
 def load_config_file():
-    if not (os.path.exists(CONF_FILENAME) and os.path.isfile(CONF_FILENAME)):
-        logger.error('The project configuration does not exist : %s' % CONF_FILENAME)
+    if not (os.path.exists(CONF_FILE) and os.path.isfile(CONF_FILE)):
+        logger.error('The project configuration does not exist : %s' % CONF_FILE)
         sys.exit(1)
         
-    with open(CONF_FILENAME, "r") as source_file:
+    with open(CONF_FILE, "r") as source_file:
         try:
             conf = json.load(source_file)
         except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (CONF_FILENAME, error))
+            logger.error('%s is not JSON valid : %s' % (CONF_FILE, error))
             sys.exit(1)
         try:
             validictory.validate(conf, c_s.OEBUILD_SCHEMA)
         except ValueError, error:
-            logger.error('%s is not a valid configuration file : %s' % (CONF_FILENAME, error))
+            logger.error('%s is not a valid configuration file : %s' % (CONF_FILE, error))
             sys.exit(1)
 
     if conf[c_s.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
         logger.error(('The project configuration file is in version %s, openerp-autobuild is ' +
                       'in version %s and support only versions %s for configuration file') % (conf[c_s.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
         sys.exit(1)
-        
-    return conf
-
-def load_subconfig_file(conf_file_path):
-    if not (os.path.exists(conf_file_path) and os.path.isfile(conf_file_path)):
-        logger.info('The project configuration does not exist : %s' % conf_file_path)
-        raise Exception()
-        
-    with open(conf_file_path, "r") as source_file:
-        try:
-            conf = json.load(source_file)
-        except ValueError, error:
-            logger.warning('%s is not JSON valid : %s' % (conf_file_path, error))
-            raise Exception()
-        try:
-            validictory.validate(conf, c_s.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.warning('%s is not a valid configuration file : %s' % (conf_file_path, error))
-            raise Exception()
-
-    if conf[c_s.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
-        logger.warning(('The project configuration file is in version %s, openerp-autobuild is ' +
-                      'in version %s and support only versions %s for configuration file') % (conf[c_s.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
-        raise Exception()
-        
-    return conf
-
-def get_deps(conf):
-    project = conf[c_s.PROJECT]
-    
+       
     for sp in ('server', 'addons', 'web'):
         try:
-            bzr_checkout(conf['openerp-%s' % sp][c_s.URL], '%s/%s' % (openerp_path(project), sp), conf['openerp-%s' % sp].get(c_s.BZR_REV, None))
+            bzr_checkout(conf['openerp-%s' % sp][c_s.URL], '%s/%s' % (OPENERP_PATH, sp), conf['openerp-%s' % sp].get(c_s.BZR_REV, None))
         except ConnectionError, error:
-            logger.error('%s: %s' % ('%s/%s' % (openerp_path(project), sp), error))
+            logger.error('%s: %s' % ('%s/%s' % (OPENERP_PATH, sp), error))
     
-    get_ext_deps(project, conf[c_s.DEPENDENCIES])
-    
-def get_ext_deps(project, deps):
-    for dep in deps:
-        destination = '%s/%s' % (deps_path(project).rstrip('/'), dep[c_s.DESTINATION])
+    for dep in conf[c_s.DEPENDENCIES]:
+        destination = '%s/%s' % (DEPS_PATH.rstrip('/'), dep[c_s.DESTINATION])
         if dep[c_s.SCM] == c_s.SCM_BZR:
             try:
                 bzr_checkout(dep[c_s.URL], destination, dep.get(c_s.BZR_REV, None))
             except ConnectionError, error:
                 logger.error('%s: %s' % (destination, error))
-            try:
-                subconf = load_subconfig_file('%s/%s' % (destination.rstrip('/'), 'oebuild.conf'))
-                get_ext_deps(project, subconf[c_s.DEPENDENCIES])
-            except Exception :
-                pass
         elif dep[c_s.SCM] == c_s.SCM_GIT:
             try:
                 git_checkout(dep[c_s.URL], destination, dep.get(c_s.GIT_BRANCH, None))
@@ -329,12 +214,7 @@ def get_ext_deps(project, deps):
             except GitCommandError, error:
                 logger.critical('%s: %s' % (destination, error))
                 sys.exit(1)
-            try:
-                subconf = load_subconfig_file('%s/%s' % (destination.rstrip('/'), 'oebuild.conf'))
-                get_ext_deps(project, subconf[c_s.DEPENDENCIES])
-            except Exception :
-                pass
-        addons_path = dep[c_s.DESTINATION]
+        addons_path = 'deps/%s' % dep[c_s.DESTINATION]
         if dep.get(c_s.ADDONS_PATH, False):
             addons_path = '%s/%s' % (addons_path, dep[c_s.ADDONS_PATH].rstrip('/'))
         deps_addons_path.append(addons_path)
