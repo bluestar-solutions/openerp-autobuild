@@ -45,8 +45,8 @@ WORKSPACE = oebuild_config.WORKSPACE
 if not os.path.exists(WORKSPACE):
     os.makedirs(WORKSPACE)
 
-VERSION = '1.5'
-SUPPORTED_VERSIONS = ('1.5')
+VERSION = '1.6'
+SUPPORTED_VERSIONS = ('1.6')
 PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
 CONF_FILENAME = 'oebuild.conf'
 DEPRECATED_FILES = ('.project-dependencies',)

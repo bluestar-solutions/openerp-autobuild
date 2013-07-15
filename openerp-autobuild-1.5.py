@@ -23,8 +23,8 @@ import tarfile
 
 load_plugins()
 
-VERSION = '1.4'
-SUPPORTED_VERSIONS = ('1.4')
+VERSION = '1.5'
+SUPPORTED_VERSIONS = ('1.4', '1.5')
 PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
 CONF_FILE = 'oebuild.conf'
 DEPRECATED_FILES = ('.project-dependencies',)
