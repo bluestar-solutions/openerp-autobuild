@@ -125,7 +125,7 @@ def assembly(conf, with_oe=False):
     for path in deps_addons_path:
         full_path = '%s/%s' % (deps_path(project), path.rstrip('/'))
         for addon in os.listdir(full_path):
-            if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.':
+            if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.' and not os.path.exists('%s/%s' % (target_addons_path(project), addon)):
                 shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon))
                 print str(('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon)))
     
