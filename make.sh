@@ -11,6 +11,8 @@ cp openerp-autobuild-1.5.py $TARGET_DIR/openerp-autobuild/openerp-autobuild-1.5.
 cp oebuild_logger.py $TARGET_DIR/openerp-autobuild/oebuild_logger.py
 cp oebuild_conf_schema.py $TARGET_DIR/openerp-autobuild/oebuild_conf_schema.py
 cp oebuild_conf_schema_1_5.py $TARGET_DIR/openerp-autobuild/oebuild_conf_schema_1_5.py
+cp oebuild_config.default $TARGET_DIR/openerp-autobuild/oebuild_config.default
+cp oe_config.default $TARGET_DIR/openerp-autobuild/oe_config.default
 
 cd $TARGET_DIR/openerp-autobuild
 dch --create -v $VERSION --package openerp-autobuild

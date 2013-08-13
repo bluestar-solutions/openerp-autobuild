@@ -35,14 +35,14 @@ if not os.path.exists(CONFIG_PATH):
 if not os.path.exists(CONFIG_FILE_PATH):
     os.makedirs(CONFIG_FILE_PATH)
 if not os.path.exists(CONFIG_FILE):
-    shutil.copyfile("%s/oebuild_config.default" % os.path.abspath(os.path.dirname(sys.argv[0])), CONFIG_FILE)
+    shutil.copyfile("/usr/lib/oebuild/oebuild_config.default", CONFIG_FILE)
     with open(CONFIG_FILE,'a+b') as f:
         contents = f.readlines()
         f.truncate(0)
         for l in contents:
             f.write(re.sub(r'{USERNAME}', os.path.expanduser("~").split('/')[-1], l))
 if not os.path.exists(OE_CONFIG_FILE):
-    shutil.copyfile("%s/oe_config.default" % os.path.abspath(os.path.dirname(sys.argv[0])), OE_CONFIG_FILE)
+    shutil.copyfile("/usr/lib/oebuild/oe_config.default", OE_CONFIG_FILE)
     
 sys.path.insert(0, '%s/.config/openerp-autobuild' % HOME)
 import oebuild_config
