@@ -29,18 +29,27 @@ HOME = os.path.expanduser("~")
 CONFIG_PATH = '%s/.config' % HOME
 CONFIG_FILE_PATH = '%s/openerp-autobuild' % CONFIG_PATH
 CONFIG_FILE = '%s/oebuild_config.py' % CONFIG_FILE_PATH
+OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
 if not os.path.exists(CONFIG_PATH):
     os.makedirs(CONFIG_PATH)
 if not os.path.exists(CONFIG_FILE_PATH):
     os.makedirs(CONFIG_FILE_PATH)
 if not os.path.exists(CONFIG_FILE):
-    f = open(CONFIG_FILE, "w")
-    f.write("# coding: utf-8\nWORKSPACE='%s/openerp-autobuild'\n\n" % HOME)
-    f.close()
+    shutil.copyfile("%s/oebuild_config.default" % os.path.abspath(os.path.dirname(sys.argv[0])), CONFIG_FILE)
+    with open(CONFIG_FILE,'a+b') as f:
+        contents = f.readlines()
+        f.truncate(0)
+        for l in contents:
+            f.write(re.sub(r'{USERNAME}', os.path.expanduser("~").split('/')[-1], l))
+if not os.path.exists(OE_CONFIG_FILE):
+    shutil.copyfile("%s/oe_config.default" % os.path.abspath(os.path.dirname(sys.argv[0])), OE_CONFIG_FILE)
     
 sys.path.insert(0, '%s/.config/openerp-autobuild' % HOME)
 import oebuild_config
 WORKSPACE = oebuild_config.WORKSPACE
+ADDONS = oebuild_config.ADDONS
+WEB = oebuild_config.WEB
+SERVER = oebuild_config.SERVER
 
 if not os.path.exists(WORKSPACE):
     os.makedirs(WORKSPACE)
@@ -89,24 +98,30 @@ def main():
     parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
     parser_eclipse_init.set_defaults(func="init-eclipse")
     
+    parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project")
+    parser_init_new.set_defaults(func="init-new")
+    
     args = parser.parse_args()
     
     for file in DEPRECATED_FILES:
         if os.path.exists(file):
             logger.warning('File %s is deprecated, you can remove it from the project' % file)
-    
-    conf = load_config_file()
-    get_deps(conf)
-    
+            
     logger.info('Entering %s mode' % args.func)
     
-    if args.func == "init-eclipse":
-        init_eclipse(conf)
-    elif args.func == "assembly":
-        assembly(conf, args.with_oe)
-    else:  
-        kill_old_openerp()
-        run_openerp(conf, args)
+    if args.func == "init-new":
+        init_new()
+    else:
+        conf = load_config_file()
+        get_deps(conf)
+    
+        if args.func == "init-eclipse":
+            init_eclipse(conf)
+        elif args.func == "assembly":
+            assembly(conf, args.with_oe)
+        else:  
+            kill_old_openerp()
+            run_openerp(conf, args)
         
     logger.info('Terminate %s mode' % args.func)
     
@@ -138,6 +153,40 @@ def assembly(conf, with_oe=False):
             tar.add('%s/%s' % (openerp_path(project), oe), arcname=oe)
             
     tar.close()
+    
+def init_new():
+    if os.path.isfile('oebuild.conf'):
+        answer = ''
+        while answer.lower() not in ['y','n']:
+            answer = raw_input("Configuration file already exists. Continue (y/n) ? ")
+        
+        if answer.lower() == 'n':
+            return
+        
+    with open('oebuild.conf','w') as f:
+        _, remote_server = BzrDir.open_tree_or_branch(SERVER)
+        _, remote_addons = BzrDir.open_tree_or_branch(ADDONS)
+        _, remote_web = BzrDir.open_tree_or_branch(WEB)
+        
+        contents = """{
+    "oebuild-version": "1.6",
+    "project": "%s",
+    "openerp-server": {
+        "url": "%s",
+        "bzr-rev": "%s"
+    },
+    "openerp-addons": {
+        "url": "%s",
+        "bzr-rev": "%s"
+    },
+    "openerp-web": {
+        "url": "%s",
+        "bzr-rev": "%s"
+    },
+    "dependencies": []
+}""" % (os.getcwd().split('/')[-1],SERVER,remote_server.revno(),ADDONS,remote_addons.revno(),WEB,remote_web.revno())
+        
+        f.write(contents)
     
 def init_eclipse(conf):
     create_eclipse_project(conf)
@@ -195,7 +244,8 @@ def run_openerp(conf, args):
     if args.modules == "def-all":
         modules = ""
         for module in os.listdir("."):
-            modules = "%s,%s" % (module,modules)
+            if os.path.isdir(module) and not module.startswith('.'):
+                modules = "%s,%s" % (module,modules)
         modules = modules.rstrip(",")
     else:
         modules = args.modules
@@ -203,7 +253,7 @@ def run_openerp(conf, args):
     addons_path = '%s/%s' % (openerp_path(project), 'addons')
     for path in deps_addons_path:
         addons_path = "%s,%s" % (addons_path, '%s/%s' % (deps_path(project), path))
-    addons_path = "%s,.,%s" % (addons_path, '%s/%s' % (openerp_path(project), 'web/addons'))
+    addons_path = "%s%s,%s" % (addons_path, ',.' if modules != '' else '', '%s/%s' % (openerp_path(project), 'web/addons'))
     
     if args.func == "test":
         update_or_install = "u"
