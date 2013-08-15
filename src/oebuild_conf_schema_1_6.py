@@ -1,4 +1,3 @@
-
 DEPENDENCIES = "dependencies"
 SCM = "scm"
 SCM_GIT = "git"

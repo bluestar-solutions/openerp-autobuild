@@ -33,10 +33,4 @@ def getLogger():
     
     logger.setLevel(logging.DEBUG)
     
-#     logger.debug("A DEBUG message")
-#     logger.info("An INFO message")
-#     logger.warning("A WARNING message")
-#     logger.error("An ERROR message")
-#     logger.critical("A CRITICAL message")
-    
     return logger

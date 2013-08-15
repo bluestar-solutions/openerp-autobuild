@@ -1,6 +1,0 @@
-# coding: utf-8
-WORKSPACE='/home/{USERNAME}/openerp-autobuild'
-SERVER='lp:openobject-server/7.0'
-ADDONS='lp:openobject-addons/7.0'
-WEB='lp:openerp-web/7.0'
-
