@@ -7,9 +7,7 @@ import subprocess
 from argparse import ArgumentParser
 import json 
 from bzrlib.plugin import load_plugins
-from bzrlib.branch import Branch
 from bzrlib.bzrdir import BzrDir
-from bzrlib.workingtree import WorkingTree
 from bzrlib.errors import ConnectionError
 import os.path
 from git import Repo
@@ -18,7 +16,7 @@ import tempfile
 import validictory
 import shutil
 import oebuild_logger
-import oebuild_conf_schema_1_5 as c_s
+import oebuild_conf_schema as c_s
 import tarfile
 
 load_plugins()
@@ -65,9 +63,9 @@ def main():
     
     args = parser.parse_args()
     
-    for file in DEPRECATED_FILES:
-        if os.path.exists(file):
-            logger.warning('File %s is deprecated, you can remove it from the project' % file)
+    for dfile in DEPRECATED_FILES:
+        if os.path.exists(dfile):
+            logger.warning('File %s is deprecated, you can remove it from the project' % dfile)
     
     load_config_file()
     
@@ -140,7 +138,7 @@ def run_openerp(args):
         
         if not db_exists or args.install:
             if db_exists:
-                _, err = call_command('dropdb -U openerp %s' % args.db_name)
+                _, _ = call_command('dropdb -U openerp %s' % args.db_name)
             call_command('createdb -U openerp %s --encoding=unicode' % args.db_name)
             update_or_install = "i"
 
@@ -255,7 +253,7 @@ def git_checkout(source, destination, branch=None):
         local.remotes.origin.pull()
         if branch:
             logger.info('%s : Checkout branch %s...' % (destination, branch))
-            res = local.git.checkout(branch)
+            local.git.checkout(branch)
 
 def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
     if log_in : 
