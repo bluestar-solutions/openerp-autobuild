@@ -1,4 +1,4 @@
-Source: openerp-autobuild
+Source: openerp-autobuild-1.5
 Section: python
 Priority: optional
 Maintainer: Bluestar Solutions Sàrl, <info@blues2.ch>
