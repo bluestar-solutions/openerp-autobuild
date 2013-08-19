@@ -16,7 +16,7 @@ import tempfile
 import validictory
 import shutil
 import oebuild_logger
-import oebuild_conf_schema_1_6 as c_s
+import oebuild_conf_schema as c_s
 import tarfile
 import lxml.etree
 import lxml.builder
