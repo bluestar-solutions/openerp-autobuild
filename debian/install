@@ -1,3 +1,3 @@
-openerp-autobuild.py usr/lib/oebuild/1.5/
-oebuild_logger.py usr/lib/oebuild/1.5/
-oebuild_conf_schema.py usr/lib/oebuild/1.5/
+src/openerp-autobuild.py usr/lib/oebuild/1.5/
+src/oebuild_logger.py usr/lib/oebuild/1.5/
+src/oebuild_conf_schema.py usr/lib/oebuild/1.5/
