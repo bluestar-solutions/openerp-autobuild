@@ -2,9 +2,3 @@
 
 %:
 	dh $@ --with python2
-	
-override_dh_auto_build:
-	rm -Rf $(CURDIR)/debian/tmp
-	mkdir -p $(CURDIR)/debian/tmp
-	cp $(CURDIR)/src/* $(CURDIR)/debian/tmp/
-	dh_auto_build
