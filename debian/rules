@@ -1,4 +1,8 @@
 #!/usr/bin/make -f
 
+make:
+	rm -Rf debian/tmp
+	mkdir -p debian/tmp
+	cp src/* debian/tmp/
 %:
 	dh $@ --with python2
