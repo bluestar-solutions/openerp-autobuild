@@ -8,7 +8,7 @@ Standards-Version: 3.9.2
 X-Python-Version: >= 2.7
 
 
-Package: openerp-autobuild
+Package: openerp-autobuild-1.5
 Architecture: all
 Section: python
 Depends: python-appindicator, ${misc:Depends}, ${python:Depends}, python-bzrlib,
