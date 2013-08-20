@@ -23,26 +23,28 @@ import lxml.builder
 
 load_plugins()
 
-HOME = os.path.expanduser("~")
-CONFIG_PATH = '%s/.config' % HOME
+OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
+USER_HOME_PATH = os.path.expanduser("~")
+CONFIG_PATH = '%s/.config/openerp-autobuild' % USER_HOME_PATH
 CONFIG_FILE_PATH = '%s/openerp-autobuild' % CONFIG_PATH
 CONFIG_FILE = '%s/oebuild_config.py' % CONFIG_FILE_PATH
 OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
+
 if not os.path.exists(CONFIG_PATH):
     os.makedirs(CONFIG_PATH)
 if not os.path.exists(CONFIG_FILE_PATH):
     os.makedirs(CONFIG_FILE_PATH)
 if not os.path.exists(CONFIG_FILE):
-    shutil.copyfile("/usr/lib/oebuild/oebuild_config.default", CONFIG_FILE)
+    shutil.copyfile("%s/oebuild_config.default" % OE_HOME_PATH, CONFIG_FILE)
     with open(CONFIG_FILE,'a+b') as f:
         contents = f.readlines()
         f.truncate(0)
         for l in contents:
             f.write(re.sub(r'{USERNAME}', os.path.expanduser("~").split('/')[-1], l))
 if not os.path.exists(OE_CONFIG_FILE):
-    shutil.copyfile("/usr/lib/oebuild/oe_config.default", OE_CONFIG_FILE)
+    shutil.copyfile("%s/oe_config.default" % OE_HOME_PATH, OE_CONFIG_FILE)
     
-sys.path.insert(0, '%s/.config/openerp-autobuild' % HOME)
+sys.path.insert(0, CONFIG_FILE_PATH)
 import oebuild_config
 WORKSPACE = oebuild_config.WORKSPACE
 ADDONS = oebuild_config.ADDONS
