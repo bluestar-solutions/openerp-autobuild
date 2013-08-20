@@ -104,7 +104,7 @@ def main():
     args = parser.parse_args()
     
     for dfile in DEPRECATED_FILES:
-        if os.path.exists(file):
+        if os.path.exists(dfile):
             logger.warning('File %s is deprecated, you can remove it from the project' % dfile)
             
     logger.info('Entering %s mode' % args.func)
