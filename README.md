@@ -90,6 +90,7 @@ The default project settings are in oebuild.conf, located at the root of the con
 For exemple if you have ["my.a", "my.c"] in your user settings and oebuild.conf, oebuild_my.a.conf, oebuild_my.b.conf, oebuild_my.c.conf in your project. All the dependencies defined in oebuild_my.a.conf will replace dependencies defined in oebuild.conf with the same name. Then the same operation will be realized with oebuild_my.c.conf on the resulted dependency list. oebuild_my.b.conf will be ignored because it is not listed in your user configuration.
 
 To create a new project with a default oebuild.conf, run (in a new project folder) :
+
 	oebuild init
 
 #### Commented Exemple
@@ -197,6 +198,7 @@ oebuild-custom.conf :
 With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located at the root of the project to get OpenERP run settings.
 
 To create a new project with a default .openerp-dev-default, run (in a project folder) :
+
 	oebuild init
 
 #### Exemple
