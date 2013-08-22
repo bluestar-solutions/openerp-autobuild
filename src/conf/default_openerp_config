@@ -1,13 +1,9 @@
 [options]
 admin_passwd = admin
 csv_internal_sep = ,
-db_host = False
 db_maxconn = 64
-db_name = False
-db_password = openerp
 db_port = False
 db_template = template1
-db_user = openerp
 dbfilter = .*
 debug_mode = False
 demo = {}
@@ -19,8 +15,8 @@ limit_request = 8192
 limit_time_cpu = 60
 limit_time_real = 60
 list_db = True
-log_handler = :DEBUG 
-log_level = debug
+log_handler = :INFO 
+log_level = info
 logfile = None
 login_message = False
 logrotate = True
