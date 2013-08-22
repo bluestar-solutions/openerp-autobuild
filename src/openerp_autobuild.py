@@ -1,64 +1,64 @@
 #!/usr/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
+##############################################################################
+#    
+#    OpenERP Autobuild
+#    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as
+#    published by the Free Software Foundation, either version 3 of the
+#    License, or (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#
+##############################################################################
+
+import os
+__builtins__.OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
 
 import sys
-import re
 import subprocess
-from argparse import ArgumentParser
-import json 
+import tempfile
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import textwrap
 from bzrlib.plugin import load_plugins
-from bzrlib.branch import Branch
 from bzrlib.bzrdir import BzrDir
-from bzrlib.workingtree import WorkingTree
 from bzrlib.errors import ConnectionError
-import os.path
+from bzrlib.errors import NotBranchError
 from git import Repo
 from git.exc import GitCommandError
-import tempfile
-import validictory
+from git.exc import InvalidGitRepositoryError
 import shutil
 import oebuild_logger
-import oebuild_conf_schema as c_s
+from settings_parser import oebuild_conf_schema, oebuild_conf_parser
+from settings_parser import user_conf_schema, user_conf_parser
 import tarfile
 import lxml.etree
 import lxml.builder
+import psycopg2.extras
+import StringIO
+from xml.dom import minidom
 
 load_plugins()
 
-HOME = os.path.expanduser("~")
-CONFIG_PATH = '%s/.config' % HOME
-CONFIG_FILE_PATH = '%s/openerp-autobuild' % CONFIG_PATH
-CONFIG_FILE = '%s/oebuild_config.py' % CONFIG_FILE_PATH
+PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
+
 OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
-if not os.path.exists(CONFIG_PATH):
-    os.makedirs(CONFIG_PATH)
-if not os.path.exists(CONFIG_FILE_PATH):
-    os.makedirs(CONFIG_FILE_PATH)
-if not os.path.exists(CONFIG_FILE):
-    shutil.copyfile("/usr/lib/oebuild/oebuild_config.default", CONFIG_FILE)
-    with open(CONFIG_FILE,'a+b') as f:
-        contents = f.readlines()
-        f.truncate(0)
-        for l in contents:
-            f.write(re.sub(r'{USERNAME}', os.path.expanduser("~").split('/')[-1], l))
 if not os.path.exists(OE_CONFIG_FILE):
-    shutil.copyfile("/usr/lib/oebuild/oe_config.default", OE_CONFIG_FILE)
+    shutil.copyfile("%s/conf/default_openerp_config" % OE_HOME_PATH, OE_CONFIG_FILE) #@UndefinedVariable
     
-sys.path.insert(0, '%s/.config/openerp-autobuild' % HOME)
-import oebuild_config
-WORKSPACE = oebuild_config.WORKSPACE
-ADDONS = oebuild_config.ADDONS
-WEB = oebuild_config.WEB
-SERVER = oebuild_config.SERVER
+user_conf = user_conf_parser.load_user_config_file()
+WORKSPACE = user_conf[user_conf_schema.WORKSPACE].replace('~', user_conf_parser.USER_HOME_PATH)
 
 if not os.path.exists(WORKSPACE):
     os.makedirs(WORKSPACE)
-
-VERSION = '1.6'
-SUPPORTED_VERSIONS = ('1.6')
-PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
-CONF_FILENAME = 'oebuild.conf'
-DEPRECATED_FILES = ('.project-dependencies',)
 
 openerp_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'openerp')
 deps_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'deps')
@@ -73,10 +73,28 @@ def main():
     shared_parser = ArgumentParser(add_help=False)
     shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
-    shared_parser.add_argument("--update", dest="udeps", action="store_true", help="Update server and dependencies.")
 
-    parser = ArgumentParser(description="Autobuild script for openERP.")
-    subparsers = parser.add_subparsers(metavar="ACTION")
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+                            description=textwrap.dedent('''\
+                                OpenERP Autobuild version %s
+                                --------------------------%s
+                                A developer tool for OpenERP with many features:
+                                    
+                                    * Run OpenERP locally with options and user defined settings.
+                                    * Run OpenERP with automated tests for your modules.
+                                    * Initialize a new OpenERP project with autobuild settings.
+                                    * Initailize configuration files for Eclipse (with PyDev plugin).
+                                    * Manage your module dependencies.
+                                    * Assembly your module with the desired OpenERP version and all dependencies.
+                                ''' % (oebuild_conf_parser.VERSION, '-' * len(oebuild_conf_parser.VERSION))),
+                            epilog=textwrap.dedent('''\
+                                goal help:
+                                    %(prog)s GOAL -h
+                            
+                                Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+                                Released under GNU AGPLv3.
+                                '''))
+    subparsers = parser.add_subparsers(metavar="GOAL")
     
     parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)", parents=[shared_parser])
     parser_run.set_defaults(func="run")
@@ -102,17 +120,13 @@ def main():
     parser_init_new.set_defaults(func="init-new")
     
     args = parser.parse_args()
-    
-    for file in DEPRECATED_FILES:
-        if os.path.exists(file):
-            logger.warning('File %s is deprecated, you can remove it from the project' % file)
             
     logger.info('Entering %s mode' % args.func)
     
     if args.func == "init-new":
-        init_new()
+        oebuild_conf_parser.create_oebuild_config_file(user_conf[user_conf_schema.DEFAULT_SERIE])
     else:
-        conf = load_config_file()
+        conf = oebuild_conf_parser.load_oebuild_config_file(user_conf[user_conf_schema.CONF_FILES])
         get_deps(conf)
     
         if args.func == "init-eclipse":
@@ -126,23 +140,20 @@ def main():
     logger.info('Terminate %s mode' % args.func)
     
 def assembly(conf, with_oe=False):
-    project = conf[c_s.PROJECT]
+    project = conf[oebuild_conf_schema.PROJECT]
     if os.path.exists(target_path(project)):
         shutil.rmtree(target_path(project))
     
     full_path = src_path
-    print str(full_path)
     for addon in os.listdir(full_path):
         if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.':
             shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon))
-            print str(('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon)))
                     
     for path in deps_addons_path:
         full_path = '%s/%s' % (deps_path(project), path.rstrip('/'))
         for addon in os.listdir(full_path):
             if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.' and not os.path.exists('%s/%s' % (target_addons_path(project), addon)):
                 shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon))
-                print str(('%s/%s' % (full_path, addon), '%s/%s' % (target_addons_path(project), addon)))
     
     os.chdir(target_path(project))
     tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
@@ -154,56 +165,32 @@ def assembly(conf, with_oe=False):
             
     tar.close()
     
-def init_new():
-    if os.path.isfile('oebuild.conf'):
-        answer = ''
-        while answer.lower() not in ['y','n']:
-            answer = raw_input("Configuration file already exists. Continue (y/n) ? ")
-        
-        if answer.lower() == 'n':
-            return
-        
-    with open('oebuild.conf','w') as f:
-        _, remote_server = BzrDir.open_tree_or_branch(SERVER)
-        _, remote_addons = BzrDir.open_tree_or_branch(ADDONS)
-        _, remote_web = BzrDir.open_tree_or_branch(WEB)
-        
-        contents = """{
-    "oebuild-version": "1.6",
-    "project": "%s",
-    "openerp-server": {
-        "url": "%s",
-        "bzr-rev": "%s"
-    },
-    "openerp-addons": {
-        "url": "%s",
-        "bzr-rev": "%s"
-    },
-    "openerp-web": {
-        "url": "%s",
-        "bzr-rev": "%s"
-    },
-    "dependencies": []
-}""" % (os.getcwd().split('/')[-1],SERVER,remote_server.revno(),ADDONS,remote_addons.revno(),WEB,remote_web.revno())
-        
-        f.write(contents)
-    
 def init_eclipse(conf):
     create_eclipse_project(conf)
     create_eclipse_pydev_project(conf)
+    
+def write_xml(filename, document, standalone=None):
+    stream = StringIO.StringIO()
+    lxml.etree.ElementTree(document).write(stream, xml_declaration=True, encoding='UTF-8', standalone=standalone)
+    mdom = minidom.parseString(stream.getvalue())
+    header = stream.getvalue().split('\n')[0]
+    stream.close()
+
+    f = open(filename, "wb")
+    pretty = mdom.toprettyxml(encoding='UTF-8')
+    f.write(header + '\n' + '\n'.join(pretty.split('\n')[1:]))
+    f.close()
         
 def create_eclipse_project(conf):
     EM = lxml.builder.ElementMaker()
     
     doc = EM.projectDescription (
-        EM.name(conf[c_s.PROJECT])
+        EM.name(conf[oebuild_conf_schema.PROJECT])
     )
-    
-    lxml.etree.ElementTree(doc).write(".project", pretty_print=True, 
-                                      xml_declaration=True, encoding='UTF-8')
+    write_xml('.project', doc)
     
 def create_eclipse_pydev_project(conf):
-    project = conf[c_s.PROJECT]
+    project = conf[oebuild_conf_schema.PROJECT]
     EM = lxml.builder.ElementMaker()
     
     ext_path = EM.pydev_pathproperty(name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH')
@@ -221,9 +208,8 @@ def create_eclipse_pydev_project(conf):
         ext_path
     )
     doc.addprevious(lxml.etree.ProcessingInstruction('eclipse-pydev', 'version="1.0"'))
-    
-    lxml.etree.ElementTree(doc).write(".pydevproject", pretty_print=True, 
-                                      xml_declaration=True, encoding='UTF-8', standalone=False)
+    write_xml('.pydevproject', doc, standalone=False)
+
        
 def kill_old_openerp():
     if os.path.exists(PID_FILE) and os.path.isfile(PID_FILE):
@@ -239,7 +225,7 @@ def kill_old_openerp():
                 f.write("%d" % 0)
 
 def run_openerp(conf, args):
-    project = conf[c_s.PROJECT]
+    project = conf[oebuild_conf_schema.PROJECT]
         
     if args.modules == "def-all":
         modules = ""
@@ -255,10 +241,22 @@ def run_openerp(conf, args):
         addons_path = "%s,%s" % (addons_path, '%s/%s' % (deps_path(project), path))
     addons_path = "%s%s,%s" % (addons_path, ',.' if modules != '' else '', '%s/%s' % (openerp_path(project), 'web/addons'))
     
+    db_conf = user_conf[user_conf_schema.DATABASE]
     if args.func == "test":
         update_or_install = "u"
-        out, _ = call_command("psql -U openerp -d postgres --tuples-only --command \"select * from pg_database where datname = '%s';\" | awk '{print $1}'" % args.db_name)
-        db_exists = (out == args.db_name)
+        try:
+            conn = psycopg2.connect(host = db_conf.get(user_conf_schema.HOST, 'localhost'),
+                                    port = db_conf.get(user_conf_schema.PORT, '5432'),
+                                    user = db_conf[user_conf_schema.USER],
+                                    password = db_conf[user_conf_schema.PASSWORD],
+                                    database = 'postgres')
+        except:
+            logger.error("Unable to connect to the database.")
+            sys.exit(1)
+
+        cur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+        cur.execute("select * from pg_database where datname = '%s'" % args.db_name)
+        db_exists = cur.fetchall() or False
         if db_exists:
             logger.info('Database %s exists' % args.db_name)
         else:
@@ -266,125 +264,115 @@ def run_openerp(conf, args):
         
         if not db_exists or args.install:
             if db_exists:
-                _, err = call_command('dropdb -U openerp %s' % args.db_name)
-            call_command('createdb -U openerp %s --encoding=unicode' % args.db_name)
+                cur.execute("drop database %s" % args.db_name)
+            cur.execute("create database %s owner %s encoding 'unicode'" % args.db_name, db_conf[user_conf_schema.USER])
             update_or_install = "i"
 
-        
-        openerp_output, _ = call_command('%s --addons-path=%s -d %s --db_user=openerp --db_password=openerp -%s %s --log-level=test --test-enable%s%s' %
-                                         (
-                                          '%s/%s' % (openerp_path(project), 'server/openerp-server'),
-                                          addons_path,
-                                          args.db_name,
-                                          update_or_install,
-                                          modules,
-                                          ' --test-commit' if args.commit else '',
-                                          ' --stop-after-init' if args.analyze else '',
-                                          ), parse_log=args.analyze, register_pid=PID_FILE)
+        cmd = '%s/%s' % (openerp_path(project), 'server/openerp-server')
+        cmd += ' --addons-path=%s' % addons_path
+        cmd += ' -d %s' % args.db_name
+        cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
+        cmd += ' --db_password=%s' % db_conf[user_conf_schema.PASSWORD]
+        cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST, 'localhost')
+        cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT, '5432')
+        cmd += ' -%s %s' % (update_or_install, modules)
+        cmd += ' --log-level=test --test-enable'
+        if args.commit:
+            cmd += ' --test-commit'
+        if args.analyze:
+            cmd += ' --stop-after-init'
+        openerp_output, _ = call_command(cmd, parse_log=args.analyze, register_pid=PID_FILE
+        )
     else:
-        openerp_output, _ = call_command('%s -c .openerp-dev-default --addons-path=%s -u %s --log-level=%s --log-handler=%s --xmlrpc-port=%d' % 
-                                          (
-                                           '%s/%s' % (openerp_path(project), 'server/openerp-server'),
-                                           addons_path,
-                                           modules,
-                                           'info' if args.func == "run" else 'debug',
-                                           ':INFO' if args.func == "run" else ':DEBUG',
-                                           args.tcp_port,
-                                          ), parse_log=False, register_pid=PID_FILE)
+        cmd = '%s/%s -c .openerp-dev-default' % (openerp_path(project), 'server/openerp-server')
+        cmd += ' --addons-path=%s' % addons_path
+        cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
+        cmd += ' --db_password=%s' % db_conf[user_conf_schema.PASSWORD]
+        cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST, 'localhost')
+        cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT, '5432')
+        cmd += ' -u %s' % modules
+        cmd += ' --log-level=%s' % ('info' if args.func == "run" else 'debug')
+        cmd += ' --log-handler=%s' % (':INFO' if args.func == "run" else ':DEBUG')
+        cmd += ' --xmlrpc-port=%d' % args.tcp_port
+        openerp_output, _ = call_command(cmd, parse_log=False, register_pid=PID_FILE)
 
     if args.func == "test" and args.analyze:
         if 'ERROR' in openerp_output:
             sys.exit(1)
     sys.exit(0)
-    
-def load_config_file():
-    if not (os.path.exists(CONF_FILENAME) and os.path.isfile(CONF_FILENAME)):
-        logger.error('The project configuration does not exist : %s' % CONF_FILENAME)
-        sys.exit(1)
-        
-    with open(CONF_FILENAME, "r") as source_file:
-        try:
-            conf = json.load(source_file)
-        except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (CONF_FILENAME, error))
-            sys.exit(1)
-        try:
-            validictory.validate(conf, c_s.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.error('%s is not a valid configuration file : %s' % (CONF_FILENAME, error))
-            sys.exit(1)
-
-    if conf[c_s.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
-        logger.error(('The project configuration file is in version %s, openerp-autobuild is ' +
-                      'in version %s and support only versions %s for configuration file') % (conf[c_s.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
-        sys.exit(1)
-        
-    return conf
-
-def load_subconfig_file(conf_file_path):
-    if not (os.path.exists(conf_file_path) and os.path.isfile(conf_file_path)):
-        logger.info('The project configuration does not exist : %s' % conf_file_path)
-        raise Exception()
-        
-    with open(conf_file_path, "r") as source_file:
-        try:
-            conf = json.load(source_file)
-        except ValueError, error:
-            logger.warning('%s is not JSON valid : %s' % (conf_file_path, error))
-            raise Exception()
-        try:
-            validictory.validate(conf, c_s.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.warning('%s is not a valid configuration file : %s' % (conf_file_path, error))
-            raise Exception()
-
-    if conf[c_s.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
-        logger.warning(('The project configuration file is in version %s, openerp-autobuild is ' +
-                      'in version %s and support only versions %s for configuration file') % (conf[c_s.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
-        raise Exception()
-        
-    return conf
 
 def get_deps(conf):
-    project = conf[c_s.PROJECT]
+    project = conf[oebuild_conf_schema.PROJECT]
+    oe_conf = conf[oebuild_conf_schema.OPENERP]
+    serie_name = oe_conf[oebuild_conf_schema.SERIE]
+    
+    serie = None
+    for serie in user_conf[user_conf_schema.OPENERP]:
+        if serie[user_conf_schema.SERIE] == serie_name:
+            break
     
     for sp in ('server', 'addons', 'web'):
         try:
-            bzr_checkout(conf['openerp-%s' % sp][c_s.URL], '%s/%s' % (openerp_path(project), sp), conf['openerp-%s' % sp].get(c_s.BZR_REV, None))
+            url = oe_conf[sp].get(oebuild_conf_schema.URL, serie[sp])
+            bzr_rev = oe_conf[sp].get(oebuild_conf_schema.BZR_REV, None)
+            bzr_checkout(url, '%s/%s' % (openerp_path(project), sp), bzr_rev)
         except ConnectionError, error:
             logger.error('%s: %s' % ('%s/%s' % (openerp_path(project), sp), error))
     
-    get_ext_deps(project, conf[c_s.DEPENDENCIES])
+    get_ext_deps(project, project, conf[oebuild_conf_schema.DEPENDENCIES])
     
-def get_ext_deps(project, deps):
+def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
+    if not deps_mapping:
+        deps_mapping = {}
+    
     for dep in deps:
-        destination = '%s/%s' % (deps_path(project).rstrip('/'), dep[c_s.DESTINATION])
-        if dep[c_s.SCM] == c_s.SCM_BZR:
+        if dep[oebuild_conf_schema.NAME] in deps_mapping.keys() :
+            src_top = deps_mapping[dep[oebuild_conf_schema.NAME]][1][oebuild_conf_schema.SOURCE]
+            src_new = dep[oebuild_conf_schema.SOURCE]
+            reason = None
+            if src_new[oebuild_conf_schema.SCM] != src_top[oebuild_conf_schema.SCM]:
+                reason = 'SCM'
+            elif src_new[oebuild_conf_schema.URL] != src_top[oebuild_conf_schema.URL]:
+                reason = 'URL'
+            elif src_new[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR and src_new[oebuild_conf_schema.BZR_REV] != src_top[oebuild_conf_schema.BZR_REV]:
+                reason = 'bazaar revision'
+            elif src_new[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_GIT and src_new[oebuild_conf_schema.GIT_BRANCH] != src_top[oebuild_conf_schema.GIT_BRANCH]:
+                reason = 'git branch' 
+            if reason: 
+                logger.warning(("Dependency %s from %s is hidden by a %s dependency which use another %s and will ignored" +
+                                "") % (dep[oebuild_conf_schema.NAME], from_project, 
+                                       deps_mapping[dep[oebuild_conf_schema.NAME]][0], reason))
+            continue
+        
+        deps_mapping[dep[oebuild_conf_schema.NAME]] = (from_project, dep)
+        destination = '%s/%s' % (deps_path(root_project).rstrip('/'), dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME]))
+        source = dep[oebuild_conf_schema.SOURCE]
+        if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR:
             try:
-                bzr_checkout(dep[c_s.URL], destination, dep.get(c_s.BZR_REV, None))
+                bzr_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.BZR_REV, None))
             except ConnectionError, error:
                 logger.error('%s: %s' % (destination, error))
             try:
-                subconf = load_subconfig_file('%s/%s' % (destination.rstrip('/'), 'oebuild.conf'))
-                get_ext_deps(project, subconf[c_s.DEPENDENCIES])
-            except Exception :
+                subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
+                get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+            except oebuild_conf_parser.IgnoreSubConf:
                 pass
-        elif dep[c_s.SCM] == c_s.SCM_GIT:
+        elif source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_GIT:
             try:
-                git_checkout(dep[c_s.URL], destination, dep.get(c_s.GIT_BRANCH, None))
+                git_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.GIT_BRANCH, None))
             except AssertionError, error:
                 logger.error('%s: %s' % (destination, error))
             except GitCommandError, error:
                 logger.critical('%s: %s' % (destination, error))
                 sys.exit(1)
             try:
-                subconf = load_subconfig_file('%s/%s' % (destination.rstrip('/'), 'oebuild.conf'))
-                get_ext_deps(project, subconf[c_s.DEPENDENCIES])
-            except Exception :
+                subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
+                get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+            except oebuild_conf_parser.IgnoreSubConf:
                 pass
-        addons_path = dep[c_s.DESTINATION]
-        if dep.get(c_s.ADDONS_PATH, False):
-            addons_path = '%s/%s' % (addons_path, dep[c_s.ADDONS_PATH].rstrip('/'))
+        addons_path = dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME])
+        if dep.get(oebuild_conf_schema.ADDONS_PATH, False):
+            addons_path = '%s/%s' % (addons_path, dep[oebuild_conf_schema.ADDONS_PATH].rstrip('/'))
         deps_addons_path.append(addons_path)
 
 def bzr_checkout(source, destination, revno=None):
@@ -393,15 +381,18 @@ def bzr_checkout(source, destination, revno=None):
         revno = int(revno)
     else:
         revno = remote.revno()
-    
+
     if os.path.exists(destination) and os.path.isdir(destination):
-        local_tree, local = BzrDir.open_tree_or_branch(destination)
-        local_revno = local.revision_id_to_revno(local_tree.last_revision())
-        if revno == local_revno:
-            logger.info('%s : Up-to-date (revno : %s)' % (destination, local_revno))
-            return
-        else:
-            shutil.rmtree(destination) 
+        try:
+            local_tree, local = BzrDir.open_tree_or_branch(destination)
+            local_revno = local.revision_id_to_revno(local_tree.last_revision())
+            if revno == local_revno:
+                logger.info('%s : Up-to-date from %s (revno : %s)' % (destination, source, local_revno))
+                return
+            else:
+                shutil.rmtree(destination)
+        except NotBranchError:
+            shutil.rmtree(destination)
 
     if not os.path.exists(destination):
         os.makedirs(destination)
@@ -410,20 +401,24 @@ def bzr_checkout(source, destination, revno=None):
     remote.create_checkout(destination, remote.get_rev_id(revno), True, accelerator_tree)
 
 def git_checkout(source, destination, branch=None):
-    if not os.path.exists(destination):
-        os.makedirs(destination)  
-        logger.info('%s : Clone from %s...' % (destination, source))
-        local = Repo.clone_from(source, destination)
-        if branch:
-            logger.info('%s : Checkout branch %s...' % (destination, branch))
-            local.git.checkout(branch)
-    else:
-        local = Repo(destination)
-        logger.info('%s : Pull from %s...' % (destination, source))
-        local.remotes.origin.pull()
-        if branch:
-            logger.info('%s : Checkout branch %s...' % (destination, branch))
-            res = local.git.checkout(branch)
+    if os.path.exists(destination):
+        try:
+            local = Repo(destination)
+            logger.info('%s : Pull from %s...' % (destination, source))
+            local.remotes.origin.pull()
+            if branch:
+                logger.info('%s : Checkout branch %s...' % (destination, branch))
+                local.git.checkout(branch)
+            return
+        except InvalidGitRepositoryError:
+            shutil.rmtree(destination)
+         
+    os.makedirs(destination)  
+    logger.info('%s : Clone from %s...' % (destination, source))
+    local = Repo.clone_from(source, destination)
+    if branch:
+        logger.info('%s : Checkout branch %s...' % (destination, branch))
+        local.git.checkout(branch)
 
 def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
     if log_in : 
