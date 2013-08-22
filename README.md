@@ -89,6 +89,9 @@ The default project settings are in oebuild.conf, located at the root of the con
 
 For exemple if you have ["my.a", "my.c"] in your user settings and oebuild.conf, oebuild_my.a.conf, oebuild_my.b.conf, oebuild_my.c.conf in your project. All the dependencies defined in oebuild_my.a.conf will replace dependencies defined in oebuild.conf with the same name. Then the same operation will be realized with oebuild_my.c.conf on the resulted dependency list. oebuild_my.b.conf will be ignored because it is not listed in your user configuration.
 
+To create a new project with a default oebuild.conf, run (in a new project folder) :
+	oebuild init
+
 #### Commented Exemple
 
 oebuild.conf:
@@ -193,6 +196,9 @@ oebuild-custom.conf :
 
 With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located at the root of the project to get OpenERP run settings.
 
+To create a new project with a default .openerp-dev-default, run (in a project folder) :
+	oebuild init
+
 #### Exemple
 
 	[options]
@@ -261,6 +267,7 @@ With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located
 * **debug** : Same as run but also logs DEBUG level messages.
 * **test** : Run OpenERP server in test mode. In this mode, the server will use another database (named after your project's name) to load demo data and perform designated tests.
 * **assembly** : Build a package with your custom addons and their dependencies in order to deploy the application.
+* **init** : Initialize an empty OpenERP project with default configuration files
 * **init-eclipse** : Initialize an existing project as a _Eclipse Pydev Project_
 
 ### Shared parameters
@@ -286,6 +293,10 @@ None
 ### Assembly parameters
 
 * **--with-oe** : Build the package with current version of OpenERP in order to deploy a fully runnable application.
+
+### Init parameters
+
+None
 
 ### Init-eclipse parameters
 
