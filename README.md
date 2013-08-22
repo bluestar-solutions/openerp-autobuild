@@ -61,6 +61,7 @@ You can find your user setting under ~/.config/openerp-autobuild/oebuild_config-
 				"server": "bzr://my-bzr-server/openerp-7.0-default-server",
 				"addons": "bzr://my-bzr-server/openerp-7.0-default-addons",
 				"web": "bzr://my-bzr-server/openerp-7.0-default-web"
+			},
 			{
 				# The url to find a custom OpenERP 7.0 series with modified web :
 				"serie": "7.0-hacked-by-me",
