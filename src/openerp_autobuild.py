@@ -263,9 +263,17 @@ def run_openerp(conf, args):
             logger.info('Database %s does not exists' % args.db_name)
         
         if not db_exists or args.install:
+            old_isolation_level = conn.isolation_level
+            conn.set_isolation_level(0)
+            
             if db_exists:
-                cur.execute("drop database %s" % args.db_name)
-            cur.execute("create database %s owner %s encoding 'unicode'" % args.db_name, db_conf[user_conf_schema.USER])
+                cur.execute('drop database "%s"' % args.db_name)
+                conn.commit()
+                
+            cur.execute('create database "%s" owner "%s" encoding \'unicode\'' % (args.db_name, db_conf[user_conf_schema.USER]))
+            conn.commit()
+
+            conn.set_isolation_level(old_isolation_level)  
             update_or_install = "i"
 
         cmd = '%s/%s' % (openerp_path(project), 'server/openerp-server')
