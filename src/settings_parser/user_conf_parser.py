@@ -44,7 +44,7 @@ if not os.path.exists(USER_OEBUILD_CONFIG_FILE):
     for line in infile:
         outfile.write(line.replace("$USERNAME", getpass.getuser()))
     infile.close()
-    outfile.close
+    outfile.close()
 
 def load_user_config_file():
     if not (os.path.exists(USER_OEBUILD_CONFIG_FILE) and os.path.isfile(USER_OEBUILD_CONFIG_FILE)):
