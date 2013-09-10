@@ -315,14 +315,19 @@ def get_deps(conf):
     serie_name = oe_conf[oebuild_conf_schema.SERIE]
     
     serie = None
-    for serie in user_conf[user_conf_schema.OPENERP]:
-        if serie[user_conf_schema.SERIE] == serie_name:
+    for tmp_serie in user_conf[user_conf_schema.OPENERP]:
+        if tmp_serie[user_conf_schema.SERIE] == serie_name:
+            serie = tmp_serie
             break
+    if not serie :
+        logger.error('The serie "%s" cannot be find in your configuration file : %s' % 
+                     (serie_name, user_conf_parser.USER_OEBUILD_CONFIG_FILE))
+        sys.exit(1)
     
     for sp in ('server', 'addons', 'web'):
         try:
-            url = oe_conf[sp].get(oebuild_conf_schema.URL, serie[sp])
-            bzr_rev = oe_conf[sp].get(oebuild_conf_schema.BZR_REV, None)
+            url = oe_conf.get(sp, {}).get(oebuild_conf_schema.URL, serie[sp])
+            bzr_rev = oe_conf.get(sp, {}).get(oebuild_conf_schema.BZR_REV, None)
             bzr_checkout(url, '%s/%s' % (openerp_path(project), sp), bzr_rev)
         except ConnectionError, error:
             logger.error('%s: %s' % ('%s/%s' % (openerp_path(project), sp), error))
