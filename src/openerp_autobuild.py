@@ -45,20 +45,16 @@ import lxml.builder
 import psycopg2.extras
 import StringIO
 from xml.dom import minidom
+import dialogs
 
 load_plugins()
 
 PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
 
 OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
-if not os.path.exists(OE_CONFIG_FILE):
-    shutil.copyfile("%s/conf/default_openerp_config" % OE_HOME_PATH, OE_CONFIG_FILE) #@UndefinedVariable
     
 user_conf = user_conf_parser.load_user_config_file()
 WORKSPACE = user_conf[user_conf_schema.WORKSPACE].replace('~', user_conf_parser.USER_HOME_PATH)
-
-if not os.path.exists(WORKSPACE):
-    os.makedirs(WORKSPACE)
 
 openerp_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'openerp')
 deps_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'deps')
@@ -124,6 +120,12 @@ def main():
     logger.info('Entering %s mode' % args.func)
     
     if args.func == "init-new":
+        overwrite = "no"
+        if os.path.exists(OE_CONFIG_FILE):
+            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % OE_CONFIG_FILE, overwrite)   
+        if (not os.path.exists(OE_CONFIG_FILE)) or overwrite == "yes":
+            shutil.copyfile("%s/conf/default_openerp_config" % OE_HOME_PATH, OE_CONFIG_FILE) #@UndefinedVariable
+
         oebuild_conf_parser.create_oebuild_config_file(user_conf[user_conf_schema.DEFAULT_SERIE])
     else:
         conf = oebuild_conf_parser.load_oebuild_config_file(user_conf[user_conf_schema.CONF_FILES])
@@ -133,7 +135,7 @@ def main():
             init_eclipse(conf)
         elif args.func == "assembly":
             assembly(conf, args.with_oe)
-        else:  
+        else:
             kill_old_openerp()
             run_openerp(conf, args)
         
@@ -143,6 +145,8 @@ def assembly(conf, with_oe=False):
     project = conf[oebuild_conf_schema.PROJECT]
     if os.path.exists(target_path(project)):
         shutil.rmtree(target_path(project))
+    os.mkdir(target_path(project))
+    os.mkdir(target_addons_path(project))
     
     full_path = src_path
     for addon in os.listdir(full_path):
@@ -225,6 +229,14 @@ def kill_old_openerp():
                 f.write("%d" % 0)
 
 def run_openerp(conf, args):
+    if not os.path.exists(OE_CONFIG_FILE):
+        logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % OE_CONFIG_FILE)
+        sys.exit(1)
+    
+    if not os.path.exists(WORKSPACE):
+        logger.info('Creating nonexistent openerp-autobuild workspace : %s', WORKSPACE)
+        os.makedirs(WORKSPACE)
+    
     project = conf[oebuild_conf_schema.PROJECT]
         
     if args.modules == "def-all":
@@ -260,7 +272,7 @@ def run_openerp(conf, args):
         if db_exists:
             logger.info('Database %s exists' % args.db_name)
         else:
-            logger.info('Database %s does not exists' % args.db_name)
+            logger.info('Database %s does not exist' % args.db_name)
         
         if not db_exists or args.install:
             old_isolation_level = conn.isolation_level
