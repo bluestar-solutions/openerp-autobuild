@@ -26,6 +26,7 @@ import validictory
 import oebuild_logger
 from settings_parser import oebuild_conf_schema
 import textwrap
+import dialogs
 
 logger = oebuild_logger.getLogger()
 
@@ -153,13 +154,12 @@ def load_subconfig_file(conf_file):
         
     return conf
 
-def create_oebuild_config_file(default_serie):
-    if os.path.isfile(DEFAULT_CONF_FILENAME):
-        answer = ''
-        while answer.lower() not in ['y','n']:
-            answer = raw_input("Configuration file already exists. Continue (y/n) ? ")  
-        if answer.lower() == 'n':
-            return
+def create_oebuild_config_file(default_serie):      
+    overwrite = "no"
+    if os.path.exists(DEFAULT_CONF_FILENAME):
+        overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % DEFAULT_CONF_FILENAME, overwrite)   
+    if os.path.exists(DEFAULT_CONF_FILENAME) and overwrite == "no":
+        return
         
     with open(DEFAULT_CONF_FILENAME,'w') as f:     
         f.write(textwrap.dedent('''\
