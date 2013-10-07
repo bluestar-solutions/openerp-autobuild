@@ -145,6 +145,8 @@ def assembly(conf, with_oe=False):
     project = conf[oebuild_conf_schema.PROJECT]
     if os.path.exists(target_path(project)):
         shutil.rmtree(target_path(project))
+    os.mkdir(target_path(project))
+    os.mkdir(target_addons_path(project))
     
     full_path = src_path
     for addon in os.listdir(full_path):
