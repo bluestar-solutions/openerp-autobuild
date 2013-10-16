@@ -276,6 +276,7 @@ To create a new project with a default .openerp-dev-default, run (in a project f
 
 * **-m**, **--modules** : Specify which custom module to load. If omitted, all custom modules will be loaded.
 * **-p**, **--tcp-port** : TCP port of the server (default:8069).
+* **--no-update**: Bypass updates and try to launch with last parameters. 
 
 ### Run parameters
 

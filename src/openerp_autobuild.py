@@ -30,13 +30,12 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import textwrap
 from bzrlib.plugin import load_plugins
 from bzrlib.bzrdir import BzrDir
-from bzrlib.errors import ConnectionError
 from bzrlib.errors import NotBranchError
 from git import Repo
-from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 import shutil
 import oebuild_logger
+from oebuild_logger import __ex
 from settings_parser import oebuild_conf_schema, oebuild_conf_parser
 from settings_parser import user_conf_schema, user_conf_parser
 import tarfile
@@ -46,6 +45,7 @@ import psycopg2.extras
 import StringIO
 from xml.dom import minidom
 import dialogs
+import json
 
 load_plugins()
 
@@ -56,19 +56,24 @@ OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
 user_conf = user_conf_parser.load_user_config_file()
 WORKSPACE = user_conf[user_conf_schema.WORKSPACE].replace('~', user_conf_parser.USER_HOME_PATH)
 
-openerp_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'openerp')
-deps_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'deps')
-target_path = lambda project: '%s/%s/%s' % (WORKSPACE, project, 'target')
+project_path = lambda project: '%s/%s' % (WORKSPACE, project)
+openerp_path = lambda project: '%s/%s' % (project_path(project), 'openerp')
+deps_path = lambda project: '%s/%s' % (project_path(project), 'deps')
+target_path = lambda project: '%s/%s' % (project_path(project), 'target')
 target_addons_path = lambda project: '%s/%s' % (target_path(project), 'custom-addons')
+deps_cache_file = lambda project: '%s/%s' % (project_path(project), 'deps.cache')
 src_path = os.path.curdir
 
 logger = oebuild_logger.getLogger()
 deps_addons_path = []
     
 def main():
+    global deps_addons_path
+    
     shared_parser = ArgumentParser(add_help=False)
     shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
+    shared_parser.add_argument("--no-update", action="store_true", dest="no_update", help="Bypass updates and try to launch with last parameters.")
 
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             description=textwrap.dedent('''\
@@ -129,8 +134,23 @@ def main():
         oebuild_conf_parser.create_oebuild_config_file(user_conf[user_conf_schema.DEFAULT_SERIE])
     else:
         conf = oebuild_conf_parser.load_oebuild_config_file(user_conf[user_conf_schema.CONF_FILES])
-        get_deps(conf)
-    
+        
+        filename = deps_cache_file(conf[oebuild_conf_schema.PROJECT])
+        if args.no_update:
+            try:
+                with open(filename, 'r') as f:
+                    deps_addons_path = json.loads(f.read())
+            except Exception, e:
+                logger.error(__ex('Impossible to read %s' % filename, e))
+                sys.exit(1)        
+        else:
+            get_deps(conf)
+            try:
+                with open(filename, 'w') as f:
+                    f.write(json.dumps(deps_addons_path))
+            except Exception, e:
+                logger.warning(__ex('Impossible to write %s' % filename, e)) 
+
         if args.func == "init-eclipse":
             init_eclipse(conf)
         elif args.func == "assembly":
@@ -142,6 +162,8 @@ def main():
     logger.info('Terminate %s mode' % args.func)
     
 def assembly(conf, with_oe=False):
+    global deps_addons_path
+    
     project = conf[oebuild_conf_schema.PROJECT]
     if os.path.exists(target_path(project)):
         shutil.rmtree(target_path(project))
@@ -229,6 +251,8 @@ def kill_old_openerp():
                 f.write("%d" % 0)
 
 def run_openerp(conf, args):
+    global deps_addons_path
+    
     if not os.path.exists(OE_CONFIG_FILE):
         logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % OE_CONFIG_FILE)
         sys.exit(1)
@@ -341,12 +365,15 @@ def get_deps(conf):
             url = oe_conf.get(sp, {}).get(oebuild_conf_schema.URL, serie[sp])
             bzr_rev = oe_conf.get(sp, {}).get(oebuild_conf_schema.BZR_REV, None)
             bzr_checkout(url, '%s/%s' % (openerp_path(project), sp), bzr_rev)
-        except ConnectionError, error:
-            logger.error('%s: %s' % ('%s/%s' % (openerp_path(project), sp), error))
+        except Exception, e:
+            logger.error(__ex('Cannot checkout from %s' % url, e))
+            sys.exit(1)
     
     get_ext_deps(project, project, conf[oebuild_conf_schema.DEPENDENCIES])
     
 def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
+    global deps_addons_path
+    
     if not deps_mapping:
         deps_mapping = {}
     
@@ -375,8 +402,9 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
         if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR:
             try:
                 bzr_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.BZR_REV, None))
-            except ConnectionError, error:
-                logger.error('%s: %s' % (destination, error))
+            except Exception, e:
+                logger.error(__ex('Cannot checkout from %s' % source[oebuild_conf_schema.URL], e))
+                sys.exit(1)
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
@@ -385,10 +413,8 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
         elif source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_GIT:
             try:
                 git_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.GIT_BRANCH, None))
-            except AssertionError, error:
-                logger.error('%s: %s' % (destination, error))
-            except GitCommandError, error:
-                logger.critical('%s: %s' % (destination, error))
+            except Exception, e:
+                logger.error(__ex('Cannot checkout from %s' % source[oebuild_conf_schema.URL], e))
                 sys.exit(1)
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
@@ -402,6 +428,7 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
 
 def bzr_checkout(source, destination, revno=None):
     accelerator_tree, remote = BzrDir.open_tree_or_branch(source)
+        
     if revno:
         revno = int(revno)
     else:
