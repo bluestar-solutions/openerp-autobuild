@@ -368,10 +368,20 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
                                 "") % (dep[oebuild_conf_schema.NAME], from_project, 
                                        deps_mapping[dep[oebuild_conf_schema.NAME]][0], reason))
             continue
-        
+
+        source = dep[oebuild_conf_schema.SOURCE]
         deps_mapping[dep[oebuild_conf_schema.NAME]] = (from_project, dep)
         destination = '%s/%s' % (deps_path(root_project).rstrip('/'), dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME]))
-        source = dep[oebuild_conf_schema.SOURCE]
+        
+        if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_LOCAL:
+            shutil.rmtree(destination)
+            shutil.copytree(source[oebuild_conf_schema.URL], destination)
+            subconf = oebuild_conf_parser.load_subconfig_file_list(source[oebuild_conf_schema.URL].rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
+            get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+            deps_addons_path.append(source[oebuild_conf_schema.URL])
+            logger.info('%s : local dependency' % (source[oebuild_conf_schema.URL]))
+            continue
+        
         if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR:
             try:
                 bzr_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.BZR_REV, None))
@@ -394,7 +404,7 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
             except oebuild_conf_parser.IgnoreSubConf:
-                pass
+                pass    
         addons_path = dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME])
         if dep.get(oebuild_conf_schema.ADDONS_PATH, False):
             addons_path = '%s/%s' % (addons_path, dep[oebuild_conf_schema.ADDONS_PATH].rstrip('/'))

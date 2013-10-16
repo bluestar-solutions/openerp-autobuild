@@ -23,6 +23,7 @@ DEPENDENCIES = "dependencies"
 SCM = "scm"
 SCM_GIT = "git"
 SCM_BZR = "bzr"
+SCM_LOCAL = "local"
 URL = "url"
 BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
@@ -53,7 +54,8 @@ DEPENDENCY = {
             "type": "object", 
             "oneOf": [
                 {"$ref": "#/definitions/gitDependency"}, 
-                {"$ref": "#/definitions/bzrDependency"}
+                {"$ref": "#/definitions/bzrDependency"},
+                {"$ref": "#/definitions/localDependency"},
             ], 
             "required": True
         },
@@ -95,6 +97,13 @@ OEBUILD_SCHEMA = {
                 URL: {"type": "string", "format": "uri", "required": True},
                 BZR_REV: {"type": "string", "pattern": "^[0-9]+$", "required": False},
             },
-        }        
+        },
+        "localDependency": {
+            "type": "object",
+            "properties": {
+                SCM: {"type": "string", "pattern": SCM_LOCAL, "required": True},
+                URL: {"type": "string", "format": "uri", "required": True},
+            },
+        }     
     }
 }

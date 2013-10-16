@@ -21,6 +21,7 @@
 
 import os
 import sys
+import shutil
 import getpass
 import json
 import validictory
@@ -32,35 +33,43 @@ logger = oebuild_logger.getLogger()
 USER_HOME_PATH = os.path.expanduser("~")
 USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
 USER_OEBUILD_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
-USER_OEBUILD_CONFIG_FILE = '%s/oebuild_config-%s.json' % (USER_OEBUILD_CONFIG_PATH, oebuild_conf_parser.VERSION)
+USER_OEBUILD_CONFIG_FILE = lambda version: '%s/oebuild_config-%s.json' % (USER_OEBUILD_CONFIG_PATH, version)
+USER_OEBUILD_CURRENT_CONFIG_FILE = USER_OEBUILD_CONFIG_FILE(oebuild_conf_parser.VERSION)
+
+def update_1_7_to_1_8():
+    # No change needed
+    shutil.copyfile(USER_OEBUILD_CONFIG_FILE('1.7'), USER_OEBUILD_CONFIG_FILE('1.8'))
 
 if not os.path.exists(USER_CONFIG_PATH):
     os.makedirs(USER_CONFIG_PATH)
 if not os.path.exists(USER_OEBUILD_CONFIG_PATH):
     os.makedirs(USER_OEBUILD_CONFIG_PATH)
-if not os.path.exists(USER_OEBUILD_CONFIG_FILE):
-    infile = open("%s/conf/default_user_config.json" % OE_HOME_PATH) #@UndefinedVariable
-    outfile = open(USER_OEBUILD_CONFIG_FILE, 'w')
-    for line in infile:
-        outfile.write(line.replace("$USERNAME", getpass.getuser()))
-    infile.close()
-    outfile.close()
+if not os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE):
+    if os.path.exists(USER_OEBUILD_CONFIG_FILE('1.7')):
+        update_1_7_to_1_8()
+    else:
+        infile = open("%s/conf/default_user_config.json" % OE_HOME_PATH) #@UndefinedVariable
+        outfile = open(USER_OEBUILD_CURRENT_CONFIG_FILE, 'w')
+        for line in infile:
+            outfile.write(line.replace("$USERNAME", getpass.getuser()))
+        infile.close()
+        outfile.close()
 
 def load_user_config_file():
-    if not (os.path.exists(USER_OEBUILD_CONFIG_FILE) and os.path.isfile(USER_OEBUILD_CONFIG_FILE)):
-        logger.error('User openerp configuration file does not exist : %s' % USER_OEBUILD_CONFIG_FILE)
+    if not (os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE) and os.path.isfile(USER_OEBUILD_CURRENT_CONFIG_FILE)):
+        logger.error('User openerp configuration file does not exist : %s' % USER_OEBUILD_CURRENT_CONFIG_FILE)
         sys.exit(1)
         
-    with open(USER_OEBUILD_CONFIG_FILE, "r") as source_file:
+    with open(USER_OEBUILD_CURRENT_CONFIG_FILE, "r") as source_file:
         try:
             conf = json.load(source_file)
         except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (USER_OEBUILD_CONFIG_FILE, error))
+            logger.error('%s is not JSON valid : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
             sys.exit(1)
         try:
             validictory.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
         except ValueError, error:
-            logger.error('%s is not a valid user configuration file : %s' % (USER_OEBUILD_CONFIG_FILE, error))
+            logger.error('%s is not a valid user configuration file : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
             sys.exit(1)
         
     return conf

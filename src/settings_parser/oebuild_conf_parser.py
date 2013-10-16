@@ -30,8 +30,8 @@ import dialogs
 
 logger = oebuild_logger.getLogger()
 
-VERSION = '1.7'
-SUPPORTED_VERSIONS = ('1.7')
+VERSION = '1.8'
+SUPPORTED_VERSIONS = ('1.7', '1.8')
 DEFAULT_CONF_FILENAME = 'oebuild.conf'
 CUSTOM_CONF_FILENAME = 'oebuild-%s.conf'
 DEPRECATED_FILES = ('.project-dependencies',)
