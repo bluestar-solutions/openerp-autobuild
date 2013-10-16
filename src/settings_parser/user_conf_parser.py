@@ -24,7 +24,7 @@ import sys
 import shutil
 import getpass
 import json
-import validictory
+import jsonschema
 import oebuild_logger
 from settings_parser import user_conf_schema, oebuild_conf_parser
 
@@ -67,7 +67,7 @@ def load_user_config_file():
             logger.error('%s is not JSON valid : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
             sys.exit(1)
         try:
-            validictory.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
+            jsonschema.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
         except ValueError, error:
             logger.error('%s is not a valid user configuration file : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
             sys.exit(1)
