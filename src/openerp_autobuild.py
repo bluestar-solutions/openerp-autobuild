@@ -400,15 +400,6 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
         deps_mapping[dep[oebuild_conf_schema.NAME]] = (from_project, dep)
         destination = '%s/%s' % (deps_path(root_project).rstrip('/'), dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME]))
         
-        if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_LOCAL:
-            shutil.rmtree(destination)
-            shutil.copytree(source[oebuild_conf_schema.URL], destination)
-            subconf = oebuild_conf_parser.load_subconfig_file_list(source[oebuild_conf_schema.URL].rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
-            get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
-            deps_addons_path.append(source[oebuild_conf_schema.URL])
-            logger.info('%s : local dependency' % (source[oebuild_conf_schema.URL]))
-            continue
-        
         if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR:
             try:
                 bzr_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.BZR_REV, None))
@@ -430,7 +421,18 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
             except oebuild_conf_parser.IgnoreSubConf:
-                pass    
+                pass
+        elif source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_LOCAL:
+            try:
+                local_copy(source[oebuild_conf_schema.URL], destination)
+            except Exception, e:
+                logger.error(__ex('Cannot copy from %s' % source[oebuild_conf_schema.URL], e))
+                sys.exit(1)
+            try:
+                subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
+                get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+            except oebuild_conf_parser.IgnoreSubConf:
+                pass
         addons_path = dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME])
         if dep.get(oebuild_conf_schema.ADDONS_PATH, False):
             addons_path = '%s/%s' % (addons_path, dep[oebuild_conf_schema.ADDONS_PATH].rstrip('/'))
@@ -482,6 +484,18 @@ def git_checkout(source, destination, branch=None):
         logger.info('%s : Checkout branch %s...' % (destination, branch))
         local.git.checkout(branch)
 
+def local_copy(source, destination):
+    logger.info('%s : Copy from %s...' % (destination, source))
+    shutil.rmtree(destination)
+    os.mkdir(destination)
+    for module in [m for m in os.listdir(source) if (os.path.isdir(os.path.join(source, m)) 
+                                                       and m[:1] != '.')]:
+        shutil.copytree(os.path.join(source, module), os.path.join(destination, module))
+    for module in [m for m in os.listdir(source) if (os.path.isfile(os.path.join(source, m)) 
+                                                       and m[:7] == 'oebuild')
+                                                       and m[-5:] == '.conf']:
+        shutil.copy2(os.path.join(source, module), os.path.join(destination, module))
+                    
 def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
     if log_in : 
         logger.info(command)
