@@ -21,6 +21,11 @@
 
 import logging, sys
 
+def __ex(message, e):
+    if hasattr(e, '__module__'):
+        return '%s: [%s: %s]' % (message, e.__module__ + "." + e.__class__.__name__, e)
+    return '%s: [%s: %s]' % (message, e.__class__.__name__, e)
+
 class SingleLevelFilter(logging.Filter):
     def __init__(self, passlevel, reject):
         self.passlevel = passlevel
