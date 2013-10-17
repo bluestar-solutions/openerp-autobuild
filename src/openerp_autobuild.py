@@ -36,7 +36,7 @@ from git.exc import InvalidGitRepositoryError
 import shutil
 import oebuild_logger
 from oebuild_logger import __ex
-from settings_parser import oebuild_conf_schema, oebuild_conf_parser
+from settings_parser import oebuild_conf_schema as schema, oebuild_conf_parser
 from settings_parser import user_conf_schema, user_conf_parser
 import tarfile
 import lxml.etree
@@ -135,7 +135,7 @@ def main():
     else:
         conf = oebuild_conf_parser.load_oebuild_config_file(user_conf[user_conf_schema.CONF_FILES])
         
-        filename = deps_cache_file(conf[oebuild_conf_schema.PROJECT])
+        filename = deps_cache_file(conf[schema.PROJECT])
         if args.no_update:
             try:
                 with open(filename, 'r') as f:
@@ -164,7 +164,7 @@ def main():
 def assembly(conf, with_oe=False):
     global deps_addons_path
     
-    project = conf[oebuild_conf_schema.PROJECT]
+    project = conf[schema.PROJECT]
     if os.path.exists(target_path(project)):
         shutil.rmtree(target_path(project))
     os.mkdir(target_path(project))
@@ -211,12 +211,12 @@ def create_eclipse_project(conf):
     EM = lxml.builder.ElementMaker()
     
     doc = EM.projectDescription (
-        EM.name(conf[oebuild_conf_schema.PROJECT])
+        EM.name(conf[schema.PROJECT])
     )
     write_xml('.project', doc)
     
 def create_eclipse_pydev_project(conf):
-    project = conf[oebuild_conf_schema.PROJECT]
+    project = conf[schema.PROJECT]
     EM = lxml.builder.ElementMaker()
     
     ext_path = EM.pydev_pathproperty(name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH')
@@ -261,7 +261,7 @@ def run_openerp(conf, args):
         logger.info('Creating nonexistent openerp-autobuild workspace : %s', WORKSPACE)
         os.makedirs(WORKSPACE)
     
-    project = conf[oebuild_conf_schema.PROJECT]
+    project = conf[schema.PROJECT]
         
     if args.modules == "def-all":
         modules = ""
@@ -346,9 +346,9 @@ def run_openerp(conf, args):
     sys.exit(0)
 
 def get_deps(conf):
-    project = conf[oebuild_conf_schema.PROJECT]
-    oe_conf = conf[oebuild_conf_schema.OPENERP]
-    serie_name = oe_conf[oebuild_conf_schema.SERIE]
+    project = conf[schema.PROJECT]
+    oe_conf = conf[schema.OPENERP]
+    serie_name = oe_conf[schema.SERIE]
     
     serie = None
     for tmp_serie in user_conf[user_conf_schema.OPENERP]:
@@ -362,14 +362,14 @@ def get_deps(conf):
     
     for sp in ('server', 'addons', 'web'):
         try:
-            url = oe_conf.get(sp, {}).get(oebuild_conf_schema.URL, serie[sp])
-            bzr_rev = oe_conf.get(sp, {}).get(oebuild_conf_schema.BZR_REV, None)
+            url = oe_conf.get(sp, {}).get(schema.URL, serie[sp])
+            bzr_rev = oe_conf.get(sp, {}).get(schema.BZR_REV, None)
             bzr_checkout(url, '%s/%s' % (openerp_path(project), sp), bzr_rev)
         except Exception, e:
             logger.error(__ex('Cannot checkout from %s' % url, e))
             sys.exit(1)
     
-    get_ext_deps(project, project, conf[oebuild_conf_schema.DEPENDENCIES])
+    get_ext_deps(project, project, conf[schema.DEPENDENCIES])
     
 def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
     global deps_addons_path
@@ -378,52 +378,64 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
         deps_mapping = {}
     
     for dep in deps:
-        if dep[oebuild_conf_schema.NAME] in deps_mapping.keys() :
-            src_top = deps_mapping[dep[oebuild_conf_schema.NAME]][1][oebuild_conf_schema.SOURCE]
-            src_new = dep[oebuild_conf_schema.SOURCE]
+        if dep[schema.NAME] in deps_mapping.keys() :
+            src_top = deps_mapping[dep[schema.NAME]][1][schema.SOURCE]
+            src_new = dep[schema.SOURCE]
             reason = None
-            if src_new[oebuild_conf_schema.SCM] != src_top[oebuild_conf_schema.SCM]:
+            if src_new[schema.SCM] != src_top[schema.SCM]:
                 reason = 'SCM'
-            elif src_new[oebuild_conf_schema.URL] != src_top[oebuild_conf_schema.URL]:
+            elif src_new[schema.URL] != src_top[schema.URL]:
                 reason = 'URL'
-            elif src_new[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR and src_new[oebuild_conf_schema.BZR_REV] != src_top[oebuild_conf_schema.BZR_REV]:
+            elif src_new[schema.SCM] == schema.SCM_BZR and src_new[schema.BZR_REV] != src_top[schema.BZR_REV]:
                 reason = 'bazaar revision'
-            elif src_new[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_GIT and src_new[oebuild_conf_schema.GIT_BRANCH] != src_top[oebuild_conf_schema.GIT_BRANCH]:
+            elif src_new[schema.SCM] == schema.SCM_GIT and src_new[schema.GIT_BRANCH] != src_top[schema.GIT_BRANCH]:
                 reason = 'git branch' 
             if reason: 
                 logger.warning(("Dependency %s from %s is hidden by a %s dependency which use another %s and will ignored" +
-                                "") % (dep[oebuild_conf_schema.NAME], from_project, 
-                                       deps_mapping[dep[oebuild_conf_schema.NAME]][0], reason))
+                                "") % (dep[schema.NAME], from_project, 
+                                       deps_mapping[dep[schema.NAME]][0], reason))
             continue
+
+        source = dep[schema.SOURCE]
+        deps_mapping[dep[schema.NAME]] = (from_project, dep)
+        destination = '%s/%s' % (deps_path(root_project).rstrip('/'), dep.get(schema.DESTINATION, dep[schema.NAME]))
         
-        deps_mapping[dep[oebuild_conf_schema.NAME]] = (from_project, dep)
-        destination = '%s/%s' % (deps_path(root_project).rstrip('/'), dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME]))
-        source = dep[oebuild_conf_schema.SOURCE]
-        if source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_BZR:
+        if source[schema.SCM] == schema.SCM_BZR:
             try:
-                bzr_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.BZR_REV, None))
+                bzr_checkout(source[schema.URL], destination, source.get(schema.BZR_REV, None))
             except Exception, e:
-                logger.error(__ex('Cannot checkout from %s' % source[oebuild_conf_schema.URL], e))
+                logger.error(__ex('Cannot checkout from %s' % source[schema.URL], e))
                 sys.exit(1)
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
-                get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+                get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
             except oebuild_conf_parser.IgnoreSubConf:
                 pass
-        elif source[oebuild_conf_schema.SCM] == oebuild_conf_schema.SCM_GIT:
+        elif source[schema.SCM] == schema.SCM_GIT:
             try:
-                git_checkout(source[oebuild_conf_schema.URL], destination, source.get(oebuild_conf_schema.GIT_BRANCH, None))
+                git_checkout(source[schema.URL], destination, source.get(schema.GIT_BRANCH, None))
             except Exception, e:
-                logger.error(__ex('Cannot checkout from %s' % source[oebuild_conf_schema.URL], e))
+                logger.error(__ex('Cannot checkout from %s' % source[schema.URL], e))
                 sys.exit(1)
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
-                get_ext_deps(root_project, subconf[oebuild_conf_schema.PROJECT], subconf[oebuild_conf_schema.DEPENDENCIES], deps_mapping)
+                get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
             except oebuild_conf_parser.IgnoreSubConf:
                 pass
-        addons_path = dep.get(oebuild_conf_schema.DESTINATION, dep[oebuild_conf_schema.NAME])
-        if dep.get(oebuild_conf_schema.ADDONS_PATH, False):
-            addons_path = '%s/%s' % (addons_path, dep[oebuild_conf_schema.ADDONS_PATH].rstrip('/'))
+        elif source[schema.SCM] == schema.SCM_LOCAL:
+            try:
+                local_copy(source[schema.URL], destination)
+            except Exception, e:
+                logger.error(__ex('Cannot copy from %s' % source[schema.URL], e))
+                sys.exit(1)
+            try:
+                subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
+                get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
+            except oebuild_conf_parser.IgnoreSubConf:
+                pass
+        addons_path = dep.get(schema.DESTINATION, dep[schema.NAME])
+        if dep.get(schema.ADDONS_PATH, False):
+            addons_path = '%s/%s' % (addons_path, dep[schema.ADDONS_PATH].rstrip('/'))
         deps_addons_path.append(addons_path)
 
 def bzr_checkout(source, destination, revno=None):
@@ -472,6 +484,18 @@ def git_checkout(source, destination, branch=None):
         logger.info('%s : Checkout branch %s...' % (destination, branch))
         local.git.checkout(branch)
 
+def local_copy(source, destination):
+    logger.info('%s : Copy from %s...' % (destination, source))
+    shutil.rmtree(destination)
+    os.mkdir(destination)
+    for module in [m for m in os.listdir(source) if (os.path.isdir(os.path.join(source, m)) 
+                                                       and m[:1] != '.')]:
+        shutil.copytree(os.path.join(source, module), os.path.join(destination, module))
+    for module in [m for m in os.listdir(source) if (os.path.isfile(os.path.join(source, m)) 
+                                                       and m[:7] == 'oebuild')
+                                                       and m[-5:] == '.conf']:
+        shutil.copy2(os.path.join(source, module), os.path.join(destination, module))
+                    
 def call_command(command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
     if log_in : 
         logger.info(command)

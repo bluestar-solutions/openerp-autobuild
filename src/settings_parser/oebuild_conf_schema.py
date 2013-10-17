@@ -19,82 +19,19 @@
 #
 ##############################################################################
 
+OEBUILD_VERSION = "oebuild-version"
+PROJECT = "project"
+OPENERP = "openerp"
+SERIE = "serie"
 DEPENDENCIES = "dependencies"
 SCM = "scm"
 SCM_GIT = "git"
 SCM_BZR = "bzr"
+SCM_LOCAL = "local"
 URL = "url"
 BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
 DESTINATION = "destination"
-OEBUILD_VERSION = "oebuild-version"
 ADDONS_PATH = "addons-path"
-PROJECT = "project"
 NAME = "name"
 SOURCE = "source"
-OPENERP = "openerp"
-SERIE = "serie"
-
-OPENERP_TYPE = {
-    "type": "object",
-    "properties": {
-        URL: {"type": "string", "format": "uri", "required": False},
-        BZR_REV: {"type": "string", "pattern": "^[0-9]+$", "required": False},
-    },
-    "required": False,
-}
-DEPENDENCY = {
-    "type": "object",
-    "properties": {
-        NAME: {"type": "string", "required": True},
-        DESTINATION: {"type": "string", "format": "uri", "required": False},
-        ADDONS_PATH: {"type": "string", "format": "uri", "required": False},
-        SOURCE: {
-            "type": "object", 
-            "oneOf": [
-                {"$ref": "#/definitions/gitDependency"}, 
-                {"$ref": "#/definitions/bzrDependency"}
-            ], 
-            "required": True
-        },
-    }
-}
-OEBUILD_SCHEMA = {
-    "type": "object",
-    "properties": {
-        OEBUILD_VERSION: {"type": "string", "pattern": "^[0-9]+|.[0-9]+$", "required": True},
-        PROJECT: {"type": "string", "pattern": "^[a-z|0-9|-]+$", "required": True},
-        OPENERP: {
-            "type": "object",
-            "properties": {
-                SERIE: {"type": "string", "required": True},
-                "server": OPENERP_TYPE,
-                "addons": OPENERP_TYPE,
-                "web": OPENERP_TYPE,
-            }
-        },
-        DEPENDENCIES: {
-            "type": "array",
-            "items": {"type": DEPENDENCY},
-            "required": True
-        }
-    },
-    "definitions": {
-        "gitDependency": {
-            "type": "object",
-            "properties": {
-                SCM: {"type": "string", "pattern": SCM_GIT, "required": True},
-                URL: {"type": "string", "format": "uri", "required": True},
-                GIT_BRANCH: {"type": "string", "required": False},
-            },
-        },
-        "bzrDependency": {
-            "type": "object",
-            "properties": {
-                SCM: {"type": "string", "pattern": SCM_BZR, "required": True},
-                URL: {"type": "string", "format": "uri", "required": True},
-                BZR_REV: {"type": "string", "pattern": "^[0-9]+$", "required": False},
-            },
-        }        
-    }
-}

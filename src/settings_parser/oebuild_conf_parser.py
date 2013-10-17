@@ -22,16 +22,19 @@
 import os
 import sys
 import json
-import validictory
+import jsonschema
 import oebuild_logger
-from settings_parser import oebuild_conf_schema
+from settings_parser import oebuild_conf_schema as schema
+from settings_parser import oebuild_conf_schema_1_7
+from settings_parser import oebuild_conf_schema_1_8
 import textwrap
 import dialogs
+from oebuild_logger import __ex
 
 logger = oebuild_logger.getLogger()
 
-VERSION = '1.7'
-SUPPORTED_VERSIONS = ('1.7')
+VERSION = '1.8'
+SUPPORTED_VERSIONS = ('1.7', '1.8')
 DEFAULT_CONF_FILENAME = 'oebuild.conf'
 CUSTOM_CONF_FILENAME = 'oebuild-%s.conf'
 DEPRECATED_FILES = ('.project-dependencies',)
@@ -52,18 +55,23 @@ def load_oebuild_config_file(conf_file_list):
     with open(DEFAULT_CONF_FILENAME, "r") as source_file:
         try:
             conf = json.load(source_file)
-        except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (DEFAULT_CONF_FILENAME, error))
+        except ValueError, e:
+            logger.error(__ex('%s is not JSON valid' % DEFAULT_CONF_FILENAME), e)
             sys.exit(1)
-        try:
-            validictory.validate(conf, oebuild_conf_schema.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.error('%s is not a valid configuration file : %s' % (DEFAULT_CONF_FILENAME, error))
-            sys.exit(1)
-
-    if conf[oebuild_conf_schema.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
+            
+    if conf[schema.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
         logger.error(('The project configuration file is in version %s, openerp-autobuild is ' +
-                      'in version %s and support only versions %s for configuration file') % (conf[oebuild_conf_schema.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
+                      'in version %s and support only versions %s for configuration file') % 
+                     (conf[schema.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
+        sys.exit(1)
+            
+    try:
+        if conf[schema.OEBUILD_VERSION] == '1.7':
+            jsonschema.validate(conf, oebuild_conf_schema_1_7.OEBUILD_SCHEMA)
+        else:
+            jsonschema.validate(conf, oebuild_conf_schema_1_8.OEBUILD_SCHEMA)
+    except Exception, e:
+        logger.error(__ex('%s is not a valid configuration file' % DEFAULT_CONF_FILENAME, e))
         sys.exit(1)
         
     for conf_name in conf_file_list:
@@ -81,32 +89,36 @@ def load_alternate_config_file(conf, conf_file):
         except ValueError, error:
             logger.error('%s is not JSON valid : %s' % (conf_file, error))
             sys.exit(1)
-        try:
-            validictory.validate(conf2, oebuild_conf_schema.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.error('%s is not a valid configuration file : %s' % (conf_file, error))
-            sys.exit(1)
-
-    if conf2[oebuild_conf_schema.OEBUILD_VERSION] != conf[oebuild_conf_schema.OEBUILD_VERSION]:
+            
+    if conf2[schema.OEBUILD_VERSION] != conf[schema.OEBUILD_VERSION]:
         logger.error(('The oebuild version of the alternate configuration file %s '+
                       'cannot be different from the default configuration file') % conf_file)
         sys.exit(1)
-    if conf2[oebuild_conf_schema.PROJECT] != conf[oebuild_conf_schema.PROJECT]:
+    if conf2[schema.PROJECT] != conf[schema.PROJECT]:
         logger.error(('The project name of the alternate configuration file %s '+
                       'cannot be different from the default configuration file') % conf_file)
         sys.exit(1)
-    if conf2[oebuild_conf_schema.OPENERP][oebuild_conf_schema.SERIE] != conf[oebuild_conf_schema.OPENERP][oebuild_conf_schema.SERIE]:
+    if conf2[schema.OPENERP][schema.SERIE] != conf[schema.OPENERP][schema.SERIE]:
         logger.error(('The openerp serie of the alternate configuration file %s '+
                       'cannot be different from the default configuration file') % conf_file)
         sys.exit(1)
+            
+    try:
+        if conf2[schema.OEBUILD_VERSION] == '1.7':
+            jsonschema.validate(conf2, oebuild_conf_schema_1_7.OEBUILD_SCHEMA)
+        else:
+            jsonschema.validate(conf2, oebuild_conf_schema_1_8.OEBUILD_SCHEMA)
+    except Exception, error:
+        logger.error('%s is not a valid configuration file : %s' % (conf_file, error))
+        sys.exit(1)
         
     for componant in ['server', 'addons', 'web']:
-        if componant in conf2[oebuild_conf_schema.OPENERP]:
-            conf[oebuild_conf_schema.OPENERP][componant].update(conf2[oebuild_conf_schema.OPENERP][componant])
+        if componant in conf2[schema.OPENERP]:
+            conf[schema.OPENERP][componant].update(conf2[schema.OPENERP][componant])
     
-    for dep2 in conf2[oebuild_conf_schema.DEPENDENCIES]:
-        for dep in conf[oebuild_conf_schema.DEPENDENCIES]:
-            if dep[oebuild_conf_schema.NAME] == dep2[oebuild_conf_schema.NAME]:
+    for dep2 in conf2[schema.DEPENDENCIES]:
+        for dep in conf[schema.DEPENDENCIES]:
+            if dep[schema.NAME] == dep2[schema.NAME]:
                 dep.update(dep2)
         
     return conf
@@ -125,9 +137,9 @@ def load_subconfig_file_list(conf_file_path, conf_file_list):
         if os.path.exists(conf_file) and os.path.isfile(conf_file):
             try:
                 conf2 = load_subconfig_file(conf_file)
-                for dep2 in conf2[oebuild_conf_schema.DEPENDENCIES]:
-                    for dep in conf[oebuild_conf_schema.DEPENDENCIES]:
-                        if dep[oebuild_conf_schema.NAME] == dep2[oebuild_conf_schema.NAME]:
+                for dep2 in conf2[schema.DEPENDENCIES]:
+                    for dep in conf[schema.DEPENDENCIES]:
+                        if dep[schema.NAME] == dep2[schema.NAME]:
                             dep.update(dep2)
             except IgnoreSubConf:
                 pass
@@ -140,16 +152,20 @@ def load_subconfig_file(conf_file):
         except ValueError, error:
             logger.warning('%s will be ignored because it is not a valid JSON file : %s' % (conf_file, error))
             raise IgnoreSubConf()
-        try:
-            validictory.validate(conf, oebuild_conf_schema.OEBUILD_SCHEMA)
-        except ValueError, error:
-            logger.warning('%s will be ignored because it is not a valid configuration file : %s' % (conf_file, error))
-            raise IgnoreSubConf()
 
-    if conf[oebuild_conf_schema.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
+    if conf[schema.OEBUILD_VERSION] not in SUPPORTED_VERSIONS:
         logger.warning(('%s will be ignored because this version is not supported : %s. '+
                         'openerp-autobuild version %s supports only those version : %s')\
-                       % (conf_file, conf[oebuild_conf_schema.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
+                       % (conf_file, conf[schema.OEBUILD_VERSION], VERSION, SUPPORTED_VERSIONS))
+        raise IgnoreSubConf()
+
+    try:
+        if conf[schema.OEBUILD_VERSION] == '1.7':
+            jsonschema.validate(conf, oebuild_conf_schema_1_7.OEBUILD_SCHEMA)
+        else:
+            jsonschema.validate(conf, oebuild_conf_schema_1_8.OEBUILD_SCHEMA)
+    except Exception, e:
+        logger.warning(__ex('%s will be ignored because it is not a valid configuration file' % conf_file), e)
         raise IgnoreSubConf()
         
     return conf

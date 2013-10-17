@@ -35,35 +35,36 @@ PASSWORD = "password"
 OPENERP_TYPE = {
     "type": "object",
     "properties": {
-        SERIE: {"type": "string", "required": True},
-        "server": {"type": "string", "format": "uri", "required": True},
-        "addons": {"type": "string", "format": "uri", "required": True},
-        "web": {"type": "string", "format": "uri", "required": True},
-    }
+        SERIE: {"type": "string"},
+        "server": {"type": "string", "format": "uri"},
+        "addons": {"type": "string", "format": "uri"},
+        "web": {"type": "string", "format": "uri"},
+    },
+    "required": [SERIE, "server", "addons", "web"]
 }
 USER_CONFIG_SCHEMA = {
     "type": "object",
     "properties": {
-        WORKSPACE: {"type": "string", "format": "uri", "required": True},
+        WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",
             "items": {"type": "string", "format": "uri"},
-            "required": True,
         },                    
         OPENERP: {
             "type": "array",
             "items": OPENERP_TYPE,
-            "required": True,
         },
-        DEFAULT_SERIE: {"type": "string", "required": True},
+        DEFAULT_SERIE: {"type": "string"},
         DATABASE: {
             "type": "object",
             "properties": {
-                HOST: {"type": "string", "required": False},
-                PORT: {"type": "string", "required": False},
-                USER: {"type": "string", "required": True},
-                PASSWORD: {"type": "string", "required": True},
-            }
+                HOST: {"type": "string"},
+                PORT: {"type": "string"},
+                USER: {"type": "string"},
+                PASSWORD: {"type": "string"},
+            },
+            "required": [USER, PASSWORD]
         }
     },
+    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE]
 }
