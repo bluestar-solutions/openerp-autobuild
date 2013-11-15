@@ -19,5 +19,7 @@
 #
 ##############################################################################
 
-import user_conf_parser
-import oebuild_conf_parser
+import user_conf_schema
+import oebuild_conf_schema
+import oebuild_conf_schema_1_7
+import oebuild_conf_schema_1_8

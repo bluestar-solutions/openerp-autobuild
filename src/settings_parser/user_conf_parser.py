@@ -21,55 +21,69 @@
 
 import os
 import sys
-import shutil
 import getpass
+import shutil
 import json
 import jsonschema
 import oebuild_logger
-from settings_parser import user_conf_schema, oebuild_conf_parser
+from settings_parser.schema import user_conf_schema
+import params
 
-logger = oebuild_logger.getLogger()
+class UserConfParser():
+    
+    VERSION_1_7 = '1.7'
 
-USER_HOME_PATH = os.path.expanduser("~")
-USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
-USER_OEBUILD_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
-USER_OEBUILD_CONFIG_FILE = lambda version: '%s/oebuild_config-%s.json' % (USER_OEBUILD_CONFIG_PATH, version)
-USER_OEBUILD_CURRENT_CONFIG_FILE = USER_OEBUILD_CONFIG_FILE(oebuild_conf_parser.VERSION)
-
-def update_1_7_to_1_8():
-    # No change needed
-    shutil.copyfile(USER_OEBUILD_CONFIG_FILE('1.7'), USER_OEBUILD_CONFIG_FILE('1.8'))
-
-if not os.path.exists(USER_CONFIG_PATH):
-    os.makedirs(USER_CONFIG_PATH)
-if not os.path.exists(USER_OEBUILD_CONFIG_PATH):
-    os.makedirs(USER_OEBUILD_CONFIG_PATH)
-if not os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE):
-    if os.path.exists(USER_OEBUILD_CONFIG_FILE('1.7')):
-        update_1_7_to_1_8()
-    else:
-        infile = open("%s/conf/default_user_config.json" % OE_HOME_PATH) #@UndefinedVariable
-        outfile = open(USER_OEBUILD_CURRENT_CONFIG_FILE, 'w')
-        for line in infile:
-            outfile.write(line.replace("$USERNAME", getpass.getuser()))
-        infile.close()
-        outfile.close()
-
-def load_user_config_file():
-    if not (os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE) and os.path.isfile(USER_OEBUILD_CURRENT_CONFIG_FILE)):
-        logger.error('User openerp configuration file does not exist : %s' % USER_OEBUILD_CURRENT_CONFIG_FILE)
-        sys.exit(1)
-        
-    with open(USER_OEBUILD_CURRENT_CONFIG_FILE, "r") as source_file:
-        try:
-            conf = json.load(source_file)
-        except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
+    _logger = oebuild_logger.getLogger()
+    
+    def __init__(self):
+        self._verify()
+    
+    def load_user_config_file(self):
+        if not (os.path.exists(params.USER_OEBUILD_CONFIG_FILE) and os.path.isfile(params.USER_OEBUILD_CONFIG_FILE)):
+            self._logger.error('User openerp configuration file does not exist : %s' % params.USER_OEBUILD_CONFIG_FILE)
             sys.exit(1)
-        try:
-            jsonschema.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
-        except ValueError, error:
-            logger.error('%s is not a valid user configuration file : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
-            sys.exit(1)
-        
-    return conf
+            
+        with open(params.USER_OEBUILD_CONFIG_FILE, "r") as source_file:
+            try:
+                conf = json.load(source_file)
+            except ValueError, error:
+                self._logger.error('%s is not JSON valid : %s' % (params.USER_OEBUILD_CONFIG_FILE, error))
+                sys.exit(1)
+            try:
+                jsonschema.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
+            except ValueError, error:
+                self._logger.error('%s is not a valid user configuration file : %s' % (params.USER_OEBUILD_CONFIG_FILE, error))
+                sys.exit(1)
+            
+        return conf
+    
+    def _verify(self):
+        if not os.path.exists(params.USER_CONFIG_PATH):
+            os.makedirs(params.USER_CONFIG_PATH)
+        if not os.path.exists(params.USER_OEBUILD_CONFIG_PATH):
+            os.makedirs(params.USER_OEBUILD_CONFIG_PATH)
+        if not os.path.exists(params.USER_OEBUILD_CONFIG_FILE):
+            if os.path.exists(params.USER_OEBUILD_CONFIG_FILE_1_7):
+                self._update(self.VERSION_1_7)
+            else:
+                infile = open("%s/conf/default_user_config.json" % params.OE_HOME_PATH)
+                outfile = open(params.USER_OEBUILD_CONFIG_FILE, 'w')
+                for line in infile:
+                    outfile.write(line.replace("$USERNAME", getpass.getuser()))
+                infile.close()
+                outfile.close()
+                
+        keep = [params.USER_OEBUILD_CONFIG_FILE]
+        for f in [f for f in os.listdir(params.USER_OEBUILD_CONFIG_PATH) if os.path.join(params.USER_OEBUILD_CONFIG_PATH, f) not in keep]:
+            path = os.path.join(params.USER_OEBUILD_CONFIG_PATH, f)
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
+    
+    def _update(self, version_from):
+        if version_from == self.VERSION_1_7:
+            self._update_1_7_to_1_8()
+
+    def _update_1_7_to_1_8(self):
+        shutil.copyfile(params.USER_OEBUILD_CONFIG_FILE_1_7, params.USER_OEBUILD_CONFIG_FILE)

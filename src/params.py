@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
 #    
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -19,5 +20,19 @@
 #
 ##############################################################################
 
-import user_conf_parser
-import oebuild_conf_parser
+import os
+
+VERSION = '1.8'
+
+OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
+
+USER_HOME_PATH = os.path.expanduser("~")
+USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
+USER_OEBUILD_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
+USER_OEBUILD_CONFIG_FILE = '%s/oebuild_config.json' % USER_OEBUILD_CONFIG_PATH
+USER_OEBUILD_CONFIG_FILE_1_7 = '%s/oebuild_config-1.7.json' % USER_OEBUILD_CONFIG_PATH
+
+SUPPORTED_VERSIONS = ('1.7', '1.8')
+DEFAULT_CONF_FILENAME = 'oebuild.conf'
+CUSTOM_CONF_FILENAME = 'oebuild-%s.conf'
+DEPRECATED_FILES = ('.project-dependencies',)

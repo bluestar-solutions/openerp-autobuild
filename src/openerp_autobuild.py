@@ -21,8 +21,6 @@
 ##############################################################################
 
 import os
-__builtins__.OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
-
 import sys
 import subprocess
 import tempfile
@@ -36,8 +34,9 @@ from git.exc import InvalidGitRepositoryError
 import shutil
 import oebuild_logger
 from oebuild_logger import __ex
-from settings_parser import oebuild_conf_schema as schema, oebuild_conf_parser
-from settings_parser import user_conf_schema, user_conf_parser
+from settings_parser.schema import user_conf_schema, oebuild_conf_schema as schema 
+from settings_parser.user_conf_parser import UserConfParser
+from settings_parser.oebuild_conf_parser import OEBuildConfParser, IgnoreSubConf
 import tarfile
 import lxml.etree
 import lxml.builder
@@ -46,15 +45,17 @@ import StringIO
 from xml.dom import minidom
 import dialogs
 import json
+import params
 
 load_plugins()
 
 PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
 
 OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
-    
+
+user_conf_parser = UserConfParser()
 user_conf = user_conf_parser.load_user_config_file()
-WORKSPACE = user_conf[user_conf_schema.WORKSPACE].replace('~', user_conf_parser.USER_HOME_PATH)
+WORKSPACE = user_conf[user_conf_schema.WORKSPACE].replace('~', params.USER_HOME_PATH)
 
 project_path = lambda project: '%s/%s' % (WORKSPACE, project)
 openerp_path = lambda project: '%s/%s' % (project_path(project), 'openerp')
@@ -66,6 +67,8 @@ src_path = os.path.curdir
 
 logger = oebuild_logger.getLogger()
 deps_addons_path = []
+
+oebuild_conf_parser = OEBuildConfParser()
     
 def main():
     global deps_addons_path
@@ -87,7 +90,7 @@ def main():
                                     * Initailize configuration files for Eclipse (with PyDev plugin).
                                     * Manage your module dependencies.
                                     * Assembly your module with the desired OpenERP version and all dependencies.
-                                ''' % (oebuild_conf_parser.VERSION, '-' * len(oebuild_conf_parser.VERSION))),
+                                ''' % (params.VERSION, '-' * len(params.VERSION))),
                             epilog=textwrap.dedent('''\
                                 goal help:
                                     %(prog)s GOAL -h
@@ -409,7 +412,7 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
-            except oebuild_conf_parser.IgnoreSubConf:
+            except IgnoreSubConf:
                 pass
         elif source[schema.SCM] == schema.SCM_GIT:
             try:
@@ -420,7 +423,7 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
-            except oebuild_conf_parser.IgnoreSubConf:
+            except IgnoreSubConf:
                 pass
         elif source[schema.SCM] == schema.SCM_LOCAL:
             try:
@@ -431,7 +434,7 @@ def get_ext_deps(root_project, from_project, deps, deps_mapping=None):
             try:
                 subconf = oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), user_conf[user_conf_schema.CONF_FILES])
                 get_ext_deps(root_project, subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
-            except oebuild_conf_parser.IgnoreSubConf:
+            except IgnoreSubConf:
                 pass
         addons_path = dep.get(schema.DESTINATION, dep[schema.NAME])
         if dep.get(schema.ADDONS_PATH, False):
