@@ -47,9 +47,13 @@ import dialogs
 import json
 import params
 
+# removed : PyChart ZSI
+# added : Pillow httplib2 PyChart(url)
+static_py_deps = "python-dateutil feedparser gdata python-ldap lxml Mako python-openid psycopg2 Babel pydot pyparsing reportlab simplejson pytz vatnumber vobject PyWebDAV Werkzeug xlwt PyYAML docutils psutil unittest2 mock Jinja2 Pillow httplib2 bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"
+
 load_plugins()
 
-PID_FILE = '%s/%s' % (tempfile.gettempdir(), 'openerp-pid')
+PID_FILE = lambda project: '%s/%s' % ('/tmp', '%s.pid' % project)
 
 OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
 
@@ -63,6 +67,10 @@ deps_path = lambda project: '%s/%s' % (project_path(project), 'deps')
 target_path = lambda project: '%s/%s' % (project_path(project), 'target')
 target_addons_path = lambda project: '%s/%s' % (target_path(project), 'custom-addons')
 deps_cache_file = lambda project: '%s/%s' % (project_path(project), 'deps.cache')
+py_deps_cache_file = lambda project: '%s/%s' % (project_path(project), 'python-deps.cache')
+virtualenv_path = lambda project: '%s/%s' % (project_path(project), 'venv')
+virtual_python = lambda project: '%s/%s' % (virtualenv_path(project), 'bin/python')
+virtual_pip = lambda project: '%s/%s' % (virtualenv_path(project), 'bin/pip')
 src_path = os.path.curdir
 
 logger = oebuild_logger.getLogger()
@@ -76,6 +84,7 @@ def main():
     shared_parser = ArgumentParser(add_help=False)
     shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
     shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
+    shared_parser.add_argument("-n", "--netrpc-port", dest="netrpc_port", type=int, default="8070", help="NetRPC server port (default:8070).")
     shared_parser.add_argument("--no-update", action="store_true", dest="no_update", help="Bypass updates and try to launch with last parameters.")
 
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
@@ -108,6 +117,7 @@ def main():
     parser_test.add_argument("--db-name", dest="db_name", help="Database name for tests.", default='autobuild_%s' % os.getcwd().split('/')[-1])
     parser_test.add_argument("--force-install", action="store_true", dest="install", help="Force new install.")
     parser_test.add_argument("--analyze", action="store_true", dest="analyze", help="Analyze log and stop OpenERP, for continuous integration.")
+    parser_test.add_argument("--force-stop-after-init", action="store_true", dest="stopafterinit", help="Force OpenERP server to stop when tests are done.")
     parser_test.set_defaults(func="test")
     
     parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
@@ -139,6 +149,7 @@ def main():
         conf = oebuild_conf_parser.load_oebuild_config_file(user_conf[user_conf_schema.CONF_FILES])
         
         filename = deps_cache_file(conf[schema.PROJECT])
+        
         if args.no_update:
             try:
                 with open(filename, 'r') as f:
@@ -152,14 +163,16 @@ def main():
                 with open(filename, 'w') as f:
                     f.write(json.dumps(deps_addons_path))
             except Exception, e:
-                logger.warning(__ex('Impossible to write %s' % filename, e)) 
+                logger.warning(__ex('Impossible to write %s' % filename, e))
+                
+        create_or_update_venv(conf, args)
 
         if args.func == "init-eclipse":
             init_eclipse(conf)
         elif args.func == "assembly":
             assembly(conf, args.with_oe)
         else:
-            kill_old_openerp()
+            kill_old_openerp(conf)
             run_openerp(conf, args)
         
     logger.info('Terminate %s mode' % args.func)
@@ -238,11 +251,45 @@ def create_eclipse_pydev_project(conf):
     )
     doc.addprevious(lxml.etree.ProcessingInstruction('eclipse-pydev', 'version="1.0"'))
     write_xml('.pydevproject', doc, standalone=False)
+    
+def create_or_update_venv(conf, args):
+    try:
+        if os.path.exists(virtualenv_path(conf[schema.PROJECT])) and os.path.exists(py_deps_cache_file(conf[schema.PROJECT])):
+            if args.no_update:
+                return
+            
+            is_config_changed = False
+            with open(py_deps_cache_file(conf[schema.PROJECT]),'r') as f:
+                py_deps_from_file = f.read()
+                is_config_changed = len(py_deps_from_file) != len(static_py_deps) or set(py_deps_from_file.split(" ")).symmetric_difference(set(static_py_deps.split(" "))) != set()
+                
+            if not is_config_changed:
+                logger.info("No changes in Python dependencies, skipping update process.")
+                return
+            
+            logger.info("Removing virtualenv : %s" % virtualenv_path(conf[schema.PROJECT]))
+            shutil.rmtree(virtualenv_path(conf[schema.PROJECT]))
+            
+            logger.info("Removing cache file : %s" % py_deps_cache_file(conf[schema.PROJECT]))
+            os.remove(py_deps_cache_file(conf[schema.PROJECT]))
+            
+        _, err = call_command("virtualenv -q %s" % virtualenv_path(conf[schema.PROJECT]))
+        if err:
+            sys.exit(1)
+        
+        _, err = call_command("%s install -q --upgrade %s" % (virtual_pip(conf[schema.PROJECT]), static_py_deps))
+        if err and "http://download.gna.org/pychart/bzr-archive/.bzr/" not in err: # bypass deprecated error on PyChart hack
+            sys.exit(1)
 
-       
-def kill_old_openerp():
-    if os.path.exists(PID_FILE) and os.path.isfile(PID_FILE):
-        with open(PID_FILE,"r") as f:
+        with open(py_deps_cache_file(conf[schema.PROJECT]),'w+') as f:
+            f.write(static_py_deps)
+            
+    except Exception, e:
+        logger.error(__ex('', e))
+
+def kill_old_openerp(conf):
+    if os.path.exists(PID_FILE(conf[schema.PROJECT])) and os.path.isfile(PID_FILE(conf[schema.PROJECT])):
+        with open(PID_FILE(conf[schema.PROJECT]),"r") as f:
             pid = f.read()
             pid = int(pid) if pid != '' else 0
         if pid != 0:
@@ -250,7 +297,7 @@ def kill_old_openerp():
                 os.kill(pid,9)
             except:
                 pass
-            with open(PID_FILE,"w") as f:
+            with open(PID_FILE(conf[schema.PROJECT]),"w") as f:
                 f.write("%d" % 0)
 
 def run_openerp(conf, args):
@@ -315,7 +362,7 @@ def run_openerp(conf, args):
             conn.set_isolation_level(old_isolation_level)  
             update_or_install = "i"
 
-        cmd = '%s/%s' % (openerp_path(project), 'server/openerp-server')
+        cmd = '%s %s/%s' % (virtual_python(project), openerp_path(project), 'server/openerp-server')
         cmd += ' --addons-path=%s' % addons_path
         cmd += ' -d %s' % args.db_name
         cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
@@ -326,12 +373,12 @@ def run_openerp(conf, args):
         cmd += ' --log-level=test --test-enable'
         if args.commit:
             cmd += ' --test-commit'
-        if args.analyze:
+        if args.analyze or args.stopafterinit:
             cmd += ' --stop-after-init'
-        openerp_output, _ = call_command(cmd, parse_log=args.analyze, register_pid=PID_FILE
+        openerp_output, _ = call_command(cmd, parse_log=args.analyze, register_pid=PID_FILE(project)
         )
     else:
-        cmd = '%s/%s -c .openerp-dev-default' % (openerp_path(project), 'server/openerp-server')
+        cmd = '%s %s/%s -c .openerp-dev-default' % (virtual_python(project), openerp_path(project), 'server/openerp-server')
         cmd += ' --addons-path=%s' % addons_path
         cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
         cmd += ' --db_password=%s' % db_conf[user_conf_schema.PASSWORD]
@@ -341,7 +388,8 @@ def run_openerp(conf, args):
         cmd += ' --log-level=%s' % ('info' if args.func == "run" else 'debug')
         cmd += ' --log-handler=%s' % (':INFO' if args.func == "run" else ':DEBUG')
         cmd += ' --xmlrpc-port=%d' % args.tcp_port
-        openerp_output, _ = call_command(cmd, parse_log=False, register_pid=PID_FILE)
+        cmd += ' --netrpc-port=%d' % args.netrpc_port
+        openerp_output, _ = call_command(cmd, parse_log=False, register_pid=PID_FILE(project))
 
     if args.func == "test" and args.analyze:
         if 'ERROR' in openerp_output:
