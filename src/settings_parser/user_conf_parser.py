@@ -54,7 +54,7 @@ class UserConfParser():
             except ValueError, error:
                 self._logger.error('%s is not a valid user configuration file : %s' % (params.USER_OEBUILD_CONFIG_FILE, error))
                 sys.exit(1)
-            
+                
         return conf
     
     def _verify(self):
@@ -73,13 +73,13 @@ class UserConfParser():
                 infile.close()
                 outfile.close()
                 
-        keep = [params.USER_OEBUILD_CONFIG_FILE]
-        for f in [f for f in os.listdir(params.USER_OEBUILD_CONFIG_PATH) if os.path.join(params.USER_OEBUILD_CONFIG_PATH, f) not in keep]:
-            path = os.path.join(params.USER_OEBUILD_CONFIG_PATH, f)
-            if os.path.isdir(path):
-                shutil.rmtree(path)
-            else:
-                os.remove(path)
+#         keep = [params.USER_OEBUILD_CONFIG_FILE]
+#         for f in [f for f in os.listdir(params.USER_OEBUILD_CONFIG_PATH) if os.path.join(params.USER_OEBUILD_CONFIG_PATH, f) not in keep]:
+#             path = os.path.join(params.USER_OEBUILD_CONFIG_PATH, f)
+#             if os.path.isdir(path):
+#                 shutil.rmtree(path)
+#             else:
+#                 os.remove(path)
     
     def _update(self, version_from):
         if version_from == self.VERSION_1_7:

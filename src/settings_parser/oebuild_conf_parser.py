@@ -29,7 +29,6 @@ from settings_parser.schema import oebuild_conf_schema_1_7
 from settings_parser.schema import oebuild_conf_schema_1_8
 import textwrap
 import dialogs
-from oebuild_logger import __ex
 import params
 
 class IgnoreSubConf(Exception):
@@ -56,7 +55,7 @@ class OEBuildConfParser():
             try:
                 conf = json.load(source_file)
             except ValueError, e:
-                self._logger.error(__ex('%s is not JSON valid' % params.DEFAULT_CONF_FILENAME), e)
+                self._logger.error(oebuild_logger.ex('%s is not JSON valid' % params.DEFAULT_CONF_FILENAME, e))
                 sys.exit(1)
                 
         if conf[schema.OEBUILD_VERSION] not in params.SUPPORTED_VERSIONS:
@@ -71,7 +70,7 @@ class OEBuildConfParser():
             else:
                 jsonschema.validate(conf, oebuild_conf_schema_1_8.OEBUILD_SCHEMA)
         except Exception, e:
-            self._logger.error(__ex('%s is not a valid configuration file' % params.DEFAULT_CONF_FILENAME, e))
+            self._logger.error(oebuild_logger.ex('%s is not a valid configuration file' % params.DEFAULT_CONF_FILENAME, e))
             sys.exit(1)
             
         for conf_name in conf_file_list:
@@ -165,7 +164,7 @@ class OEBuildConfParser():
             else:
                 jsonschema.validate(conf, oebuild_conf_schema_1_8.OEBUILD_SCHEMA)
         except Exception, e:
-            self._logger.warning(__ex('%s will be ignored because it is not a valid configuration file' % conf_file), e)
+            self._logger.warning(oebuild_logger.ex('%s will be ignored because it is not a valid configuration file' % conf_file), e)
             raise IgnoreSubConf()
             
         return conf

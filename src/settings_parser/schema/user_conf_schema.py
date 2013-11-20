@@ -31,6 +31,7 @@ HOST = "host"
 PORT = "port"
 USER = "user"
 PASSWORD = "password"
+PYTHON_DEPENDENCIES = "python-dependencies"
 
 OPENERP_TYPE = {
     "type": "object",
@@ -39,6 +40,10 @@ OPENERP_TYPE = {
         "server": {"type": "string", "format": "uri"},
         "addons": {"type": "string", "format": "uri"},
         "web": {"type": "string", "format": "uri"},
+        PYTHON_DEPENDENCIES: {
+            "type": "array",
+            "items": {"type": "string"}
+        },
     },
     "required": [SERIE, "server", "addons", "web"]
 }

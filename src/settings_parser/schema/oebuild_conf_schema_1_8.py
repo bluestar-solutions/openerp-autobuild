@@ -60,6 +60,10 @@ OEBUILD_SCHEMA = {
             },
             "required": [schema.SERIE]
         },
+        schema.PYTHON_DEPENDENCIES: {
+            "type": "array",
+            "items": {"type": "string"}
+        },
         schema.DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY
