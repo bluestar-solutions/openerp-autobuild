@@ -19,6 +19,8 @@
 #
 ##############################################################################
 
+import params
+
 OEBUILD_VERSION = "oebuild-version"
 PROJECT = "project"
 OPENERP = "openerp"
@@ -36,3 +38,124 @@ DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
 SOURCE = "source"
+SPECIFIER = "specifier"
+
+OPENERP_TYPE = {
+    "type": "object",
+    "properties": {
+        URL: {"type": "string", "format": "uri"},
+        BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
+    },
+    "additionalProperties" : False
+}
+PYTHON_DEPENDENCY = {
+    "type": "object",
+    "properties": {
+        NAME: {"type": "string"},
+        SPECIFIER: {"type": "string"}
+    },
+    "required": [NAME],
+    "additionalProperties" : False
+}
+DEPENDENCY = {
+    "type": "object",
+    "properties": {
+        NAME: {"type": "string"},
+        DESTINATION: {"type": "string", "format": "uri"},
+        ADDONS_PATH: {"type": "string", "format": "uri"},
+        SOURCE: {
+            "type": "object", 
+            "oneOf": [
+                {"$ref": "#/definitions/gitDependency"}, 
+                {"$ref": "#/definitions/bzrDependency"},
+                {"$ref": "#/definitions/localDependency"}
+            ],
+        },
+    },
+    "required": [NAME],
+    "additionalProperties" : False
+}
+DEPENCENCY_DEFINITIONS = {
+    "gitDependency": {
+        "type": "object",
+        "properties": {
+            SCM: {"type": "string", "pattern": SCM_GIT},
+            URL: {"type": "string", "format": "uri"},
+            GIT_BRANCH: {"type": "string"},
+        },
+        "required": [SCM, URL],
+        "additionalProperties" : False
+    },
+    "bzrDependency": {
+        "type": "object",
+        "properties": {
+            SCM: {"type": "string", "pattern": SCM_BZR},
+            URL: {"type": "string", "format": "uri"},
+            BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
+        },
+        "required": [SCM, URL],
+        "additionalProperties" : False
+    },
+    "localDependency": {
+        "type": "object",
+        "properties": {
+            SCM: {"type": "string", "pattern": SCM_LOCAL},
+            URL: {"type": "string", "format": "uri"},
+        },
+        "required": [SCM, URL],
+        "additionalProperties" : False
+    }        
+}
+OEBUILD_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        PROJECT: {"type": "string", "pattern": "^[a-z|0-9|-]+$"},
+        OPENERP: {
+            "type": "object",
+            "properties": {
+                SERIE: {"type": "string"},
+                "server": OPENERP_TYPE,
+                "addons": OPENERP_TYPE,
+                "web": OPENERP_TYPE,
+            },
+            "required": [SERIE],
+            "additionalProperties" : False
+        },
+        PYTHON_DEPENDENCIES: {
+            "type": "array",
+            "items": PYTHON_DEPENDENCY
+        },
+        DEPENDENCIES: {
+            "type": "array",
+            "items": DEPENDENCY
+        }
+    },
+    "required": [OEBUILD_VERSION, PROJECT, DEPENDENCIES],
+    "additionalProperties" : False,
+    "definitions": DEPENCENCY_DEFINITIONS
+}
+OEBUILD_ALT_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        OPENERP: {
+            "type": "object",
+            "properties": {
+                "server": OPENERP_TYPE,
+                "addons": OPENERP_TYPE,
+                "web": OPENERP_TYPE,
+            },
+            "additionalProperties" : False
+        },
+        DEPENDENCIES: {
+            "type": "array",
+            "items": DEPENDENCY
+        }
+    },
+    "required": [OEBUILD_VERSION, DEPENDENCIES],
+    "additionalProperties" : False,
+    "definitions": DEPENCENCY_DEFINITIONS
+}

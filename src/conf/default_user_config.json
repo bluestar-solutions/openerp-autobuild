@@ -1,57 +1,23 @@
 {
-	"workspace": "~/openerp-autobuild",
-	"custom-configuration-files": ["$USERNAME"],
-	"openerp": [{
-		"serie": "trunk",
-		"server": "lp:openobject-server",
-		"addons": "lp:openobject-addons",
-		"web": "lp:openerp-web",
-		"python-dependencies": [
-			"python-dateutil", "feedparser", "gdata python-ldap", "lxml", "Mako", "python-openid", "psycopg2", "Babel",
-			"pydot", "pyparsing", "reportlab", "simplejson", "pytz", "vatnumber", "vobject", "PyWebDAV", "Werkzeug",
-			"xlwt", "PyYAML", "docutils", "psutil", "unittest2", "mock", "Jinja2", "Pillow",
-			"httplib2", "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"
-		]
-	},{
-		"serie": "6.0",
-		"server": "lp:openobject-server/6.0",
-		"addons": "lp:openobject-addons/6.0",
-		"web": "lp:openerp-web/6.0",
-		"python-dependencies": [
-			"python-dateutil", "feedparser", "gdata python-ldap", "lxml", "Mako", "python-openid", "psycopg2", "Babel",
-			"pydot", "pyparsing", "reportlab", "simplejson", "pytz", "vatnumber", "vobject", "PyWebDAV", "Werkzeug",
-			"xlwt", "PyYAML", "docutils", "psutil", "unittest2", "mock", "Jinja2", "Pillow",
-			"httplib2", "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"
-		]
-	},{
-		"serie": "6.1",
-		"server": "lp:openobject-server/6.1",
-		"addons": "lp:openobject-addons/6.1",
-		"web": "lp:openerp-web/6.1",
-		"python-dependencies": [
-			"python-dateutil", "feedparser", "gdata python-ldap", "lxml", "Mako", "python-openid", "psycopg2", "Babel",
-			"pydot", "pyparsing", "reportlab", "simplejson", "pytz", "vatnumber", "vobject", "PyWebDAV", "Werkzeug",
-			"xlwt", "PyYAML", "docutils", "psutil", "unittest2", "mock", "Jinja2", "Pillow",
-			"httplib2", "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"
-		]
-	},{
-		"serie": "7.0",
-		"server": "lp:openobject-server/7.0",
-		"addons": "lp:openobject-addons/7.0",
-		"web": "lp:openerp-web/7.0",
-		"python-dependencies": [
-			"python-dateutil", "feedparser", "gdata python-ldap", "lxml", "Mako", "python-openid", "psycopg2", "Babel",
-			"pydot", "pyparsing", "reportlab", "simplejson", "pytz", "vatnumber", "vobject", "PyWebDAV", "Werkzeug",
-			"xlwt", "PyYAML", "docutils", "psutil", "unittest2", "mock", "Jinja2", "Pillow",
-			"httplib2", "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"
-		]
-	}],
-	"default-serie": "7.0",
-	"database": {
-		"host": "localhost",
-		"port": "5432",
-		"user": "openerp",
-		"password": "openerp"
-	}
+    "comment" = [
+        " ************************************************************************************************** ",
+        " *                                                                                                * ",
+        " *  Here you can override settings defined in /etc/oebuild_config.json or define your own series  * ",
+        " *                                                                                                * ",
+        " *  Custom series is a practical way to share pathed series a your company or developer team,     * ",
+        " *  but please avoid using it in project configuration for public published module !              * ",
+        " *                                                                                                * ",
+        " ************************************************************************************************** ",                                                                                                   ",
+    ]
+    "workspace": None,
+    "custom-configuration-files": ["$USERNAME"],
+    "openerp": []
+    }],
+    "default-serie": None,
+    "database": {
+        "host": None,
+        "port": None,
+        "user": None,
+        "password": None
+    }
 }
-

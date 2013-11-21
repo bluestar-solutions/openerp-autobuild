@@ -32,7 +32,19 @@ PORT = "port"
 USER = "user"
 PASSWORD = "password"
 PYTHON_DEPENDENCIES = "python-dependencies"
+NAME="name"
+SPECIFIER = "specifier"
+COMMENT = "comment"
 
+PYTHON_DEPENDENCY = {
+    "type": "object",
+    "properties": {
+        NAME: {"type": "string"},
+        SPECIFIER: {"type": "string"}
+    },
+    "required": [NAME],
+    "additionalProperties" : False
+}
 OPENERP_TYPE = {
     "type": "object",
     "properties": {
@@ -42,14 +54,16 @@ OPENERP_TYPE = {
         "web": {"type": "string", "format": "uri"},
         PYTHON_DEPENDENCIES: {
             "type": "array",
-            "items": {"type": "string"}
+            "items": PYTHON_DEPENDENCY
         },
     },
-    "required": [SERIE, "server", "addons", "web"]
+    "required": [SERIE, "server", "addons", "web", PYTHON_DEPENDENCIES],
+    "additionalProperties": False
 }
 USER_CONFIG_SCHEMA = {
     "type": "object",
     "properties": {
+        COMMENT: {"type": "array", "items": "string"},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",
@@ -68,8 +82,10 @@ USER_CONFIG_SCHEMA = {
                 USER: {"type": "string"},
                 PASSWORD: {"type": "string"},
             },
-            "required": [USER, PASSWORD]
+            "required": [USER, PASSWORD],
+            "additionalProperties" : False
         }
     },
-    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE]
+    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE],
+    "additionalProperties" : False
 }

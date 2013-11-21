@@ -25,15 +25,13 @@ import getpass
 import shutil
 import json
 import jsonschema
-import oebuild_logger
+from oebuild_logger import logging
 from settings_parser.schema import user_conf_schema
 import params
 
 class UserConfParser():
-    
-    VERSION_1_7 = '1.7'
 
-    _logger = oebuild_logger.getLogger()
+    _logger = logging.getLogger(__name__)
     
     def __init__(self):
         self._verify()
@@ -82,7 +80,7 @@ class UserConfParser():
 #                 os.remove(path)
     
     def _update(self, version_from):
-        if version_from == self.VERSION_1_7:
+        if version_from == params.VERSION_1_7:
             self._update_1_7_to_1_8()
 
     def _update_1_7_to_1_8(self):

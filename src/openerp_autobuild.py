@@ -31,9 +31,8 @@ from bzrlib.errors import NotBranchError
 from git import Repo
 from git.exc import InvalidGitRepositoryError
 import shutil
-import oebuild_logger
-from oebuild_logger import ex
-from settings_parser.schema import user_conf_schema, oebuild_conf_schema as schema 
+from settings_parser.schema import user_conf_schema, oebuild_conf_schema as schema ,\
+    oebuild_conf_schema
 from settings_parser.user_conf_parser import UserConfParser
 from settings_parser.oebuild_conf_parser import OEBuildConfParser, IgnoreSubConf
 import tarfile
@@ -45,6 +44,8 @@ from xml.dom import minidom
 import dialogs
 import json
 import params
+from oebuild_logger import _ex, logging
+import re
 
 load_plugins()
 
@@ -52,7 +53,7 @@ OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
     
 class Autobuild():
     
-    _logger = oebuild_logger.getLogger()
+    _logger = logging.getLogger(__name__)
     
     user_conf = UserConfParser().load_user_config_file()
     
@@ -75,7 +76,7 @@ class Autobuild():
     oebuild_conf_parser = OEBuildConfParser()
     
     deps_addons_path = []
-    python_deps = set()
+    python_deps = []
     
     def __init__(self):
         shared_parser = ArgumentParser(add_help=False)
@@ -151,7 +152,7 @@ class Autobuild():
                     with open(self.deps_cache_file(), 'r') as f:
                         self.deps_addons_path = json.loads(f.read())
                 except Exception, e:
-                    self._logger.error(ex('Impossible to read %s' % self.deps_cache_file(), e))
+                    self._logger.error(_ex('Impossible to read %s' % self.deps_cache_file(), e))
                     sys.exit(1)        
             else:
                 self.get_deps(conf)
@@ -159,7 +160,7 @@ class Autobuild():
                     with open(self.deps_cache_file(), 'w') as f:
                         f.write(json.dumps(self.deps_addons_path))
                 except Exception, e:
-                    self._logger.warning(ex('Impossible to write %s' % self.deps_cache_file(), e))
+                    self._logger.warning(_ex('Impossible to write %s' % self.deps_cache_file(), e))
                     
             self.create_or_update_venv(conf, args)
     
@@ -245,47 +246,54 @@ class Autobuild():
         self.write_xml('.pydevproject', doc, standalone=False)
         
     def create_or_update_venv(self, conf, args):
-        try:
-            if os.path.exists(self.virtualenv_path()) and os.path.exists(self.py_deps_cache_file()):
-                if args.no_update:
-                    return
-                
-                is_config_changed = False
-                with open(self.py_deps_cache_file(),'r') as f:
-                    py_deps_from_file = set(json.load(f))
-                    is_config_changed = len(py_deps_from_file) != len(self.python_deps) or py_deps_from_file.symmetric_difference(self.python_deps) != set()
-                    
-                if not is_config_changed:
-                    self._logger.info("No changes in Python dependencies, skipping update process.")
-                    return
-                
-                self._logger.info("Removing virtualenv : %s" % self.virtualenv_path())
-                shutil.rmtree(self.virtualenv_path())
-                
-                self._logger.info("Removing cache file : %s" % self.py_deps_cache_file())
-                os.remove(self.py_deps_cache_file())
-  
-            elif not os.path.exists(self.py_deps_cache_file()):
-                if args.no_update:
-                    self._logger.error("Cannot run in no-update mode without last run python dependencies cache file, try running without --no-update argument.")
-                    sys.exit(1)
-                if os.path.exists(self.virtualenv_path()):
-                    self._logger.info("Removing virtualenv : %s" % self.virtualenv_path())
-                    shutil.rmtree(self.virtualenv_path())    
-                
-            _, err = self.call_command("virtualenv -q %s" % self.virtualenv_path())
-            if err:
-                sys.exit(1)
+
+        if os.path.exists(self.virtualenv_path()) and os.path.exists(self.py_deps_cache_file()):
+            if args.no_update:
+                return
             
-            _, err = self.call_command("%s install -q --upgrade %s" % (self.virtual_pip(), ' '.join(list(self.python_deps))))
-            if err and "http://download.gna.org/pychart/bzr-archive/.bzr/" not in err: # bypass deprecated error on PyChart hack
-                sys.exit(1)
-    
-            with open(self.py_deps_cache_file(),'w+') as f:
-                json.dump(list(self.python_deps), f)
+            is_config_changed = True
+            with open(self.py_deps_cache_file(),'r') as f:
+                last_run_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in json.load(f)])
+                current_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
+                is_config_changed = len(last_run_py_deps) != len(current_py_deps) or last_run_py_deps.symmetric_difference(current_py_deps) != set()
                 
-        except Exception, e:
-            self._logger.error(ex('', e))
+            if not is_config_changed:
+                self._logger.info("virtualenv %s : No changes in Python dependencies, use it as is" % self.virtualenv_path())
+                return
+            
+            self._logger.info("virtualenv %s : Changes in Python dependencies, need to rebuild" % self.virtualenv_path())
+            shutil.rmtree(self.virtualenv_path())
+            os.remove(self.py_deps_cache_file())
+        
+        elif not os.path.exists(self.py_deps_cache_file()):
+            if args.no_update:
+                self._logger.error("Cannot run in no-update mode without last run Python dependencies cache file, try running without --no-update argument.")
+                sys.exit(1)
+            if os.path.exists(self.virtualenv_path()):
+                self._logger.info("virtualenv %s : No last run Python dependencies cache file, need to rebuild" % self.virtualenv_path())
+                shutil.rmtree(self.virtualenv_path())    
+            
+        py_deps_string = ' '.join(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
+        self._logger.info("virtualenv %s : Create and install Python dependencies (%s)" % (self.virtualenv_path(), py_deps_string))
+        _, err = self.call_command("virtualenv -q %s" % self.virtualenv_path(),
+                                   log_in=False, log_out=False, log_err=True)
+        if err:
+            sys.exit(1)
+        
+        _, err = self.call_command("%s install -q --upgrade %s" % (
+            self.virtual_pip(), py_deps_string
+            ),
+            log_in=False, log_out=False, log_err=False)
+        for e in err.split('\n'):
+            if re.search(r'Format RepositoryFormat6\(\) .* is deprecated', e, re.I):
+                # If an error is thrown because of using deprecated RepositoryFormat6() format, just warn and continue
+                self._logger.warning(e)
+            elif len(e) > 0:
+                self._logger.error(e)
+                sys.exit(1)
+        
+        with open(self.py_deps_cache_file(),'w+') as f:
+            json.dump(list(self.python_deps), f)
     
     def kill_old_openerp(self, conf):
         if os.path.exists(self.pid_file()) and os.path.isfile(self.pid_file()):
@@ -372,7 +380,8 @@ class Autobuild():
             if args.analyze or args.stopafterinit:
                 cmd += ' --stop-after-init'
             try:
-                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file())
+                self._logger.info('Start OpenERP ...')
+                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file(), log_in=False)
             except KeyboardInterrupt:
                 self._logger.info("OpenERP stopped from command line")
                 if args.func == "test" and args.analyze:
@@ -390,7 +399,8 @@ class Autobuild():
             cmd += ' --xmlrpc-port=%d' % args.tcp_port
             cmd += ' --netrpc-port=%d' % args.netrpc_port
             try:
-                openerp_output, _ = self.call_command(cmd, parse_log=False, register_pid=self.pid_file())
+                self._logger.info('Start OpenERP ...')
+                openerp_output, _ = self.call_command(cmd, parse_log=False, register_pid=self.pid_file(), log_in=False)
             except KeyboardInterrupt:
                 self._logger.info("OpenERP stopped after keyboard interrupt")
     
@@ -419,7 +429,7 @@ class Autobuild():
                 bzr_rev = oe_conf.get(sp, {}).get(schema.BZR_REV, None)
                 self.bzr_checkout(url, '%s/%s' % (self.openerp_path(), sp), bzr_rev)
             except Exception, e:
-                self._logger.error(ex('Cannot checkout from %s' % url, e))
+                self._logger.error(_ex('Cannot checkout from %s' % url, e))
                 sys.exit(1)
         
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
@@ -427,7 +437,15 @@ class Autobuild():
         self.get_ext_deps(self.project, conf[schema.DEPENDENCIES])
         
     def add_python_deps(self, python_deps):
-        self.python_deps = self.python_deps.union(set(python_deps))
+        existing_names = [idep['name'] for idep in self.python_deps]
+        for dep in python_deps:
+            if dep['name'] in existing_names:
+                existing_dep = [idep for idep in self.python_deps if idep['name'] == dep['name']][0]
+                self._logger.warning(("Dependency %s%s is hidden by %s%s and will ignored" +
+                                      "") % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, ''),
+                                             existing_dep[oebuild_conf_schema.NAME], existing_dep.get(oebuild_conf_schema.SPECIFIER, '')))
+                continue
+            self.python_deps.append(dep)
         
     def get_ext_deps(self, from_project, deps, deps_mapping=None):
         if not deps_mapping:
@@ -460,10 +478,10 @@ class Autobuild():
                 try:
                     self.bzr_checkout(source[schema.URL], destination, source.get(schema.BZR_REV, None))
                 except Exception, e:
-                    self._logger.error(ex('Cannot checkout from %s' % source[schema.URL], e))
+                    self._logger.error(_ex('Cannot checkout from %s' % source[schema.URL], e))
                     sys.exit(1)
                 try:
-                    subconf = self.oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
+                    subconf = self.oebuild_conf_parser.load_transitive_oebuild_config_file(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
                     self.get_ext_deps(subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
                 except IgnoreSubConf:
                     pass
@@ -471,10 +489,10 @@ class Autobuild():
                 try:
                     self.git_checkout(source[schema.URL], destination, source.get(schema.GIT_BRANCH, None))
                 except Exception, e:
-                    self._logger.error(ex('Cannot checkout from %s' % source[schema.URL], e))
+                    self._logger.error(_ex('Cannot checkout from %s' % source[schema.URL], e))
                     sys.exit(1)
                 try:
-                    subconf = self.oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
+                    subconf = self.oebuild_conf_parser.load_transitive_oebuild_config_file(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
                     self.get_ext_deps(subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
                 except IgnoreSubConf:
                     pass
@@ -482,10 +500,10 @@ class Autobuild():
                 try:
                     self.local_copy(source[schema.URL], destination)
                 except Exception, e:
-                    self._logger.error(ex('Cannot copy from %s' % source[schema.URL], e))
+                    self._logger.error(_ex('Cannot copy from %s' % source[schema.URL], e))
                     sys.exit(1)
                 try:
-                    subconf = self.oebuild_conf_parser.load_subconfig_file_list(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
+                    subconf = self.oebuild_conf_parser.load_transitive_oebuild_config_file(destination.rstrip('/'), self.user_conf[user_conf_schema.CONF_FILES])
                     self.get_ext_deps(subconf[schema.PROJECT], subconf[schema.DEPENDENCIES], deps_mapping)
                 except IgnoreSubConf:
                     pass
