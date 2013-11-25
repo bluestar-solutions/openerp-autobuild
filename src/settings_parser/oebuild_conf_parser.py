@@ -25,10 +25,10 @@ import json
 import jsonschema
 from oebuild_logger import _ex, logging
 from settings_parser.schema import oebuild_conf_schema as schema
-import textwrap
 import dialogs
 import params
 import re
+import json_regex as jre
 
 class IgnoreSubConf(Exception):
     pass
@@ -88,14 +88,14 @@ class OEBuildConfParser():
                 raise IgnoreSubConf()
         
     def load_oebuild_config_file(self, conf_file_list):   
-        if not (os.path.exists(params.DEFAULT_CONF_FILENAME) and os.path.isfile(params.DEFAULT_CONF_FILENAME)):
-            self._logger.error('The project configuration does not exist : %s' % params.DEFAULT_CONF_FILENAME)
+        if not (os.path.exists(params.PROJECT_CONFIG_FILE) and os.path.isfile(params.PROJECT_CONFIG_FILE)):
+            self._logger.error('The project configuration does not exist : %s' % params.PROJECT_CONFIG_FILE)
             sys.exit(1)
             
-        conf = self._load_file(params.DEFAULT_CONF_FILENAME)
+        conf = self._load_file(params.PROJECT_CONFIG_FILE)
             
         for conf_name in conf_file_list:
-            conf_file_name = params.CUSTOM_CONF_FILENAME % conf_name
+            conf_file_name = params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name
             if os.path.exists(conf_file_name) and os.path.isfile(conf_file_name):
                 try:
                     conf = self._load_alt_file(conf, conf_file_name)
@@ -105,16 +105,16 @@ class OEBuildConfParser():
         return conf
     
     def load_transitive_oebuild_config_file(self, conf_file_path, conf_file_list):
-        conf_file = '%s/%s' % (conf_file_path, params.DEFAULT_CONF_FILENAME)
+        conf_file = '%s/%s' % (conf_file_path, params.PROJECT_CONFIG_FILE)
         if not (os.path.exists(conf_file) and os.path.isfile(conf_file)):
             # Probably not an oebuild project
-            self._logger.info('%s : %s file not found. It is probably not a oebuild module' % (conf_file_path, params.DEFAULT_CONF_FILENAME))
+            self._logger.info('%s : %s file not found. It is probably not a oebuild module' % (conf_file_path, params.PROJECT_CONFIG_FILE))
             raise IgnoreSubConf()
         
         conf = self._load_file(conf_file)
                 
         for conf_name in conf_file_list:
-            conf_file = '%s/%s' % (conf_file_path, params.CUSTOM_CONF_FILENAME % conf_name)
+            conf_file = '%s/%s' % (conf_file_path, params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name)
             if os.path.exists(conf_file) and os.path.isfile(conf_file):
                 try:
                     conf = self._load_alt_file(conf, conf_file)
@@ -123,52 +123,31 @@ class OEBuildConfParser():
                 
         return conf
     
-#     def load_subconfig_file(self, conf_file):
-#         with open(conf_file, "r") as source_file:
-#             try:
-#                 conf = json.load(source_file)
-#             except ValueError, error:
-#                 self._logger.warning('%s will be ignored because it is not a valid JSON file : %s' % (conf_file, error))
-#                 raise IgnoreSubConf()
-#     
-#         if conf[schema.OEBUILD_VERSION] not in params.SUPPORTED_VERSIONS:
-#             self._logger.warning(('%s will be ignored because this version is not supported : %s. '+
-#                                   'openerp-autobuild version %s supports only those version : %s')\
-#                                  % (conf_file, conf[schema.OEBUILD_VERSION], params.VERSION, params.SUPPORTED_VERSIONS))
-#             raise IgnoreSubConf()
-#         raise IgnoreSubConf()
-#     
-#         try:
-#             jsonschema.validate(conf, schema.OEBUILD_SCHEMA)
-#         except Exception, e:
-#             self._logger.warning(_ex('%s will be ignored because it is not a valid configuration file' % conf_file), e)
-#             raise IgnoreSubConf()
-#             
-#         return conf
-    
     def create_oebuild_config_file(self, default_serie):      
         overwrite = "no"
-        if os.path.exists(params.DEFAULT_CONF_FILENAME):
-            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.DEFAULT_CONF_FILENAME, overwrite)   
-        if os.path.exists(params.DEFAULT_CONF_FILENAME) and overwrite == "no":
+        if os.path.exists(params.PROJECT_CONFIG_FILE):
+            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.PROJECT_CONFIG_FILE, overwrite)   
+        if os.path.exists(params.PROJECT_CONFIG_FILE) and overwrite == "no":
             return
             
-        with open(params.DEFAULT_CONF_FILENAME,'w') as f:     
-            f.write(textwrap.dedent('''\
-                {
-                    "oebuild-version": "%s",
-                    "project": "%s",
-                    "openerp": {
-                        "serie": "%s"
-                    },
-                    "dependencies": []
-                }
-                
-                ''' % (params.VERSION, os.getcwd().split('/')[-1], default_serie)))
+        with open(params.DEFAULT_PROJECT_CONFIG_FILE, 'r') as f:
+            content = f.read()
+
+        content = re.sub(r'\$OEBUILD_VERSION', params.VERSION, content)
+        content = re.sub(r'\$PROJECT_NAME', os.getcwd().split('/')[-1], content)
+        content = re.sub(r'\$SERIE', default_serie, content)
+            
+        with open(params.PROJECT_CONFIG_FILE, 'w+') as f:     
+            f.write(content)
             
     def _update_file(self, version_from, file_name, alt_schema=False):
-        self._logger.warning(('%s is in version %s and openerp-autobuild is in version %s') % 
+        self._logger.info(('%s is in version %s and openerp-autobuild is in version %s') % 
                              (file_name, version_from, params.VERSION))
+        
+        valid_keys = self.UPDATE_ALT_FROM.keys() if alt_schema else self.UPDATE_FROM.keys()
+        if version_from not in valid_keys:
+            self._logger.warning("Cannot update from version %s: %s will be ignored" % (version_from, file_name))
+            raise IgnoreSubConf()
         
         updated_fname = file_name + ".updated"
         with open(file_name, "r") as source_file:
@@ -192,18 +171,14 @@ class OEBuildConfParser():
             
         with open(updated_fname, "r") as updated_file:
             return json.load(updated_file)
-
-    # 
-    update_version = lambda v_from, v_to: (r'("oebuild-version"\s*:\s*)"%s"' % v_from, r'\1"%s"' % v_to)
-    remove_param = lambda p_name: (r'"%s"\s*:\s*".*"\s*,?\s*\n?' % p_name, r'')
     
     UPDATE_FROM =  {
-        "1.7": [update_version("1.7", "1.8"),
+        "1.7": [jre.update_version("1.7", "1.8"),
                 (r'(\n?)(\s*)("dependencies"\s*:)', r'\1\2"python-dependencies": [],\1\2\3')]
     }
     
     UPDATE_ALT_FROM =  {
-        "1.7": [update_version("1.7", "1.8"),
-                remove_param("project"),
-                remove_param("serie")]
+        "1.7": [jre.update_version("1.7", "1.8"),
+                jre.remove_param("project"),
+                jre.remove_param("serie")]
     }

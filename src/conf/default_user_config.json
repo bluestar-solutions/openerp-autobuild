@@ -1,23 +1,18 @@
 {
-    "comment" = [
-        " ************************************************************************************************** ",
-        " *                                                                                                * ",
-        " *  Here you can override settings defined in /etc/oebuild_config.json or define your own series  * ",
-        " *                                                                                                * ",
-        " *  Custom series is a practical way to share pathed series a your company or developer team,     * ",
-        " *  but please avoid using it in project configuration for public published module !              * ",
-        " *                                                                                                * ",
-        " ************************************************************************************************** ",                                                                                                   ",
-    ]
-    "workspace": None,
+    "comment": [
+        " *************************************************************************************************** ",
+        " *                                                                                                 * ",
+        " *  Here you can override settings defined in /etc/oebuild_config.json and define your own series  * ",
+        " *                                                                                                 * ",
+        " *  Custom series is a practical way to share pathed series a your company or developer team,      * ",
+        " *  but please avoid using it in project configuration for public published module !               * ",
+        " *                                                                                                 * ",
+        " *************************************************************************************************** "
+    ],
+    "oebuild-version": "1.8",
     "custom-configuration-files": ["$USERNAME"],
-    "openerp": []
-    }],
-    "default-serie": None,
+    "openerp": [
+    ],
     "database": {
-        "host": None,
-        "port": None,
-        "user": None,
-        "password": None
     }
 }

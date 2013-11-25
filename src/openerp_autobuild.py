@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# PYTHON_ARGCOMPLETE_OK - This string is needed to activate argcomplete on this script ! 
 ##############################################################################
 #    
 #    OpenERP Autobuild
@@ -23,8 +24,6 @@
 import os
 import sys
 import subprocess
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
-import textwrap
 from bzrlib.plugin import load_plugins
 from bzrlib.bzrdir import BzrDir
 from bzrlib.errors import NotBranchError
@@ -44,19 +43,18 @@ from xml.dom import minidom
 import dialogs
 import json
 import params
-from oebuild_logger import _ex, logging
+from oebuild_logger import _ex, logging, LOG_PARSER, COLORIZED
 import re
+from argument_parser import OEArgumentParser
 
 load_plugins()
-
-OE_CONFIG_FILE = '%s/.openerp-dev-default' % os.getcwd()
     
 class Autobuild():
     
     _logger = logging.getLogger(__name__)
+    _arg_parser = None
     
-    user_conf = UserConfParser().load_user_config_file()
-    
+    user_conf = None
     project = None
     workspace_path = lambda self: self.user_conf[user_conf_schema.WORKSPACE].replace('~', params.USER_HOME_PATH)
     project_path = lambda self: '%s/%s' % (self.workspace_path(), self.project)
@@ -78,69 +76,20 @@ class Autobuild():
     deps_addons_path = []
     python_deps = []
     
-    def __init__(self):
-        shared_parser = ArgumentParser(add_help=False)
-        shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
-        shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
-        shared_parser.add_argument("-n", "--netrpc-port", dest="netrpc_port", type=int, default="8070", help="NetRPC server port (default:8070).")
-        shared_parser.add_argument("--no-update", action="store_true", dest="no_update", help="Bypass updates and try to launch with last parameters.")
-    
-        parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
-                                description=textwrap.dedent('''\
-                                    OpenERP Autobuild version %s
-                                    --------------------------%s
-                                    A developer tool for OpenERP with many features:
-                                        
-                                        * Run OpenERP locally with options and user defined settings.
-                                        * Run OpenERP with automated tests for your modules.
-                                        * Initialize a new OpenERP project with autobuild settings.
-                                        * Initailize configuration files for Eclipse (with PyDev plugin).
-                                        * Manage your module dependencies.
-                                        * Assembly your module with the desired OpenERP version and all dependencies.
-                                    ''' % (params.VERSION, '-' * len(params.VERSION))),
-                                epilog=textwrap.dedent('''\
-                                    goal help:
-                                        %(prog)s GOAL -h
-                                
-                                    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
-                                    Released under GNU AGPLv3.
-                                    '''))
-        subparsers = parser.add_subparsers(metavar="GOAL")
+    def __init__(self, arg_parser):
+        self._arg_parser = arg_parser
+        args = self._arg_parser.args
         
-        parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)", parents=[shared_parser])
-        parser_run.set_defaults(func="run")
-        
-        parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results", parents=[shared_parser])
-        parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
-        parser_test.add_argument("--db-name", dest="db_name", help="Database name for tests.", default='autobuild_%s' % os.getcwd().split('/')[-1])
-        parser_test.add_argument("--force-install", action="store_true", dest="install", help="Force new install.")
-        parser_test.add_argument("--analyze", action="store_true", dest="analyze", help="Analyze log and stop OpenERP, for continuous integration.")
-        parser_test.add_argument("--force-stop-after-init", action="store_true", dest="stopafterinit", help="Force OpenERP server to stop when tests are done.")
-        parser_test.set_defaults(func="test")
-        
-        parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
-        parser_debug.set_defaults(func="debug")
-        
-        parser_assembly = subparsers.add_parser('assembly', help="Prepare all files to deploy in target folder", parents=[shared_parser])
-        parser_assembly.add_argument("--with-oe", action="store_true", dest="with_oe", help="Include OpenERP files")
-        parser_assembly.set_defaults(func="assembly")
-        
-        parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
-        parser_eclipse_init.set_defaults(func="init-eclipse")
-        
-        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project")
-        parser_init_new.set_defaults(func="init-new")
-        
-        args = parser.parse_args()
+        self.user_conf = UserConfParser().load_user_config_file()
                 
         self._logger.info('Entering %s mode' % args.func)
         
         if args.func == "init-new":
             overwrite = "no"
-            if os.path.exists(OE_CONFIG_FILE):
-                overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % OE_CONFIG_FILE, overwrite)   
-            if (not os.path.exists(OE_CONFIG_FILE)) or overwrite == "yes":
-                shutil.copyfile("%s/conf/default_openerp_config" % OE_HOME_PATH, OE_CONFIG_FILE) #@UndefinedVariable
+            if os.path.exists(params.OE_CONFIG_FILE):
+                overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.OE_CONFIG_FILE, overwrite)   
+            if (not os.path.exists(params.OE_CONFIG_FILE)) or overwrite == "yes":
+                shutil.copyfile(params.DEFAULT_OE_CONFIG_FILE, params.OE_CONFIG_FILE)
     
             self.oebuild_conf_parser.create_oebuild_config_file(self.user_conf[user_conf_schema.DEFAULT_SERIE])
         else:
@@ -161,8 +110,6 @@ class Autobuild():
                         f.write(json.dumps(self.deps_addons_path))
                 except Exception, e:
                     self._logger.warning(_ex('Impossible to write %s' % self.deps_cache_file(), e))
-                    
-            self.create_or_update_venv(conf, args)
     
             if args.func == "init-eclipse":
                 self.init_eclipse(conf)
@@ -258,10 +205,10 @@ class Autobuild():
                 is_config_changed = len(last_run_py_deps) != len(current_py_deps) or last_run_py_deps.symmetric_difference(current_py_deps) != set()
                 
             if not is_config_changed:
-                self._logger.info("virtualenv %s : No changes in Python dependencies, use it as is" % self.virtualenv_path())
+                self._logger.info("virtualenv %s: No changes in Python dependencies, use it as is" % self.virtualenv_path())
                 return
             
-            self._logger.info("virtualenv %s : Changes in Python dependencies, need to rebuild" % self.virtualenv_path())
+            self._logger.info("virtualenv %s: Changes in Python dependencies, need to rebuild" % self.virtualenv_path())
             shutil.rmtree(self.virtualenv_path())
             os.remove(self.py_deps_cache_file())
         
@@ -273,23 +220,31 @@ class Autobuild():
                 self._logger.info("virtualenv %s : No last run Python dependencies cache file, need to rebuild" % self.virtualenv_path())
                 shutil.rmtree(self.virtualenv_path())    
             
-        py_deps_string = ' '.join(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
+        py_deps_string = " ".join(["'%s%s'" % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
         self._logger.info("virtualenv %s : Create and install Python dependencies (%s)" % (self.virtualenv_path(), py_deps_string))
-        _, err = self.call_command("virtualenv -q %s" % self.virtualenv_path(),
+        out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path(),
                                    log_in=False, log_out=False, log_err=True)
-        if err:
-            sys.exit(1)
+        for o in out.split('\n'):
+            if len(o) > 0:
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o))
+        for e in err.split('\n'):
+            if len(e) > 0:
+                self._logger.error("virtualenv %s: %s" % (self.virtualenv_path(), e))
+                sys.exit(1)
         
-        _, err = self.call_command("%s install -q --upgrade %s" % (
+        out, err = self.call_command("%s install -q --upgrade %s" % (
             self.virtual_pip(), py_deps_string
             ),
             log_in=False, log_out=False, log_err=False)
+        for o in out.split('\n'):
+            if len(o) > 0:
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o))
         for e in err.split('\n'):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated', e, re.I):
                 # If an error is thrown because of using deprecated RepositoryFormat6() format, just warn and continue
-                self._logger.warning(e)
+                self._logger.warning("virtualenv %s: %s" % (self.virtualenv_path(), e))
             elif len(e) > 0:
-                self._logger.error(e)
+                self._logger.error("virtualenv %s: %s" % (self.virtualenv_path(), e))
                 sys.exit(1)
         
         with open(self.py_deps_cache_file(),'w+') as f:
@@ -309,8 +264,10 @@ class Autobuild():
                     f.write("%d" % 0)
     
     def run_openerp(self, conf, args):
-        if not os.path.exists(OE_CONFIG_FILE):
-            self._logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % OE_CONFIG_FILE)
+        self.create_or_update_venv(conf, args)
+        
+        if not os.path.exists(params.OE_CONFIG_FILE):
+            self._logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % params.OE_CONFIG_FILE)
             sys.exit(1)
         
         if not os.path.exists(self.workspace_path()):
@@ -337,8 +294,8 @@ class Autobuild():
             try:
                 conn = psycopg2.connect(host = db_conf.get(user_conf_schema.HOST, 'localhost'),
                                         port = db_conf.get(user_conf_schema.PORT, '5432'),
-                                        user = db_conf[user_conf_schema.USER],
-                                        password = db_conf[user_conf_schema.PASSWORD],
+                                        user = db_conf.get(user_conf_schema.USER, 'openerp'),
+                                        password = db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
                                         database = 'postgres')
             except:
                 self._logger.error("Unable to connect to the database.")
@@ -369,8 +326,8 @@ class Autobuild():
             cmd = '%s %s/%s' % (self.virtual_python(), self.openerp_path(), 'server/openerp-server')
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' -d %s' % args.db_name
-            cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
-            cmd += ' --db_password=%s' % db_conf[user_conf_schema.PASSWORD]
+            cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
+            cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD, 'openerp')
             cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST, 'localhost')
             cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT, '5432')
             cmd += ' -%s %s' % (update_or_install, modules)
@@ -381,7 +338,7 @@ class Autobuild():
                 cmd += ' --stop-after-init'
             try:
                 self._logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file(), log_in=False)
+                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file(), log_in=False, parse_tests=True)
             except KeyboardInterrupt:
                 self._logger.info("OpenERP stopped from command line")
                 if args.func == "test" and args.analyze:
@@ -389,8 +346,8 @@ class Autobuild():
         else:
             cmd = '%s %s/%s -c .openerp-dev-default' % (self.virtual_python(), self.openerp_path(), 'server/openerp-server')
             cmd += ' --addons-path=%s' % addons_path
-            cmd += ' --db_user=%s' % db_conf[user_conf_schema.USER]
-            cmd += ' --db_password=%s' % db_conf[user_conf_schema.PASSWORD]
+            cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
+            cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD, 'openerp')
             cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST, 'localhost')
             cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT, '5432')
             cmd += ' -u %s' % modules
@@ -419,8 +376,7 @@ class Autobuild():
                 serie = tmp_serie
                 break
         if not serie :
-            self._logger.error('The serie "%s" cannot be find in your configuration file : %s' % 
-                         (serie_name, params.USER_OEBUILD_CONFIG_FILE))
+            self._logger.error('The serie "%s" does not exists' % (serie_name))
             sys.exit(1)
         
         for sp in ('server', 'addons', 'web'):
@@ -570,7 +526,7 @@ class Autobuild():
                                                            and m[-5:] == '.conf']:
             shutil.copy2(os.path.join(source, module), os.path.join(destination, module))
                         
-    def call_command(self, command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None):
+    def call_command(self, command, log_in=True, log_out=True, log_err=True, parse_log=True, register_pid=None, parse_tests=False):
         if log_in : 
             self._logger.info(command)
         process = subprocess.Popen(command,
@@ -590,13 +546,23 @@ class Autobuild():
                 self._logger.info(out)
             return (out, err)
         else:
+            test_ok = True
             while True:
                 line = process.stdout.readline()
-                if line != '':
-                    print(line.rstrip())
-                else:
+                if line and len(line.rstrip()) > 0:
+                    match = LOG_PARSER.search(line.rstrip())
+                    if match and len(match.groups()) == 3:
+                        print '%s %s %s' % (match.group(1), COLORIZED(match.group(2), match.group(2)), match.group(3))
+                        if parse_tests and match.group(2) == 'ERROR':
+                            test_ok = False
+                    else:
+                        print line.rstrip()
+                elif not line:
                     break
+            if parse_tests:
+                print '\n' + (COLORIZED('DEBUG', 'OpenERP Test result: ') + (COLORIZED('INFO', 'SUCCESS') if test_ok else COLORIZED('ERROR', 'FAILED')))
             return (None, None)
 
 if __name__ == "__main__":
-    Autobuild()
+    arg_parser = OEArgumentParser()
+    Autobuild(arg_parser)

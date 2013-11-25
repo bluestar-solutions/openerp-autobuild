@@ -20,6 +20,7 @@
 ##############################################################################
 
 import logging, sys
+import re
 
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
 
@@ -29,12 +30,17 @@ COLOR_SEQ = "\033[1;%dm"
 BOLD_SEQ = "\033[1m"
 
 COLORS = {
-    'DEBUG': BLUE,
-    'INFO': WHITE,
+    'DEBUG': WHITE,
+    'INFO': GREEN,
     'WARNING': YELLOW,
     'ERROR': RED,
-    'CRITICAL': RED,
+    'CRITICAL': MAGENTA,
+    'TEST': BLUE,
 }
+
+COLORIZED = lambda levelname, expression: COLOR_SEQ % (30 + COLORS[levelname]) + expression + RESET_SEQ
+
+LOG_PARSER = re.compile(r'(^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \d*) (%s) (.*$)' % ('|'.join(COLORS.keys())))
 
 def _ex(message, e):
     if hasattr(e, '__module__'):
@@ -60,7 +66,7 @@ class ColoredFormatter(logging.Formatter):
     def format(self, record):
         levelname = record.levelname
         if self.use_color and levelname in COLORS:
-            levelname_color = COLOR_SEQ % (30 + COLORS[levelname]) + levelname + RESET_SEQ
+            levelname_color = COLORIZED(levelname, levelname)
             record.levelname = levelname_color
         return logging.Formatter.format(self, record)
      

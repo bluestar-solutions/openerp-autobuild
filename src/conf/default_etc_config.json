@@ -1,5 +1,5 @@
 {
-    "comment" = [
+    "comment": [
         " **************************************************************************************** ",
         " *                                                                                      * ",
         " *  WARNING : THIS FILE IS THE DEFAULT CONFIGURATION OF SERIES IN OPENERP-AUTOBUILD,    * ",
@@ -9,8 +9,9 @@
         " *            or override these default series in you own user configuration file,      * ",
         " *            which is located here: ~/.config/openerp-autobuild/oebuild_config.json    * ",
         " *                                                                                      * ",
-        " **************************************************************************************** ",                                                                                                   ",
-    ]
+        " **************************************************************************************** "
+    ],
+    "oebuild-version": "1.8",
     "workspace": "~/openerp-autobuild",
     "custom-configuration-files": [],
     "openerp": [{
@@ -19,6 +20,7 @@
         "addons": "lp:openobject-addons",
         "web": "lp:openerp-web",
         "python-dependencies": [
+            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -54,6 +56,7 @@
         "addons": "lp:openobject-addons/6.0",
         "web": "lp:openerp-web/6.0",
         "python-dependencies": [
+            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -89,6 +92,7 @@
         "addons": "lp:openobject-addons/6.1",
         "web": "lp:openerp-web/6.1",
         "python-dependencies": [
+            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -124,6 +128,7 @@
         "addons": "lp:openobject-addons/7.0",
         "web": "lp:openerp-web/7.0",
         "python-dependencies": [
+            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},

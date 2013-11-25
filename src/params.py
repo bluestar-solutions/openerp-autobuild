@@ -23,17 +23,22 @@
 import os
 
 VERSION = '1.8'
-VERSION_1_7 = '1.7'
 
 OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
+DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PATH
+DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
 
 USER_HOME_PATH = os.path.expanduser("~")
 USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
-USER_OEBUILD_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
-DEFAULT_OEBUILD_CONFIG_FILE = "/etc/oebuild_config.json" 
-USER_OEBUILD_CONFIG_FILE = '%s/oebuild_config.json' % USER_OEBUILD_CONFIG_PATH
-USER_OEBUILD_CONFIG_FILE_1_7 = '%s/oebuild_config-1.7.json' % USER_OEBUILD_CONFIG_PATH
+USER_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
 
-DEFAULT_CONF_FILENAME = 'oebuild.conf'
-CUSTOM_CONF_FILENAME = 'oebuild-%s.conf'
+ETC_CONFIG_FILE = "/etc/oebuild_config.json" 
+USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH
+
+OE_CONFIG_FILE = '.openerp-dev-default'
+
+PROJECT_CONFIG_FILE = 'oebuild.conf'
+PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
+
 DEPRECATED_FILES = ('.project-dependencies',)
