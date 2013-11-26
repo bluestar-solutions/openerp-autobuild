@@ -12,10 +12,8 @@ By default : ~/openerp-autobuild/[your-project-name]/deps
 
 Take a look at your config file (~/.config/openerp-autobuild/oebuild_config-1.7.json) and locate the workspace key.
 
-##Is OpenERP autobuild 1.7 compatible with previous versions ?
-Previous versions of OpenERP Autobuild configuration files are not compatible with the version 1.7 of OpenERP Autobuild.
-However, dependencies may have previous configuration files but the transitive dependencies are not managed.
+##Is OpenERP autobuild compatible with previous versions ?
+OpenERP Autobuild configuration files are not compatible with previous version, but OpenERP Autobuild will
+automatically update your project configuration files.
+If dependencies have previous configuration files autobuild will update these in the workspace to use it.
 
-## Will OpenERP autobuild 1.7 be compatible with future versions
-The version 1.7 is the first public release.
-New release will remain compatible with this version.
