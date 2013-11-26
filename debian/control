@@ -11,4 +11,5 @@ Package: openerp-autobuild
 Architecture: all
 Section: python
 Depends: python-pip, bzr, libpq-dev, python-psycopg2, python-virtualenv, python-dev, libldap2-dev, libsasl2-dev, libxml2-dev, libxslt-dev
+Breaks:  python-git, python-jsonschema, openerp-autobuild-1.5, openerp-autobuild-1.6, openerp-autobuild-1.7
 Description: A script to automatically run openerp
