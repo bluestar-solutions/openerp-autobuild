@@ -15,3 +15,6 @@ DESTPATH="${DESTPATH:-$DEFAULT_DESTPATH}"
 
 cp "$SCRIPTPATH/oebuild" "$DESTPATH"
 cp "$DESTPATH/conf/default_etc_config.json" "/etc/oebuild_config.json"
+
+ln -s "$DESTPATH/openerp_autobuild.py" "/usr/bin/openerp-autobuild"
+ln -s "$DESTPATH/openerp_autobuild.py" "/usr/bin/oebuild"
