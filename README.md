@@ -7,191 +7,85 @@ Autobuild for OpenERP is an utility script designed to simply configure, debug, 
 ### From Ubuntu PPA
 
 	sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild
-	sudo apt-get update`
+	sudo apt-get update
 	sudo apt-get install openerp-autobuild
 
-If you want to install an older version:
+### From archive
 
-	sudo apt-get install openerp-autobuild-X.X # With X.X the desired version
+Download archive, extract it and run install.sh script
+
+#### Requirements
+
+* **Source headers**: Python 2.7 (python), OpenLDAP (libldap2), libsasl2, libxml2, libxslt
+* **Softwares**: pip, Bazaar (bzr), PostgreSQL version information tool (pg_config), virtualenv
+* **Python libraries**: jsonschema, psycopg2, GitPython, argcomplete
+
+The Python libraries can be installed with pip.
 
 ## Configuration
 
 ### User Settings
 
-You can find your user setting under ~/.config/openerp-autobuild/oebuild_config-X.X.json, with X.X the target version of the settings.
+You can find your user setting under "~/.config/openerp-autobuild/oebuild_config.json", this file is
+used to override default settings defined in "/etc/oebuild_config.json".
 
-#### Commented Exemple
+#### Options
 
-	{
-		# The workspace folder, where openerp-autobuild will pull 
-		# all the dependencies needed by your projects :
-		"workspace": "~/openerp-autobuild",
-
-		# A list of project configuration name used to override 
-		# the project default configuration, used to specify 
-		# custom dependency source or version :
-		"custom-configuration-files": ["bluestar", "herve.martinet"],
-
-		"openerp": [
-			{
-				# The url to find official OpenERP trunk series :
-				"serie": "trunk",
-				"server": "lp:openobject-server",
-				"addons": "lp:openobject-addons",
-				"web": "lp:openerp-web"
-			},
-			{ 
-				# The url to find official OpenERP 6.0 series :
-				"serie": "6.0",
-				"server": "lp:openobject-server/6.0",
-				"addons": "lp:openobject-addons/6.0",
-				"web": "lp:openerp-web/6.0"
-			},
-			{
-				# The url to find official OpenERP 6.1 series :
-				"serie": "6.1",
-				"server": "lp:openobject-server/6.1",
-				"addons": "lp:openobject-addons/6.1",
-				"web": "lp:openerp-web/6.1"
-			},
-			{ 
-				# The url to find official OpenERP 7.0 series. Here with custom url
-				# if you have a local bazaar mirror of OpenERP serie 7.0 to speed up operations :
-				"serie": "7.0",
-				"server": "bzr://my-bzr-server/openerp-7.0-default-server",
-				"addons": "bzr://my-bzr-server/openerp-7.0-default-addons",
-				"web": "bzr://my-bzr-server/openerp-7.0-default-web"
-			},
-			{
-				# The url to find a custom OpenERP 7.0 series with modified web :
-				"serie": "7.0-hacked-by-me",
-				"server": "bzr://my-bzr-server/openerp-7.0-default-server",
-				"addons": "bzr://my-bzr-server/openerp-7.0-default-addons",
-				"web": "bzr://my-bzr-server/openerp-7.0-hacked-by-me-web"
-			}
-		],
-
-		# The default serie to use for new projects :
-		"default-serie": "7.0",
-
-		# Your PostgreSQL settings for OpenERP :
-		"database": {
-			"host": "localhost",
-			"port": "5432",
-			"user": "openerp",
-			"password": "openerp"
-		}
-	}
+* ``oebuild-version``: Specify the version of openerp-autobuild targeted by the configuration file.
+* ``workspace``: Specify the directory used to store builded virtual environment (with OpenERP and dependencies) for each project.
+* ``custom-configuration-files``: A list of alternative project configuration names. For instance, if you specify ``["mycompany", "me"]``, 
+  oebuild.conf will be read and overrided firstly by oebuild-mycompany.conf (if file exists), and then by oebuild-me.conf (if file exists).
+* ``openerp``: List of configured OpenERP series 
+    * ``serie``: The serie name. If the name is defined in default configuration file, the following options will override the default.
+    * ``server``: Bazaar url for the OpenERP server branch.
+    * ``addons``: Bazaar url for the OpenERP addons branch.
+    * ``web``: Bazaar url for the OpenERP web branch.
+    * ``python-dependencies``: List of Python dependencies for this serie (will be downloaded and installed in virtualenv by pip).
+        * ``name``: The pip name of the Python library.
+        * ``specifier``: The pip version constraint specifier.
+* ``default-serie``: The default serie used to configure new project by init goal.
+* ``database``: The database connection settings.
+    * ``host``: The database host (default localhost).
+    * ``port``: The database port (default 5432).
+    * ``user``: The database user (default openerp).
+    * ``password``: The database password (default openerp).
 
 ### Project Settings
 
-The default project settings are in oebuild.conf, located at the root of the concerned project. This file can be overridden by every oebuild_*.conf, if * is defined in your user settings custom-configuration-files list.
-
-For exemple if you have ["my.a", "my.c"] in your user settings and oebuild.conf, oebuild_my.a.conf, oebuild_my.b.conf, oebuild_my.c.conf in your project. All the dependencies defined in oebuild_my.a.conf will replace dependencies defined in oebuild.conf with the same name. Then the same operation will be realized with oebuild_my.c.conf on the resulted dependency list. oebuild_my.b.conf will be ignored because it is not listed in your user configuration.
+The default project settings are in oebuild.conf, located at the root of the concerned project. This file can be overridden by every oebuild-*.conf, 
+if * is defined in your user settings custom-configuration-files list.
 
 To create a new project with a default oebuild.conf, run (in a new project folder) :
 
 	oebuild init
 
-#### Commented Exemple
+#### Options
 
-oebuild.conf:
+* ``oebuild-version``: Specify the version of openerp-autobuild targeted by the configuration file.
+* ``project``: The project name.
+* ``openerp``: OpenERP serie to use for this project.
+    * ``serie``: The serie name. This name have to be defined in default configuration fil or in user configuration file.
+        * ``server``: Bazaar settings for the OpenERP server branch.
+            * ``url``: Bazaar url to use.
+            * ``bzr-rev``: Bazaar branch revision to use.        
+        * ``addons``: Bazaar settings for the OpenERP addons branch.
+            * ``url``: Bazaar url to use.
+            * ``bzr-rev``: Bazaar branch revision to use.    
+        * ``web``: Bazaar settings for the OpenERP web branch.
+            * ``url``: Bazaar url to use.
+            * ``bzr-rev``: Bazaar branch revision to use.          
+* ``python-dependencies``: List of Python dependencies for this project (will be downloaded and installed in virtualenv by pip).
+    * ``name``: The pip name of the Python library.
+    * ``specifier``: The pip version constraint specifier.
+* ``dependencies``: List of other OpenERP addons project dependency.
+    * ``name``: The addons project name.
+    * ``source``: The addons project source location.
+        * ``scm``: The protocol used to get the project (git, bzr, local).
+        * ``url``: The scm url or local path.
+        * ``bzr-rev``: The Bazaar revision to used (only if scm=bzr).
+        * ``git-branch``: The git branch to used (only if scm=git).
 
-	{
-		# The target version of OpenERP Autobuild :
-		"oebuild-version": "X.X",
-
-		# The project name :
-		"project": "my-openerp-addons",
-
-		"openerp": {
-			"serie": "7.0",
-			"server": {
-				# Specific bazaar revision to use for server :
-				"bzr-rev": "4898"
-			},
-			"addons": {
-				# Specific bazaar revision to use for server :
-				"bzr-rev": "8875"
-			},
-			# No bazaar revision specified for web, use the last one.
-		},
-
-		# If the project source code will be public, all url of dependency should be too :
-		"dependencies": [{ 
-			# The dependency name :
-			"name": "another-addons-a",
-			"source": {
-				"scm": "bzr",
-
-				# URL of a bazaar branch :
-				"url": "lp:~team-a/another-addons-a/7.0.1.0"
-			}
-		},{
-			"name": "another-addons-b",
-			"source": {
-				"scm": "bzr",
-
-				# URL of a launchpad serie :
-				"url": "lp:another-addons-b/7.0"
-				
-				# Specific bzr revision to use. Optionnal, default last revision :
-				"bzr-rev": "1234"
-			}
-		},{ 
-			# A git dependency :
-			"name": "another-addons-c",
-			"source": {
-				"scm": "git",
-				"url": "ssh://git@github.com:user/another-addons-c.git",
-
-				# Specific git branch to use. Optionnal, default "master" :
-				"git-branch": "a-branch" 
-			}
-		}]
-	}
-
-oebuild-custom.conf :
-
-	{
-		"oebuild-version": "X.X",
-		"project": "my-openerp-addons",
-		"openerp": {
-			"serie": "7.0",
-			"addons": {
-				# Specific bazaar revision to use for addons, will replace 
-				# the one defined in oebuild.conf if this file is used :
-				"bzr-rev": "2222"
-			},
-			"web": {
-				# Specific bazaar revision to use for web :
-				"bzr-rev": "1111"
-			},
-		},
-		"dependencies": [{
-			"name": "another-addons-b",
-			"source": {
-				"scm": "bzr",
-
-				# Use a local mirror to get another-addons-b :
-				"url": "bzr://my-bzr-server/another-addons-b-7.0"
-				
-				# Specific bzr revision to use. Optionnal, default last revision ;
-				"bzr-rev": "1234"
-			}
-		},{
-			"name": "another-addons-c",
-			"source": {
-				"scm": "git",
-				"url": "ssh://git@github.com:user/another-addons-c.git",
-				
-				# Take anothe branch, will replace the one defined in oebuild.conf if this file is used :
-				"git-branch": "b-branch"
-			}
-		}]
-
-		# another-addons-b is not defined here, source defined in oebuild.conf will be used for it.
-	}
+Only ``oebuild-version``, ``openerp`` and ``dependencies`` options can be overrided in a alternative configuration file.
 
 ### OpenERP Settings
 
@@ -200,68 +94,6 @@ With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located
 To create a new project with a default .openerp-dev-default, run (in a project folder) :
 
 	oebuild init
-
-#### Exemple
-
-	[options]
-	admin_passwd = admin
-	csv_internal_sep = ,
-	db_maxconn = 64
-	db_name = False
-	db_template = template1
-	dbfilter = .*
-	debug_mode = False
-	demo = {}
-	email_from = False
-	import_partial = 
-	limit_memory_hard = 805306368
-	limit_memory_soft = 671088640
-	limit_request = 8192
-	limit_time_cpu = 60
-	limit_time_real = 60
-	list_db = True
-	log_handler = :INFO 
-	log_level = info
-	logfile = None
-	login_message = False
-	logrotate = True
-	max_cron_threads = 4
-	netrpc = True
-	netrpc_interface = 
-	netrpc_port = 8070
-	osv_memory_age_limit = 1.0
-	osv_memory_count_limit = False
-	pg_path = None
-	pidfile = None
-	proxy_mode = False
-	reportgz = False
-	secure_cert_file = server.cert
-	secure_pkey_file = server.pkey
-	server_wide_modules = None
-	smtp_password = False
-	smtp_port = 25
-	smtp_server = localhost
-	smtp_ssl = False
-	smtp_user = False
-	static_http_document_root = None
-	static_http_enable = False
-	static_http_url_prefix = None
-	syslog = False
-	test_commit = False
-	test_enable = False
-	test_file = False
-	test_report_directory = False
-	timezone = False
-	translate_modules = ['all']
-	unaccent = False
-	without_demo = False
-	workers = 0
-	xmlrpc = True
-	xmlrpc_interface = 
-	xmlrpc_port = 8069
-	xmlrpcs = True
-	xmlrpcs_interface = 
-	xmlrpcs_port = 8071
 
 ### Goals
 
@@ -275,7 +107,8 @@ To create a new project with a default .openerp-dev-default, run (in a project f
 ### Shared parameters
 
 * **-m**, **--modules** : Specify which custom module to load. If omitted, all custom modules will be loaded.
-* **-p**, **--tcp-port** : TCP port of the server (default:8069).
+* **-p**, **--tcp-port** : XML_RPC port of the server (default:8069).
+* **-n**, **--netrpc-port** : NET_RPC port of the server (default:8070).
 * **--no-update**: Bypass updates and try to launch with last parameters. 
 
 ### Run parameters
@@ -292,6 +125,7 @@ None
 * **--db-name** : Specify custom database name for the tests. ***WARNING*** if database alread exists, it's data may be altered.
 * **--force-install** : Force a new install of the modules. The database will be dropped if existing and built-in tests will be run.
 * **--analyze** : Analyze logs and stop OpenERP. Use it with continuous integration.
+* **--stop-after-init** : Force OpenERP server to stop when tests are done.
 
 ### Assembly parameters
 

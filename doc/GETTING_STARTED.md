@@ -7,7 +7,7 @@ In this quick start guide you will learn :
 - How to set the revision of OpeneERP
 - How to add dependencies to your project
 
-If you want to go further, you can read more about all the options here http://docs.blues2.ch/node/5.
+If you want to go further, you can read more about all the options here [README.md].
 
 ### Install from Ubuntu PPA
 	
@@ -17,23 +17,19 @@ If you want to go further, you can read more about all the options here http://d
 
 ### Configure
 
-Run openerp autobuild to create the configuration files
-
-	oebuild -h
-
-Open your main configuration file ~/.config/openerp-autobuild/oebuild_config-1.7.json and locate the database configuration :
+Open your main configuration file ~/.config/openerp-autobuild/oebuild_config.json and locate the database configuration :
 
 	"database": {
-            "host": "localhost",
-            "port": "5432",
-            "user": "openerp",
-            "password": "openerp"
-        }
+        "host": "localhost",
+        "port": "5432",
+        "user": "openerp",
+        "password": "openerp"
+    }
 
 Change it according to your PostgreSQL settings. 
 
 This configuration file contains your settings for all the projects.
-Discover the whole configuration in the read me file located here http://docs.blues2.ch/node/5.
+Discover the whole configuration in the read me file located here [README.md].
 
 ### Initialise and Run a project
 Creating a new project is easy as :
@@ -53,7 +49,6 @@ Run your new OpenERP project
 
 Whait until you see this log line : ... HTTP service (werkzeug) running on 0.0.0.0:8069
 You may now connect to a running openerp instance at http://localhost:8069/.
-
 
 ### Create your own module
 
