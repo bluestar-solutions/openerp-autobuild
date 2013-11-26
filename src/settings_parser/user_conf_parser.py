@@ -110,8 +110,8 @@ class UserConfParser():
                 conf_1_7 = self._read_conf(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7)
                 user_conf_1_7_update.update_from_1_7(conf, conf_1_7)
             
-            if conf[user_conf_schema.OEBUILD_VERSION] != params.VERSION:
-                user_conf = self._load_conf(params.USER_CONFIG_FILE)
+            user_conf = self._load_conf(params.USER_CONFIG_FILE, False)
+            if user_conf[user_conf_schema.OEBUILD_VERSION] != params.VERSION:
                 self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
 
 #         keep = [params.USER_OEBUILD_CONFIG_FILE]
