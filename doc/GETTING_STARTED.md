@@ -47,7 +47,7 @@ Run your new OpenERP project
 
 	oebuild run
 
-Whait until you see this log line : ... HTTP service (werkzeug) running on 0.0.0.0:8069
+Wait until you see this log line : ... HTTP service (werkzeug) running on 0.0.0.0:8069
 You may now connect to a running openerp instance at http://localhost:8069/.
 
 ### Create your own module
