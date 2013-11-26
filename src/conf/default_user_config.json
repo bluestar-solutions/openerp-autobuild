@@ -4,7 +4,7 @@
         " *                                                                                                 * ",
         " *  Here you can override settings defined in /etc/oebuild_config.json and define your own series  * ",
         " *                                                                                                 * ",
-        " *  Custom series is a practical way to share pathed series a your company or developer team,      * ",
+        " *  Custom series is a practical way to share patched series in your company or developer team,    * ",
         " *  but please avoid using it in project configuration for public published module !               * ",
         " *                                                                                                 * ",
         " *************************************************************************************************** "
