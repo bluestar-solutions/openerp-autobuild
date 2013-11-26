@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
 #    
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -19,19 +20,25 @@
 #
 ##############################################################################
 
-OEBUILD_VERSION = "oebuild-version"
-PROJECT = "project"
-OPENERP = "openerp"
-SERIE = "serie"
-DEPENDENCIES = "dependencies"
-SCM = "scm"
-SCM_GIT = "git"
-SCM_BZR = "bzr"
-SCM_LOCAL = "local"
-URL = "url"
-BZR_REV = "bzr-rev"
-GIT_BRANCH = "git-branch"
-DESTINATION = "destination"
-ADDONS_PATH = "addons-path"
-NAME = "name"
-SOURCE = "source"
+import os
+
+VERSION = '1.8'
+
+OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
+DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PATH
+DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
+
+USER_HOME_PATH = os.path.expanduser("~")
+USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
+USER_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
+
+ETC_CONFIG_FILE = "/etc/oebuild_config.json" 
+USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH
+
+OE_CONFIG_FILE = '.openerp-dev-default'
+
+PROJECT_CONFIG_FILE = 'oebuild.conf'
+PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
+
+DEPRECATED_FILES = ('.project-dependencies',)

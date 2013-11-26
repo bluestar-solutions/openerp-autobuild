@@ -1,0 +1,9 @@
+{
+    "oebuild-version": "$OEBUILD_VERSION",
+    "project": "$PROJECT_NAME",
+    "openerp": {
+        "serie": "$SERIE"
+    },
+    "python-dependencies": [],
+    "dependencies": []
+}

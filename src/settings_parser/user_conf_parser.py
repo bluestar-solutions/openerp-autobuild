@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -15,61 +15,114 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
 import os
 import sys
-import shutil
 import getpass
 import json
 import jsonschema
-import oebuild_logger
-from settings_parser import user_conf_schema, oebuild_conf_parser
+from oebuild_logger import _ex, logging
+from settings_parser.schema import user_conf_schema
+import params
+import user_conf_1_7_update
 
-logger = oebuild_logger.getLogger()
+class UserConfParser():
 
-USER_HOME_PATH = os.path.expanduser("~")
-USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
-USER_OEBUILD_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
-USER_OEBUILD_CONFIG_FILE = lambda version: '%s/oebuild_config-%s.json' % (USER_OEBUILD_CONFIG_PATH, version)
-USER_OEBUILD_CURRENT_CONFIG_FILE = USER_OEBUILD_CONFIG_FILE(oebuild_conf_parser.VERSION)
+    _logger = logging.getLogger(__name__)
 
-def update_1_7_to_1_8():
-    # No change needed
-    shutil.copyfile(USER_OEBUILD_CONFIG_FILE('1.7'), USER_OEBUILD_CONFIG_FILE('1.8'))
+    def __init__(self):
+        self._verify()
 
-if not os.path.exists(USER_CONFIG_PATH):
-    os.makedirs(USER_CONFIG_PATH)
-if not os.path.exists(USER_OEBUILD_CONFIG_PATH):
-    os.makedirs(USER_OEBUILD_CONFIG_PATH)
-if not os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE):
-    if os.path.exists(USER_OEBUILD_CONFIG_FILE('1.7')):
-        update_1_7_to_1_8()
-    else:
-        infile = open("%s/conf/default_user_config.json" % OE_HOME_PATH) #@UndefinedVariable
-        outfile = open(USER_OEBUILD_CURRENT_CONFIG_FILE, 'w')
-        for line in infile:
-            outfile.write(line.replace("$USERNAME", getpass.getuser()))
-        infile.close()
-        outfile.close()
+    def _read_conf(self, file_name):
+        with open(file_name, "r") as source_file:
+            try:
+                return json.load(source_file)
+            except ValueError, error:
+                self._logger.error('%s is not JSON valid : %s' % (file_name, error))
+                sys.exit(1)
 
-def load_user_config_file():
-    if not (os.path.exists(USER_OEBUILD_CURRENT_CONFIG_FILE) and os.path.isfile(USER_OEBUILD_CURRENT_CONFIG_FILE)):
-        logger.error('User openerp configuration file does not exist : %s' % USER_OEBUILD_CURRENT_CONFIG_FILE)
-        sys.exit(1)
-        
-    with open(USER_OEBUILD_CURRENT_CONFIG_FILE, "r") as source_file:
+    def _load_conf(self, conf_file, default=True):
+        conf = None
         try:
-            conf = json.load(source_file)
-        except ValueError, error:
-            logger.error('%s is not JSON valid : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
+            conf = self._read_conf(conf_file)
+            try:
+                jsonschema.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA(default))
+            except ValueError, error:
+                self._logger.error('%s is not a valid user configuration file : %s' % (conf_file, error))
+                sys.exit(1)
+        except IOError, e:
+            self._logger.error(_ex(conf_file, e))
             sys.exit(1)
-        try:
-            jsonschema.validate(conf, user_conf_schema.USER_CONFIG_SCHEMA)
-        except ValueError, error:
-            logger.error('%s is not a valid user configuration file : %s' % (USER_OEBUILD_CURRENT_CONFIG_FILE, error))
+        return conf
+
+    def load_user_config_file(self):
+        if not (os.path.exists(params.USER_CONFIG_FILE) and os.path.isfile(params.USER_CONFIG_FILE)):
+            self._logger.error('User openerp configuration file does not exist : %s' % params.USER_CONFIG_FILE)
             sys.exit(1)
-        
-    return conf
+
+        default_conf = self._load_conf(params.ETC_CONFIG_FILE)
+        user_conf = self._load_conf(params.USER_CONFIG_FILE, False)
+
+        merged_conf = dict(default_conf)
+        merged_conf.update(user_conf)
+
+        merged_conf[user_conf_schema.OPENERP] = default_conf[user_conf_schema.OPENERP]
+        default_serie_names = [s[user_conf_schema.SERIE] for s in default_conf[user_conf_schema.OPENERP]]
+        for serie in user_conf[user_conf_schema.OPENERP]:
+            if serie[user_conf_schema.SERIE] in default_serie_names:
+                default_serie = [s for s in default_conf[user_conf_schema.OPENERP] if s[user_conf_schema.SERIE] == serie[user_conf_schema.SERIE]][0]
+                merged_serie = default_serie
+                merged_serie.update(serie)
+                merged_serie[user_conf_schema.PYTHON_DEPENDENCIES] = default_serie[user_conf_schema.PYTHON_DEPENDENCIES]
+                for py_dep in serie.get(user_conf_schema.PYTHON_DEPENDENCIES, []):
+                    default_py_dep = [d for d in merged_serie[user_conf_schema.PYTHON_DEPENDENCIES] if d[user_conf_schema.NAME] == py_dep[user_conf_schema.NAME]]
+                    if default_py_dep:
+                        default_py_dep[0].update(py_dep)
+                    else:
+                        merged_serie[user_conf_schema.PYTHON_DEPENDENCIES].append(py_dep)
+                merged_conf[user_conf_schema.OPENERP].append(merged_serie)
+            else:
+                merged_conf[user_conf_schema.OPENERP].append(serie)
+
+        merged_conf[user_conf_schema.DATABASE] = default_conf[user_conf_schema.DATABASE]
+        merged_conf[user_conf_schema.DATABASE].update(user_conf[user_conf_schema.DATABASE])
+
+        return merged_conf
+
+    def _verify(self):
+        if not os.path.exists(params.USER_CONFIG_PATH):
+            os.makedirs(params.USER_CONFIG_PATH)
+        if not os.path.exists(params.USER_CONFIG_PATH):
+            os.makedirs(params.USER_CONFIG_PATH)
+        if not os.path.exists(params.USER_CONFIG_FILE):
+            infile = open(params.DEFAULT_USER_CONFIG_FILE)
+            outfile = open(params.USER_CONFIG_FILE, 'w')
+            for line in infile:
+                outfile.write(line.replace("$VERSION", params.VERSION).replace("$USERNAME", getpass.getuser()))
+            infile.close()
+            outfile.close()
+            
+            if os.path.exists(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7):
+                conf = self.load_user_config_file()
+                conf_1_7 = self._read_conf(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7)
+                user_conf_1_7_update.update_from_1_7(conf, conf_1_7)
+            
+            user_conf = self._load_conf(params.USER_CONFIG_FILE, False)
+            if user_conf[user_conf_schema.OEBUILD_VERSION] != params.VERSION:
+                self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
+
+#         keep = [params.USER_OEBUILD_CONFIG_FILE]
+#         for f in [f for f in os.listdir(params.USER_OEBUILD_CONFIG_PATH) if os.path.join(params.USER_OEBUILD_CONFIG_PATH, f) not in keep]:
+#             path = os.path.join(params.USER_OEBUILD_CONFIG_PATH, f)
+#             if os.path.isdir(path):
+#                 shutil.rmtree(path)
+#             else:
+#                 os.remove(path)
+
+    def _update(self, version_from):
+        pass
+
+UPDATE_FROM = {}

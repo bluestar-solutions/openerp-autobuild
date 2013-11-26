@@ -19,7 +19,5 @@
 #
 ##############################################################################
 
-import user_conf_parser
-import oebuild_conf_parser
-import json_regex
-import user_conf_1_7_update
+import user_conf_schema
+import oebuild_conf_schema

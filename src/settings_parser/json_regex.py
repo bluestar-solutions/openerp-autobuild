@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -15,11 +15,16 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
-import user_conf_parser
-import oebuild_conf_parser
-import json_regex
-import user_conf_1_7_update
+import json
+
+update_version = lambda v_from, v_to: (r'("oebuild-version"\s*:\s*)"%s"' % v_from, r'\1"%s"' % v_to)
+
+remove_param = lambda p_name: (r'"%s"\s*:\s*".*"\s*,?\s*\n?' % p_name, r'')
+add_param_before = lambda p_name, p_value, before_p_name: (r'(\n?)(\s*)("%s"\s*:)' % (before_p_name), r'\n\2"%s": "%s"\n\2\3' % (p_name, p_value))
+set_param_value = lambda p_name, p_value: (r'("%s"\s*:\s*)(".*")' % (p_name), r'\1"%s"' % (p_value))
+set_param_array = lambda p_name, p_array: (r'("%s"\s*:\s*)(\[.*\])' % (p_name), r'\1%s' % (json.dumps(p_array)))
+

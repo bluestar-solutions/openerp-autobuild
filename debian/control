@@ -1,21 +1,15 @@
-Source: openerp-autobuild-DEV
+Source: openerp-autobuild
 Section: python
 Priority: optional
 Maintainer: Bluestar Solutions Sàrl, <info@blues2.ch>
 Build-Depends: debhelper (>= 7),
-               python (>= 2.7)
+               python (>= 2.7), python (<< 3.0)
 Standards-Version: 3.9.2
-X-Python-Version: >= 2.7
+X-Python-Version: >= 2.7, << 3.0
 
-
-Package: openerp-autobuild-DEV
+Package: openerp-autobuild
 Architecture: all
 Section: python
-Depends: python-appindicator, ${misc:Depends}, ${python:Depends}, python-bzrlib,
-		 python-dateutil, python-feedparser, python-gdata, python-ldap, python-libxslt1,
-		 python-lxml, python-mako, python-openid, python-psycopg2, python-pybabel, python-pychart,
-		 python-pydot, python-pyparsing, python-reportlab, python-simplejson, python-tz, python-vatnumber,
-		 python-vobject, python-webdav, python-werkzeug, python-xlwt, python-yaml, python-zsi, python-docutils,
-		 python-psutil, bzr, wget, python-unittest2, python-mock, python-jinja2, python-pip
-Breaks:  python-git, python-jsonschema
+Depends: python-pip, bzr, libpq-dev, python-psycopg2, python-virtualenv, python-dev, libldap2-dev, libsasl2-dev, libxml2-dev, libxslt-dev
+Breaks:  python-git, python-jsonschema, openerp-autobuild-1.5, openerp-autobuild-1.6, openerp-autobuild-1.7
 Description: A script to automatically run openerp

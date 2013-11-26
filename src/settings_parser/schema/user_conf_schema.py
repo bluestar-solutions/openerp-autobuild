@@ -19,6 +19,9 @@
 #
 ##############################################################################
 
+import params
+
+OEBUILD_VERSION = "oebuild-version"
 URL = "url"
 BZR_REV = "bzr-rev"
 OPENERP = "openerp"
@@ -31,20 +34,41 @@ HOST = "host"
 PORT = "port"
 USER = "user"
 PASSWORD = "password"
+PYTHON_DEPENDENCIES = "python-dependencies"
+NAME="name"
+SPECIFIER = "specifier"
+COMMENT = "comment"
 
-OPENERP_TYPE = {
+PYTHON_DEPENDENCY = {
+    "type": "object",
+    "properties": {
+        NAME: {"type": "string"},
+        SPECIFIER: {"type": "string"}
+    },
+    "required": [NAME],
+    "additionalProperties" : False
+}
+OPENERP_TYPE = lambda default=True: {
     "type": "object",
     "properties": {
         SERIE: {"type": "string"},
         "server": {"type": "string", "format": "uri"},
         "addons": {"type": "string", "format": "uri"},
         "web": {"type": "string", "format": "uri"},
+        PYTHON_DEPENDENCIES: {
+            "type": "array",
+            "items": PYTHON_DEPENDENCY
+        },
     },
-    "required": [SERIE, "server", "addons", "web"]
+    "required": [SERIE, "server", "addons", "web", PYTHON_DEPENDENCIES] if default else [SERIE],
+    "additionalProperties": False
 }
-USER_CONFIG_SCHEMA = {
+USER_CONFIG_SCHEMA = lambda default=True: {
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
+        COMMENT: {"type": "array", "items": {"type": "string"}},
+        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",
@@ -52,7 +76,7 @@ USER_CONFIG_SCHEMA = {
         },                    
         OPENERP: {
             "type": "array",
-            "items": OPENERP_TYPE,
+            "items": OPENERP_TYPE(default),
         },
         DEFAULT_SERIE: {"type": "string"},
         DATABASE: {
@@ -63,8 +87,9 @@ USER_CONFIG_SCHEMA = {
                 USER: {"type": "string"},
                 PASSWORD: {"type": "string"},
             },
-            "required": [USER, PASSWORD]
+            "additionalProperties" : False
         }
     },
-    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE]
+    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE, DATABASE] if default else [CONF_FILES, OPENERP, DATABASE],
+    "additionalProperties" : False
 }

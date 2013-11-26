@@ -21,14 +21,24 @@
 
 import sys
 
-def query_yes_no(question, default="yes"):
-    valid = {"yes":"yes",   "y":"yes",  "ye":"yes",
-             "no":"no",     "n":"no"}
+ANSWER_YES = "yes"
+ANSWER_NO = "no"
+
+VALID_ENTRIES = {
+    "yes": ANSWER_YES,
+    "y":   ANSWER_YES,
+    "ye":  ANSWER_YES,
+    "no":  ANSWER_NO,
+    "n":   ANSWER_NO
+}
+
+def query_yes_no(question, default=ANSWER_YES):
+    
     if default == None:
         prompt = " [y/n] "
-    elif default == "yes":
+    elif default == ANSWER_YES:
         prompt = " [Y/n] "
-    elif default == "no":
+    elif default == ANSWER_NO:
         prompt = " [y/N] "
     else:
         raise ValueError("invalid default answer: '%s'" % default)
@@ -38,8 +48,8 @@ def query_yes_no(question, default="yes"):
         choice = raw_input().lower()
         if default is not None and choice == '':
             return default
-        elif choice in valid.keys():
-            return valid[choice]
+        elif choice in VALID_ENTRIES.keys():
+            return VALID_ENTRIES[choice]
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")

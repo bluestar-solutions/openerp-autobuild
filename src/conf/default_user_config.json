@@ -1,38 +1,18 @@
 {
-	"workspace": "~/openerp-autobuild",
-	"custom-configuration-files": ["$USERNAME"],
-	"openerp": [
-		{
-			"serie": "trunk",
-			"server": "lp:openobject-server",
-			"addons": "lp:openobject-addons",
-			"web": "lp:openerp-web"
-		},
-		{
-			"serie": "6.0",
-			"server": "lp:openobject-server/6.0",
-			"addons": "lp:openobject-addons/6.0",
-			"web": "lp:openerp-web/6.0"
-		},
-		{
-			"serie": "6.1",
-			"server": "lp:openobject-server/6.1",
-			"addons": "lp:openobject-addons/6.1",
-			"web": "lp:openerp-web/6.1"
-		},
-		{
-			"serie": "7.0",
-			"server": "lp:openobject-server/7.0",
-			"addons": "lp:openobject-addons/7.0",
-			"web": "lp:openerp-web/7.0"
-		}
-	],
-	"default-serie": "7.0",
-	"database": {
-		"host": "localhost",
-		"port": "5432",
-		"user": "openerp",
-		"password": "openerp"
-	}
+    "comment": [
+        " *************************************************************************************************** ",
+        " *                                                                                                 * ",
+        " *  Here you can override settings defined in /etc/oebuild_config.json and define your own series  * ",
+        " *                                                                                                 * ",
+        " *  Custom series is a practical way to share patched series in your company or developer team,    * ",
+        " *  but please avoid using it in project configuration of public published modules !               * ",
+        " *                                                                                                 * ",
+        " *************************************************************************************************** "
+    ],
+    "oebuild-version": "$VERSION",
+    "custom-configuration-files": ["$USERNAME"],
+    "openerp": [
+    ],
+    "database": {
+    }
 }
-
