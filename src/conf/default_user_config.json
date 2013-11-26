@@ -9,7 +9,7 @@
         " *                                                                                                 * ",
         " *************************************************************************************************** "
     ],
-    "oebuild-version": "1.8",
+    "oebuild-version": "$VERSION",
     "custom-configuration-files": ["$USERNAME"],
     "openerp": [
     ],

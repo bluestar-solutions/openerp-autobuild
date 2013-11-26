@@ -101,7 +101,7 @@ class UserConfParser():
             infile = open(params.DEFAULT_USER_CONFIG_FILE)
             outfile = open(params.USER_CONFIG_FILE, 'w')
             for line in infile:
-                outfile.write(line.replace("$USERNAME", getpass.getuser()))
+                outfile.write(line.replace("$VERSION", params.VERSION).replace("$USERNAME", getpass.getuser()))
             infile.close()
             outfile.close()
             
