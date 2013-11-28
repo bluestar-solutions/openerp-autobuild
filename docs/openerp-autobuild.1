@@ -1,0 +1,65 @@
+OPENERP(1)                       User Commands                      OPENERP(1)
+
+
+
+NNAAMMEE
+       OpenERP - Automatically build and run openerp in virtualenv
+
+DDEESSCCRRIIPPTTIIOONN
+       usage: openerp_autobuild.py [-h] [-v] GOAL ...
+
+       OpenERP Autobuild version 2.1 ---------------------------------------------------------- A developer
+       tool for OpenERP with many features:
+
+              * Run OpenERP locally with options and user defined settings.  *
+              Run OpenERP with automated tests for your modules.  * Initialize
+              a new OpenERP project with  autobuild  settings.   *  Initailize
+              configuration  files  for Eclipse (with PyDev plugin).  * Manage
+              your module dependencies.   *  Assembly  your  module  with  the
+              desired OpenERP version and all dependencies.
+
+   ppoossiittiioonnaall aarrgguummeennttss::
+              GOAL
+
+       run    Run openERP server normally (default)
+
+       test   Run  openERP  server, perform tests, stop the server and display
+              tests results
+
+       debug  Run openERP server with full debug messages
+
+       assembly
+              Prepare all files to deploy in target folder
+
+              init-eclipse
+
+              Initialize an Eclipse Pyedv project
+
+       init   Initialize an empty OpenERP project
+
+   ooppttiioonnaall aarrgguummeennttss::
+       --hh, ----hheellpp
+              show this help message and exit
+
+       --vv, ----vveerrssiioonn
+              show program's version number and exit
+
+   ggooaall hheellpp::
+              openerp_autobuild.py GOAL --hh
+
+CCOOPPYYRRIIGGHHTT
+       Copyright      ©      2012-2013      Bluestar      Solutions      S??rl
+       (<http://www.blues2.ch>).  Released under GNU AGPLv3.
+
+SSEEEE AALLSSOO
+       The  full  documentation for OOppeennEERRPP is maintained as a Texinfo manual.
+       If the iinnffoo and OOppeennEERRPP programs are properly installed at  your  site,
+       the command
+
+              iinnffoo OOppeennEERRPP
+
+       should give you access to the complete manual.
+
+
+
+OpenERP Autobuild 2.1            November 2013                      OPENERP(1)
