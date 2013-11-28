@@ -1,3 +1,5 @@
 #!/bin/bash -e
 sudo pip install --upgrade jsonschema GitPython argcomplete
 activate-global-python-argcomplete
+
+#DEBHELPER#
