@@ -88,7 +88,7 @@ then
 	done
 fi
 
-cp -R "$SCRIPTPATH/oebuild" "$DESTPATH"
+cp -R "$SCRIPTPATH/src" "$DESTPATH"
 cp "$DESTPATH/conf/default_etc_config.json" "/etc/oebuild_config.json"
 
 rm -f "/usr/bin/openerp-autobuild"
