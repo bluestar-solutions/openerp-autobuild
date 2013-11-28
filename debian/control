@@ -4,13 +4,13 @@ Priority: optional
 Maintainer: Bluestar Solutions Sàrl, <info@blues2.ch>
 Build-Depends: debhelper (>= 7),
                python (>= 2.7), python (<< 2.8)
-Standards-Version: 3.9.2
+Standards-Version: 3.9.4
 X-Python-Version: >= 2.7, << 2.8
 
 Package: openerp-autobuild
 Architecture: all
 Section: python
-Depends: python (>= 2.7), python (<< 2.8), python-pip, bzr, libpq-dev, python-psycopg2, python-virtualenv, python-dev, libldap2-dev, libsasl2-dev, libxml2-dev, libxslt-dev
+Depends: ${misc:Depends}, python-pip, bzr, libpq-dev, python-psycopg2, python-virtualenv, python-dev, libldap2-dev, libsasl2-dev, libxml2-dev, libxslt-dev
 Breaks:  python-git (<< 0.3.2~), python-jsonschema (<< 2.3.0~), openerp-autobuild-1.5 (<< 2~), openerp-autobuild-1.6 (<< 2~), openerp-autobuild-1.7 (<< 2~)
 Description: openerp-autobuild is a script to automatically run openerp
  Inspired by solutions like composer (http://getcomposer.org) this tool is made for OpenERP modules developers. 
