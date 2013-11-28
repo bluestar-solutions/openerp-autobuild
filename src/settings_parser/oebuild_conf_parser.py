@@ -165,7 +165,7 @@ class OEBuildConfParser():
         if answer == dialogs.ANSWER_YES:
             os.rename(updated_fname, file_name)
             updated_fname = file_name
-            self._logger.info('%s has been updated to version 1.8' % file_name)
+            self._logger.info('%s has been updated to version %s' % (file_name, params.VERSION))
         else:
             self._logger.info('An updated version of %s will be used and stored in %s' % (file_name, updated_fname))
             
@@ -173,12 +173,12 @@ class OEBuildConfParser():
             return json.load(updated_file)
     
     UPDATE_FROM =  {
-        "1.7": [jre.update_version("1.7", "1.8"),
+        "1.7": [jre.update_version("1.7", "2.1"),
                 (r'(\n?)(\s*)("dependencies"\s*:)', r'\1\2"python-dependencies": [],\1\2\3')]
     }
     
     UPDATE_ALT_FROM =  {
-        "1.7": [jre.update_version("1.7", "1.8"),
+        "1.7": [jre.update_version("1.7", "2.1"),
                 jre.remove_param("project"),
                 jre.remove_param("serie")]
     }

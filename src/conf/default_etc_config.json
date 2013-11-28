@@ -11,7 +11,7 @@
         " *                                                                                      * ",
         " **************************************************************************************** "
     ],
-    "oebuild-version": "1.8",
+    "oebuild-version": "2.1",
     "workspace": "~/openerp-autobuild",
     "custom-configuration-files": [],
     "openerp": [{

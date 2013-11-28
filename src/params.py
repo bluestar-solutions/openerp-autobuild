@@ -22,7 +22,7 @@
 
 import os
 
-VERSION = '1.8'
+VERSION = '2.1'
 
 OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
@@ -30,8 +30,7 @@ DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PA
 DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
 
 USER_HOME_PATH = os.path.expanduser("~")
-USER_CONFIG_PATH = '%s/.config' % USER_HOME_PATH
-USER_CONFIG_PATH = '%s/openerp-autobuild' % USER_CONFIG_PATH
+USER_CONFIG_PATH = '%s/.config/openerp-autobuild' % USER_HOME_PATH
 
 ETC_CONFIG_FILE = "/etc/oebuild_config.json" 
 USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH

@@ -28,6 +28,7 @@ from oebuild_logger import _ex, logging
 from settings_parser.schema import user_conf_schema
 import params
 import user_conf_1_7_update
+import shutil
 
 class UserConfParser():
 
@@ -109,20 +110,27 @@ class UserConfParser():
                 conf = self.load_user_config_file()
                 conf_1_7 = self._read_conf(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7)
                 user_conf_1_7_update.update_from_1_7(conf, conf_1_7)
+                self._clean_after_update()
             
             user_conf = self._load_conf(params.USER_CONFIG_FILE, False)
             if user_conf[user_conf_schema.OEBUILD_VERSION] != params.VERSION:
                 self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
-
-#         keep = [params.USER_OEBUILD_CONFIG_FILE]
-#         for f in [f for f in os.listdir(params.USER_OEBUILD_CONFIG_PATH) if os.path.join(params.USER_OEBUILD_CONFIG_PATH, f) not in keep]:
-#             path = os.path.join(params.USER_OEBUILD_CONFIG_PATH, f)
-#             if os.path.isdir(path):
-#                 shutil.rmtree(path)
-#             else:
-#                 os.remove(path)
+                
+    def _clean_after_update(self):
+        keep = [params.USER_CONFIG_FILE, 
+                user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7]
+        
+        for f in [f for f in os.listdir(params.USER_CONFIG_PATH) if os.path.join(params.USER_CONFIG_PATH, f) not in keep]:
+            path = os.path.join(params.USER_CONFIG_PATH, f)
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            else:
+                os.remove(path)
 
     def _update(self, version_from):
-        pass
+        #
+        # Manage future version update here...
+        #
+        self._clean_after_update()
 
 UPDATE_FROM = {}
