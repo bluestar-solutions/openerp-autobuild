@@ -1,1 +1,2 @@
 src/* usr/lib/oebuild/
+src/conf/default_etc_config.json etc/oebuild_config.json
