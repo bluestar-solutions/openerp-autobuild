@@ -1,6 +1,6 @@
 # Easy dependency management for OpenERP developers !
 
-OpenERP Autobuild was created by Bluestar Solutions Sàrl an OpenERP partner who develops custom-made modules.
+OpenERP Autobuild was created by Bluestar Solutions Sàrl, an OpenERP partner who develops custom-made modules.
 
 The main goals of OpenERP Autobuild are :
 
