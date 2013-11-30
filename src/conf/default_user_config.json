@@ -9,6 +9,9 @@
         " *                                                                                                 * ",
         " *************************************************************************************************** "
     ],
+    "user":"$USERNAME",
+    "module_author":"$USERNAME",
+    "website":"$WEBSITE"
     "oebuild-version": "$VERSION",
     "custom-configuration-files": ["$USERNAME"],
     "openerp": [
