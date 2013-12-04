@@ -1,3 +1,2 @@
-#!/usr/bin/dh-exec
 src/* usr/lib/oebuild/
-src/conf/default_etc_config.json => etc/oebuild_config.json
+src/conf/etc/oebuild_config.json etc/
