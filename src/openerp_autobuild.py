@@ -71,7 +71,7 @@ class Autobuild():
 
     pid_file = lambda self: '%s/%s' % ('/tmp', '%s.pid' % self.project)
     
-    oebuild_conf_parser = OEBuildConfParser()
+    oebuild_conf_parser = None
     
     deps_addons_path = []
     python_deps = []
@@ -79,6 +79,8 @@ class Autobuild():
     def __init__(self, arg_parser):
         self._arg_parser = arg_parser
         args = self._arg_parser.args
+        
+        self.oebuild_conf_parser = OEBuildConfParser(args.analyze)
         
         self.user_conf = UserConfParser().load_user_config_file()
                 
