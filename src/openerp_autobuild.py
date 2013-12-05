@@ -80,7 +80,7 @@ class Autobuild():
         self._arg_parser = arg_parser
         args = self._arg_parser.args
         
-        self.oebuild_conf_parser = OEBuildConfParser(args.analyze)
+        self.oebuild_conf_parser = OEBuildConfParser(getattr(args, 'analyze', False))
         
         self.user_conf = UserConfParser().load_user_config_file()
                 
