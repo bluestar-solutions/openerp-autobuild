@@ -6,7 +6,7 @@
 override_dh_gencontrol:
 	DIST_DEPENDS=""
 	DIST_BREAKS="python-git, python-jsonschema, python-argcomplete"
-	if [ $(lsb_release -is) == "Ubuntu" ]; then \
+	@if [ $(lsb_release -is) == "Ubuntu" ]; then \
 		case $(lsb_release -rs) in \
 			"12.04") \
 				DIST_DEPENDS="" \
