@@ -2,7 +2,9 @@
 
 DIST_DEPENDS = -Vdist:Depends=""
 DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
+DEBUG = init
 ifeq ($(shell lsb_release -is),Ubuntu)
+	DEBUG = ubuntu
 	ifeq ($(shell lsb_release -rs),12.04)
 		DIST_DEPENDS = -Vdist:Depends=""
 		DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
@@ -12,6 +14,7 @@ ifeq ($(shell lsb_release -is),Ubuntu)
 		DIST_BREAKS = -Vdist:Breaks="python-jsonschema, python-argcomplete"
 	endif
 	ifeq ($(shell lsb_release -rs),13.04)
+		DEBUG = ubuntu1304
 		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
 		DIST_BREAKS = -Vdist:Breaks="python-argcomplete"
 	endif
@@ -25,6 +28,5 @@ endif
 	dh $@ --with python2
 
 override_dh_gencontrol:
-	echo :::::::::::::::::::::::$(DIST_DEPENDS)
-	echo :::::::::::::::::::::::$(DIST_BREAKS)
+	echo :::::::::::::::::::::::$(DEBUG)
 	dh_gencontrol -- $(DIST_DEPENDS) $(DIST_BREAKS)
