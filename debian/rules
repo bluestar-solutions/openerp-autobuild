@@ -1,26 +1,30 @@
 #!/usr/bin/make -f
 
+DIST_DEPENDS = -Vdist:Depends=""
+DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
 ifeq ($(shell lsb_release -is),Ubuntu)
-    ifeq ($(shell lsb_release -rs),12.04)
-        DIST_DEPENDS = -Vdist:Depends=""
-        DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
-    endif
-    ifeq ($(shell lsb_release -rs),12.10)
-        DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2)"
-        DIST_BREAKS = -Vdist:Breaks="python-jsonschema, python-argcomplete"
-    endif
-    ifeq ($(shell lsb_release -rs),13.04)
-        DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
-        DIST_BREAKS = -Vdist:Breaks="python-argcomplete"
-    endif
-    ifeq ($(shell lsb_release -rs),13.10)
-        DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)"
-        DIST_BREAKS = -Vdist:Breaks=""
-    endif
+	ifeq ($(shell lsb_release -rs),12.04)
+		DIST_DEPENDS = -Vdist:Depends=""
+		DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
+	endif
+	ifeq ($(shell lsb_release -rs),12.10)
+		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2)"
+		DIST_BREAKS = -Vdist:Breaks="python-jsonschema, python-argcomplete"
+	endif
+	ifeq ($(shell lsb_release -rs),13.04)
+		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
+		DIST_BREAKS = -Vdist:Breaks="python-argcomplete"
+	endif
+	ifeq ($(shell lsb_release -rs),13.10)
+		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)"
+		DIST_BREAKS = -Vdist:Breaks=""
+	endif
 endif
 
 %:
 	dh $@ --with python2
 
 override_dh_gencontrol:
+	echo :::::::::::::::::::::::$(DIST_DEPENDS)
+	echo :::::::::::::::::::::::$(DIST_BREAKS)
 	dh_gencontrol -- $(DIST_DEPENDS) $(DIST_BREAKS)
