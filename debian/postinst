@@ -1,6 +1,6 @@
 #!/bin/bash -e
     
-if [[ $(lsb_release -is) == "Ubuntu" ]] then
+if [[ $(lsb_release -is) == "Ubuntu" ]] ; then
     case $(lsb_release -rs) in
         "12.04")
             sudo pip install --upgrade jsonschema argcomplete GitPython
