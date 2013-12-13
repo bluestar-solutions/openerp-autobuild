@@ -1,32 +1,30 @@
 #!/usr/bin/make -f
 
-DIST_DEPENDS = -Vdist:Depends=""
-DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
-DEBUG = init
-ifeq ($(shell lsb_release -is),Ubuntu)
-	DEBUG = ubuntu
-	ifeq ($(shell lsb_release -rs),12.04)
-		DIST_DEPENDS = -Vdist:Depends=""
-		DIST_BREAKS = -Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
-	endif
-	ifeq ($(shell lsb_release -rs),12.10)
-		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2)"
-		DIST_BREAKS = -Vdist:Breaks="python-jsonschema, python-argcomplete"
-	endif
-	ifeq ($(shell lsb_release -rs),13.04)
-		DEBUG = ubuntu1304
-		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
-		DIST_BREAKS = -Vdist:Breaks="python-argcomplete"
-	endif
-	ifeq ($(shell lsb_release -rs),13.10)
-		DIST_DEPENDS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)"
-		DIST_BREAKS = -Vdist:Breaks=""
-	endif
-endif
-
 %:
 	dh $@ --with python2
 
 override_dh_gencontrol:
-	echo :::::::::::::::::::::::$(DEBUG)
+	DIST_DEPENDS=-Vdist:Depends=""
+	DIST_BREAKS=-Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
+	if [[ $(lsb_release -is) == "Ubuntu" ]] then
+		case $(lsb_release -rs) in
+			"12.04")
+				DIST_DEPENDS=-Vdist:Depends=""
+				DIST_BREAKS=-Vdist:Breaks="python-git, python-jsonschema, python-argcomplete"
+				;;
+			"12.10")
+				DIST_DEPENDS=-Vdist:Depends="python-git (>= 0.3.2)"
+				DIST_BREAKS=-Vdist:Breaks="python-jsonschema, python-argcomplete"
+				;;
+			"13.04")
+				DIST_DEPENDS=-Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
+				DIST_BREAKS=-Vdist:Breaks="python-argcomplete"
+				;;
+			"*")
+				DIST_DEPENDS=-Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)"
+				DIST_BREAKS=-Vdist:Breaks=""
+				;;
+		esac
+	fi
+	echo ::::$(DIST_DEPENDS)
 	dh_gencontrol -- $(DIST_DEPENDS) $(DIST_BREAKS)
