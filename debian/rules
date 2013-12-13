@@ -2,31 +2,3 @@
 
 %:
 	dh $@ --with python2
-
-override_dh_gencontrol:
-	DIST_DEPENDS=""
-	DIST_BREAKS="python-git, python-jsonschema, python-argcomplete"
-	DISTRIBUTION=$(lsb_release -is)
-	RELEASE=$(lsb_release -rs)
-	@if [ $DISTRIBUTION == "Ubuntu" ]; then \
-		case $RELEASE in \
-			"12.04") \
-				DIST_DEPENDS="" \
-				DIST_BREAKS="python-git, python-jsonschema, python-argcomplete" \
-				;; \
-			"12.10") \
-				DIST_DEPENDS="python-git (>= 0.3.2)" \
-				DIST_BREAKS="python-jsonschema, python-argcomplete" \
-				;; \
-			"13.04") \
-				DIST_DEPENDS="python-git (>= 0.3.2), python-jsonschema (>= 0.7)" \
-				DIST_BREAKS="python-argcomplete" \
-				;; \
-			"*") \
-				DIST_DEPENDS="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)" \
-				DIST_BREAKS="" \
-				;; \
-		esac \
-	fi
-	echo ::::$(DIST_DEPENDS)
-	dh_gencontrol -- -Vdist:Depends="$(DIST_DEPENDS)" -Vdist:Breaks="$(DIST_BREAKS)"
