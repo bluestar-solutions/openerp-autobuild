@@ -36,8 +36,10 @@ class IgnoreSubConf(Exception):
 class OEBuildConfParser():
 
     _logger = logging.getLogger(__name__)
+    _analyze = False
     
-    def __init__(self):
+    def __init__(self, analyze=False):
+        self._analyze = analyze
         for dfile in params.DEPRECATED_FILES:
             if os.path.exists(dfile):
                 self._logger.warning('File %s is deprecated, you can remove it from the project' % dfile)
@@ -159,7 +161,7 @@ class OEBuildConfParser():
                 updated_file.write(content)
                 
         answer = dialogs.ANSWER_NO
-        if len(file_name.split('/')) == 1:
+        if len(file_name.split('/')) == 1 and not self._analyze:
             answer = dialogs.query_yes_no("Do you want to replace the project configuration files by the updated version " + 
                                           "(otherwise the updated versions will be saved to new files) ?", default=dialogs.ANSWER_NO)
         if answer == dialogs.ANSWER_YES:
