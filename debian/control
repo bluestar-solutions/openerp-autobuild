@@ -11,7 +11,7 @@ Package: openerp-autobuild
 Architecture: all
 Section: python
 Depends: python (>= 2.7), python (<< 2.8), ${misc:Depends}, ${dist:Depends}, python-pip, bzr, libpq-dev, python-psycopg2, python-virtualenv, python-dev, libldap2-dev, libsasl2-dev, libxml2-dev, libxslt-dev
-Breaks:  python-git (<< 0.3.2~), python-jsonschema (<< 2.3.0~), openerp-autobuild-1.5 (<< 2~), openerp-autobuild-1.6 (<< 2~), openerp-autobuild-1.7 (<< 2~)
+Breaks:  ${dist:Breaks}, openerp-autobuild-1.5 (<< 2~), openerp-autobuild-1.6 (<< 2~), openerp-autobuild-1.7 (<< 2~)
 Description: Automatically build and run openerp in virtualenv
  This tool is made for OpenERP modules developers. It manages the dependencies
  and the run goal of your project. By enabling the possibility to define 
