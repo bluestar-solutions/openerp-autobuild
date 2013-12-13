@@ -20,7 +20,7 @@ ifeq ($(shell lsb_release -is),Ubuntu)
 endif
 
 %:
-	dh $@ --with python2
+    dh $@ --with python2
 
 override_dh_gencontrol:
     dh_gencontrol -- $(DIST_DEPENDS) $(DIST_BREAKS)
