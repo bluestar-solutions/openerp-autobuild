@@ -1,5 +1,25 @@
 #!/bin/bash -e
-sudo pip install --upgrade jsonschema GitPython argcomplete
+    
+if [[ $(lsb_release -is) == "Ubuntu" ]] then
+    case $(lsb_release -rs) in
+        "12.04")
+            sudo pip install --upgrade jsonschema argcomplete GitPython
+            ;;
+        "12.10")
+            sudo pip install --upgrade jsonschema argcomplete
+            ;;
+        "13.04")
+            sudo pip install --upgrade argcomplete
+            ;;
+        "*")
+            # Nothing to install by pip since 13.10
+            ;;
+    esac
+else
+    sudo pip install --upgrade jsonschema argcomplete
+    sudo pip install --upgrade --pre GitPython
+fi
+
 activate-global-python-argcomplete
 
 #DEBHELPER#

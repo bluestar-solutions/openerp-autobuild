@@ -1,4 +1,19 @@
 #!/usr/bin/make -f
 
+ifeq ($(lsb_release -is), Ubuntu)
+    ifeq ($(lsb_release -rs), 12.04) # For Ubuntu 12.04 LTS (precise)
+        SUBSTVARS = -Vdist:Depends=""
+    endif
+    ifeq ($(lsb_release -rs), 12.10) # For Ubuntu 12.10 (quantal)
+        SUBSTVARS = -Vdist:Depends="python-git (>= 0.3.2)"
+    endif
+    ifeq ($(lsb_release -rs), 13.04) # For Ubuntu 13.04 (raring)
+        SUBSTVARS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7)"
+    endif
+    ifeq ($(lsb_release -rs), 13.10) # For Ubuntu 13.10 (saucy)
+        SUBSTVARS = -Vdist:Depends="python-git (>= 0.3.2), python-jsonschema (>= 0.7), python-argcomplete (>= 0.5.4)"
+    endif
+endif
+
 %:
 	dh $@ --with python2
