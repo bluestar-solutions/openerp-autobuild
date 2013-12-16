@@ -226,28 +226,32 @@ class Autobuild():
         self._logger.info("virtualenv %s : Create and install Python dependencies (%s)" % (self.virtualenv_path(), py_deps_string))
         out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path(),
                                    log_in=False, log_out=False, log_err=True)
-        for o in out.split('\n'):
+        for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o))
-        for e in err.split('\n'):
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o.rstrip()))
+        errors = False
+        for e in re.split('\n(?=\S)', err):
             if len(e) > 0:
-                self._logger.error("virtualenv %s: %s" % (self.virtualenv_path(), e))
-                sys.exit(1)
+                errors = True
+                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
+        if errors:
+            sys.exit(1)
         
-        out, err = self.call_command("%s install -q --upgrade %s" % (
-            self.virtual_pip(), py_deps_string
-            ),
-            log_in=False, log_out=False, log_err=False)
-        for o in out.split('\n'):
+        out, err = self.call_command('LC_ALL=C %s install --egg -q --upgrade %s' % (self.virtual_pip(), py_deps_string),
+                                     log_in=False, log_out=False, log_err=False)
+        for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o))
-        for e in err.split('\n'):
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o.rstrip()))
+        errors = False
+        for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated', e, re.I):
                 # If an error is thrown because of using deprecated RepositoryFormat6() format, just warn and continue
-                self._logger.warning("virtualenv %s: %s" % (self.virtualenv_path(), e))
+                self._logger.warning(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
             elif len(e) > 0:
-                self._logger.error("virtualenv %s: %s" % (self.virtualenv_path(), e))
-                sys.exit(1)
+                errors = True
+                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
+        if errors:
+            sys.exit(1)
         
         with open(self.py_deps_cache_file(),'w+') as f:
             json.dump(list(self.python_deps), f)

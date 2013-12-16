@@ -20,7 +20,6 @@
         "addons": "lp:openobject-addons",
         "web": "lp:openerp-web",
         "python-dependencies": [
-            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -56,7 +55,6 @@
         "addons": "lp:openobject-addons/6.0",
         "web": "lp:openerp-web/6.0",
         "python-dependencies": [
-            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -92,7 +90,6 @@
         "addons": "lp:openobject-addons/6.1",
         "web": "lp:openerp-web/6.1",
         "python-dependencies": [
-            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
@@ -128,7 +125,6 @@
         "addons": "lp:openobject-addons/7.0",
         "web": "lp:openerp-web/7.0",
         "python-dependencies": [
-            {"name": "distribute", "specifier": "==0.6.49"},
             {"name": "python-dateutil"},
             {"name": "feedparser"},
             {"name": "gdata"},
