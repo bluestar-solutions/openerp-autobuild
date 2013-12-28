@@ -89,6 +89,12 @@ class Autobuild():
             self.create_module(conf, args)
             sys.exit(0)
 
+        if args.func == "module-add-class":
+            conf = self.oebuild_conf_parser.load_oebuild_config_file(self.user_conf[user_conf_schema.CONF_FILES])
+            self.create_class(conf, args)
+            sys.exit(0)
+
+
         if args.func == "init-new":
             overwrite = "no"
             if os.path.exists(params.OE_CONFIG_FILE):
@@ -193,6 +199,28 @@ class Autobuild():
         with open("%s/__openerp__.py" % module_path, 'w+') as f:
             f.write(openerppy)
 
+    def create_class(self, conf, args):
+        module_path = '%s/%s' % (self.src_path, args.module_name)
+        #class_def = args.class_name.split('/')
+        class_name = args.class_name
+        class_path = '%s/%s' % (module_path, class_name)
+        if os.path.exists(class_path):
+            self._logger.error("The  class already exists")
+            sys.exit(1)
+        with open(params.HEADER_PY_TPL, 'r') as f:
+            header = f.read()
+
+        header = re.sub(r'\$AUTHOR', self.user_conf[user_conf_schema.MODULE_AUTHOR], header)
+        header = re.sub(r'\$WEBSITE', self.user_conf[user_conf_schema.WEBSITE], header)
+
+        with open(params.CLASS_TPL, 'r') as f:
+            classfile = f.read()
+
+        classfile = re.sub(r'\$HEADER', header, classfile)
+        classfile = re.sub(r'\$CLASS_NAME', class_name, classfile)
+
+        with open(class_path, 'w+') as f:
+            f.write(classfile)
 
     def init_eclipse(self, conf):
         self.create_eclipse_project(conf)

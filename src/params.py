@@ -45,3 +45,4 @@ DEPRECATED_FILES = ('.project-dependencies',)
 INIT_PY_TPL = '%s/.config/openerp-autobuild/initpy.tpl' % USER_HOME_PATH
 OPENERP_PY_TPL = '%s/.config/openerp-autobuild/openerppy.tpl' % USER_HOME_PATH
 HEADER_PY_TPL = '%s/.config/openerp-autobuild/header.tpl' % USER_HOME_PATH
+CLASS_TPL = '%s/.config/openerp-autobuild/class.tpl' % USER_HOME_PATH
