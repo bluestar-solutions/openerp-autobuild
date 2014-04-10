@@ -87,5 +87,12 @@ class ColoredLogger(logging.Logger):
         f2 = SingleLevelFilter(logging.INFO, True)
         h2.addFilter(f2)
         self.addHandler(h2)
+          
+        # Set the logger for bzrlib
+        h_bzr = logging.StreamHandler(sys.stderr)
+        h_bzr.setFormatter(fmt)
+        f_bzr = SingleLevelFilter(logging.ERROR, False)
+        h_bzr.addFilter(f_bzr)
+        logging.getLogger('bzr').addHandler(h_bzr)
   
 logging.setLoggerClass(ColoredLogger)
