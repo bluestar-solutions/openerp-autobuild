@@ -26,9 +26,9 @@ import jsonschema
 from oebuild_logger import _ex, logging
 from settings_parser.schema import oebuild_conf_schema as schema
 import dialogs
-import params
 import re
 import json_regex as jre
+import static_params
 
 class IgnoreSubConf(Exception):
     pass
@@ -37,10 +37,12 @@ class OEBuildConfParser():
 
     _logger = logging.getLogger(__name__)
     _analyze = False
+    params = None
     
-    def __init__(self, analyze=False):
+    def __init__(self, params, analyze=False):
         self._analyze = analyze
-        for dfile in params.DEPRECATED_FILES:
+        self.params = params
+        for dfile in static_params.DEPRECATED_FILES:
             if os.path.exists(dfile):
                 self._logger.warning('File %s is deprecated, you can remove it from the project' % dfile)
             
@@ -57,7 +59,7 @@ class OEBuildConfParser():
                     self._logger.warning(_ex('%s is not JSON valid and will be ignored' % file_name, e))
                     raise IgnoreSubConf()
           
-        if conf.get(schema.OEBUILD_VERSION, None) != params.VERSION:
+        if conf.get(schema.OEBUILD_VERSION, None) != static_params.VERSION:
             conf = self._update_file(conf.get(schema.OEBUILD_VERSION, None), file_name, alt_schema)
         self._validate_conf(conf, file_name, strict_mode, alt_schema)  
         
@@ -90,14 +92,14 @@ class OEBuildConfParser():
                 raise IgnoreSubConf()
         
     def load_oebuild_config_file(self, conf_file_list):   
-        if not (os.path.exists(params.PROJECT_CONFIG_FILE) and os.path.isfile(params.PROJECT_CONFIG_FILE)):
-            self._logger.error('The project configuration does not exist : %s' % params.PROJECT_CONFIG_FILE)
+        if not (os.path.exists(static_params.PROJECT_CONFIG_FILE) and os.path.isfile(static_params.PROJECT_CONFIG_FILE)):
+            self._logger.error('The project configuration does not exist : %s' % static_params.PROJECT_CONFIG_FILE)
             sys.exit(1)
             
-        conf = self._load_file(params.PROJECT_CONFIG_FILE)
+        conf = self._load_file(static_params.PROJECT_CONFIG_FILE)
             
         for conf_name in conf_file_list:
-            conf_file_name = params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name
+            conf_file_name = static_params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name
             if os.path.exists(conf_file_name) and os.path.isfile(conf_file_name):
                 try:
                     conf = self._load_alt_file(conf, conf_file_name)
@@ -107,16 +109,16 @@ class OEBuildConfParser():
         return conf
     
     def load_transitive_oebuild_config_file(self, conf_file_path, conf_file_list):
-        conf_file = '%s/%s' % (conf_file_path, params.PROJECT_CONFIG_FILE)
+        conf_file = '%s/%s' % (conf_file_path, static_params.PROJECT_CONFIG_FILE)
         if not (os.path.exists(conf_file) and os.path.isfile(conf_file)):
             # Probably not an oebuild project
-            self._logger.info('%s : %s file not found. It is probably not a oebuild module' % (conf_file_path, params.PROJECT_CONFIG_FILE))
+            self._logger.info('%s : %s file not found. It is probably not a oebuild module' % (conf_file_path, static_params.PROJECT_CONFIG_FILE))
             raise IgnoreSubConf()
         
         conf = self._load_file(conf_file)
                 
         for conf_name in conf_file_list:
-            conf_file = '%s/%s' % (conf_file_path, params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name)
+            conf_file = '%s/%s' % (conf_file_path, static_params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name)
             if os.path.exists(conf_file) and os.path.isfile(conf_file):
                 try:
                     conf = self._load_alt_file(conf, conf_file)
@@ -127,24 +129,24 @@ class OEBuildConfParser():
     
     def create_oebuild_config_file(self, default_serie):      
         overwrite = "no"
-        if os.path.exists(params.PROJECT_CONFIG_FILE):
-            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.PROJECT_CONFIG_FILE, overwrite)   
-        if os.path.exists(params.PROJECT_CONFIG_FILE) and overwrite == "no":
+        if os.path.exists(static_params.PROJECT_CONFIG_FILE):
+            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % static_params.PROJECT_CONFIG_FILE, overwrite)   
+        if os.path.exists(static_params.PROJECT_CONFIG_FILE) and overwrite == "no":
             return
             
-        with open(params.DEFAULT_PROJECT_CONFIG_FILE, 'r') as f:
+        with open(static_params.DEFAULT_PROJECT_CONFIG_FILE, 'r') as f:
             content = f.read()
 
-        content = re.sub(r'\$OEBUILD_VERSION', params.VERSION, content)
+        content = re.sub(r'\$OEBUILD_VERSION', static_params.VERSION, content)
         content = re.sub(r'\$PROJECT_NAME', os.getcwd().split('/')[-1], content)
         content = re.sub(r'\$SERIE', default_serie, content)
             
-        with open(params.PROJECT_CONFIG_FILE, 'w+') as f:     
+        with open(static_params.PROJECT_CONFIG_FILE, 'w+') as f:     
             f.write(content)
             
     def _update_file(self, version_from, file_name, alt_schema=False):
         self._logger.info(('%s is in version %s and openerp-autobuild is in version %s') % 
-                             (file_name, version_from, params.VERSION))
+                             (file_name, version_from, static_params.VERSION))
         
         valid_keys = self.UPDATE_ALT_FROM.keys() if alt_schema else self.UPDATE_FROM.keys()
         if version_from not in valid_keys:
@@ -167,7 +169,7 @@ class OEBuildConfParser():
         if answer == dialogs.ANSWER_YES:
             os.rename(updated_fname, file_name)
             updated_fname = file_name
-            self._logger.info('%s has been updated to version %s' % (file_name, params.VERSION))
+            self._logger.info('%s has been updated to version %s' % (file_name, static_params.VERSION))
         else:
             self._logger.info('An updated version of %s will be used and stored in %s' % (file_name, updated_fname))
             

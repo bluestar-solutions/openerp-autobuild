@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-import params
+import static_params
 
 OEBUILD_VERSION = "oebuild-version"
 URL = "url"
@@ -68,7 +68,7 @@ USER_CONFIG_SCHEMA = lambda default=True: {
     "type": "object",
     "properties": {
         COMMENT: {"type": "array", "items": {"type": "string"}},
-        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",

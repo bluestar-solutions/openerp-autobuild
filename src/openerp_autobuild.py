@@ -42,7 +42,8 @@ import StringIO
 from xml.dom import minidom
 import dialogs
 import json
-import params
+from params import Params
+import static_params
 from oebuild_logger import _ex, logging, LOG_PARSER, COLORIZED
 import re
 from argument_parser import OEArgumentParser
@@ -56,7 +57,7 @@ class Autobuild():
     
     user_conf = None
     project = None
-    workspace_path = lambda self: self.user_conf[user_conf_schema.WORKSPACE].replace('~', params.USER_HOME_PATH)
+    workspace_path = None
     project_path = lambda self: '%s/%s' % (self.workspace_path(), self.project)
     openerp_path = lambda self: '%s/%s' % (self.project_path(), 'openerp')
     deps_path = lambda self: '%s/%s' % (self.project_path(), 'deps')
@@ -75,23 +76,27 @@ class Autobuild():
     
     deps_addons_path = []
     python_deps = []
+    params = None
     
     def __init__(self, arg_parser):
         self._arg_parser = arg_parser
         args = self._arg_parser.args
+                
+        self.params = Params(getattr(args, 'home_config', None), getattr(args, 'etc_config', None))            
+                
+        self.oebuild_conf_parser = OEBuildConfParser(self.params, getattr(args, 'analyze', False))
         
-        self.oebuild_conf_parser = OEBuildConfParser(getattr(args, 'analyze', False))
-        
-        self.user_conf = UserConfParser().load_user_config_file()
+        self.user_conf = UserConfParser(self.params).load_user_config_file()
+        self.workspace_path = self.user_conf[user_conf_schema.WORKSPACE].replace('~', self.params.USER_HOME_PATH)
                 
         self._logger.info('Entering %s mode' % args.func)
         
         if args.func == "init-new":
             overwrite = "no"
-            if os.path.exists(params.OE_CONFIG_FILE):
-                overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.OE_CONFIG_FILE, overwrite)   
-            if (not os.path.exists(params.OE_CONFIG_FILE)) or overwrite == "yes":
-                shutil.copyfile(params.DEFAULT_OE_CONFIG_FILE, params.OE_CONFIG_FILE)
+            if os.path.exists(static_params.OE_CONFIG_FILE):
+                overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % static_params.OE_CONFIG_FILE, overwrite)   
+            if (not os.path.exists(static_params.OE_CONFIG_FILE)) or overwrite == "yes":
+                shutil.copyfile(static_params.DEFAULT_OE_CONFIG_FILE, static_params.OE_CONFIG_FILE)
     
             self.oebuild_conf_parser.create_oebuild_config_file(self.user_conf[user_conf_schema.DEFAULT_SERIE])
         else:
@@ -272,8 +277,8 @@ class Autobuild():
     def run_openerp(self, conf, args):
         self.create_or_update_venv(conf, args)
         
-        if not os.path.exists(params.OE_CONFIG_FILE):
-            self._logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % params.OE_CONFIG_FILE)
+        if not os.path.exists(static_params.OE_CONFIG_FILE):
+            self._logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % static_params.OE_CONFIG_FILE)
             sys.exit(1)
         
         if not os.path.exists(self.workspace_path()):
