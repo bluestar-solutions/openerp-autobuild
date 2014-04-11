@@ -1,6 +1,6 @@
 {
 	"workspace": "~dev_workspace/openerp-autobuild",
-	"custom-configuration-files": ["bluestar","florent.mole"],
+	"custom-configuration-files": [],
 
 	"openerp": [
 		{

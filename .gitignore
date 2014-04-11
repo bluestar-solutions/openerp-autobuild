@@ -1,2 +1,3 @@
 *.pyc
+devconf/dev_workspace/*
 /.settings
