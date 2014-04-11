@@ -28,6 +28,7 @@ from oebuild_logger import _ex, logging
 from settings_parser.schema import user_conf_schema
 import user_conf_1_7_update
 import shutil
+import static_params
 
 class UserConfParser():
 
@@ -100,10 +101,10 @@ class UserConfParser():
         if not os.path.exists(self.params.USER_CONFIG_PATH):
             os.makedirs(self.params.USER_CONFIG_PATH)
         if not os.path.exists(self.params.USER_CONFIG_FILE):
-            infile = open(self.params.DEFAULT_USER_CONFIG_FILE)
+            infile = open(static_params.DEFAULT_USER_CONFIG_FILE)
             outfile = open(self.params.USER_CONFIG_FILE, 'w')
             for line in infile:
-                outfile.write(line.replace("$VERSION", self.params.VERSION).replace("$USERNAME", getpass.getuser()))
+                outfile.write(line.replace("$VERSION", static_params.VERSION).replace("$USERNAME", getpass.getuser()))
             infile.close()
             outfile.close()
             
@@ -114,7 +115,7 @@ class UserConfParser():
                 self._clean_after_update()
             
             user_conf = self._load_conf(self.params.USER_CONFIG_FILE, False)
-            if user_conf[user_conf_schema.OEBUILD_VERSION] != self.params.VERSION:
+            if user_conf[user_conf_schema.OEBUILD_VERSION] != static_params.VERSION:
                 self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
                 
     def _clean_after_update(self):

@@ -93,7 +93,7 @@ class OEArgumentParser():
         parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
         parser_eclipse_init.set_defaults(func="init-eclipse")
 
-        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project")
+        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project", parents=[shared_parser])
         parser_init_new.set_defaults(func="init-new")
 
         argcomplete.autocomplete(parser)

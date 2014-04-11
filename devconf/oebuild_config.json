@@ -1,0 +1,39 @@
+{
+	"workspace": "~dev_workspace/openerp-autobuild",
+	"custom-configuration-files": ["bluestar","florent.mole"],
+
+	"openerp": [
+		{
+			"serie": "trunk",
+			"server": "lp:openobject-server",
+			"addons": "lp:openobject-addons",
+			"web": "lp:openerp-web"
+		},
+		{
+			"serie": "6.0",
+			"server": "lp:openobject-server/6.0",
+			"addons": "lp:openobject-addons/6.0",
+			"web": "lp:openerp-web/6.0"
+		},
+    	{
+                "serie": "6.1",
+                "server": "bzr://bss-devtools02:4155/openerp-6.1-default-server",
+                "addons": "bzr://bss-devtools02:4155/openerp-6.1-default-addons",
+                "web": "bzr://bss-devtools02:4155/openerp-6.1-default-web"
+        },
+        {
+                "serie": "7.0",
+                "server": "bzr://bss-devtools02:4155/openerp-7.0-default-server",
+                "addons": "bzr://bss-devtools02:4155/openerp-7.0-default-addons",
+                "web": "bzr://bss-devtools02:4155/openerp-7.0-default-web"
+        }
+	],
+	"default-serie": "7.0",
+	"database": {
+		"host": "localhost",
+		"port": "5432",
+		"user": "openerp",
+		"password": "openerp"
+	}
+}
+

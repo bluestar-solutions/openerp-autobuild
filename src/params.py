@@ -34,7 +34,7 @@ class Params():
         
         if user_home_path:
             self.USER_HOME_PATH = user_home_path
-            self.USER_CONFIG_PATH = '%s/.config/openerp-autobuild' % self.USER_HOME_PATH
+            self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
             self.USER_CONFIG_FILE = '%s/oebuild_config.json' % self.USER_CONFIG_PATH
             
         if etc_path:

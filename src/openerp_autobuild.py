@@ -58,19 +58,18 @@ class Autobuild():
     user_conf = None
     project = None
     workspace_path = None
-    project_path = lambda self: '%s/%s' % (self.workspace_path(), self.project)
-    openerp_path = lambda self: '%s/%s' % (self.project_path(), 'openerp')
-    deps_path = lambda self: '%s/%s' % (self.project_path(), 'deps')
-    target_path = lambda self: '%s/%s' % (self.project_path(), 'target')
-    target_addons_path = lambda self: '%s/%s' % (self.target_path(), 'custom-addons')
-    deps_cache_file = lambda self: '%s/%s' % (self.project_path(), 'deps.cache')
-    py_deps_cache_file = lambda self: '%s/%s' % (self.project_path(), 'python-deps.cache')
-    virtualenv_path = lambda self: '%s/%s' % (self.project_path(), 'venv')
-    virtual_python = lambda self: '%s/%s' % (self.virtualenv_path(), 'bin/python')
-    virtual_pip = lambda self: '%s/%s' % (self.virtualenv_path(), 'bin/pip')
+    project_path = None
+    openerp_path = None
+    deps_path = None
+    target_path = None
+    target_addons_path = None
+    deps_cache_file = None
+    py_deps_cache_file = None
+    virtualenv_path = None
+    virtual_python = None
+    virtual_pip = None
     src_path = os.path.curdir
 
-    pid_file = lambda self: '%s/%s' % ('/tmp', '%s.pid' % self.project)
     
     oebuild_conf_parser = None
     
@@ -102,21 +101,31 @@ class Autobuild():
         else:
             conf = self.oebuild_conf_parser.load_oebuild_config_file(self.user_conf[user_conf_schema.CONF_FILES])
             self.project = conf[schema.PROJECT]
-            
+            self.project_path = '%s/%s' % (self.workspace_path, self.project)
+            self.openerp_path = '%s/%s' % (self.project_path, 'openerp')
+            self.deps_path = '%s/%s' % (self.project_path, 'deps')
+            self.target_path = '%s/%s' % (self.project_path, 'target')
+            self.target_addons_path = '%s/%s' % (self.target_path, 'custom-addons')
+            self.deps_cache_file = '%s/%s' % (self.project_path, 'deps.cache')
+            self.py_deps_cache_file = '%s/%s' % (self.project_path, 'python-deps.cache')
+            self.virtualenv_path = '%s/%s' % (self.project_path, 'venv')
+            self.virtual_python = '%s/%s' % (self.virtualenv_path, 'bin/python')
+            self.virtual_pip = '%s/%s' % (self.virtualenv_path, 'bin/pip')
+            self.pid_file = '%s/%s' % ('/tmp', '%s.pid' % self.project)
             if args.no_update:
                 try:
-                    with open(self.deps_cache_file(), 'r') as f:
+                    with open(self.deps_cache_file, 'r') as f:
                         self.deps_addons_path = json.loads(f.read())
                 except Exception, e:
-                    self._logger.error(_ex('Impossible to read %s' % self.deps_cache_file(), e))
+                    self._logger.error(_ex('Impossible to read %s' % self.deps_cache_file, e))
                     sys.exit(1)        
             else:
                 self.get_deps(conf)
                 try:
-                    with open(self.deps_cache_file(), 'w') as f:
+                    with open(self.deps_cache_file, 'w') as f:
                         f.write(json.dumps(self.deps_addons_path))
                 except Exception, e:
-                    self._logger.warning(_ex('Impossible to write %s' % self.deps_cache_file(), e))
+                    self._logger.warning(_ex('Impossible to write %s' % self.deps_cache_file, e))
     
             if args.func == "init-eclipse":
                 self.init_eclipse(conf)
@@ -129,29 +138,29 @@ class Autobuild():
         self._logger.info('Terminate %s mode' % args.func)
         
     def assembly(self, conf, with_oe=False):
-        if os.path.exists(self.target_path()):
-            shutil.rmtree(self.target_path())
-        os.mkdir(self.target_path())
-        os.mkdir(self.target_addons_path())
+        if os.path.exists(self.target_path):
+            shutil.rmtree(self.target_path)
+        os.mkdir(self.target_path)
+        os.mkdir(self.target_addons_path)
         
         full_path = self.src_path
         for addon in os.listdir(full_path):
             if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.':
-                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (self.target_addons_path(), addon))
+                shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (self.target_addons_path, addon))
                         
         for path in self.deps_addons_path:
-            full_path = '%s/%s' % (self.deps_path(), path.rstrip('/'))
+            full_path = '%s/%s' % (self.deps_path, path.rstrip('/'))
             for addon in os.listdir(full_path):
-                if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.' and not os.path.exists('%s/%s' % (self.target_addons_path(), addon)):
-                    shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (self.target_addons_path(), addon))
+                if os.path.isdir('%s/%s' % (full_path, addon)) and addon[0] != '.' and not os.path.exists('%s/%s' % (self.target_addons_path, addon)):
+                    shutil.copytree('%s/%s' % (full_path, addon), '%s/%s' % (self.target_addons_path, addon))
         
-        os.chdir(self.target_path())
+        os.chdir(self.target_path)
         tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
         tar.add('custom-addons')
         
         if with_oe:
             for oe in ['server','web','addons']:
-                tar.add('%s/%s' % (self.openerp_path(), oe), arcname=oe)
+                tar.add('%s/%s' % (self.openerp_path, oe), arcname=oe)
                 
         tar.close()
         
@@ -183,7 +192,7 @@ class Autobuild():
         EM = lxml.builder.ElementMaker()
         
         ext_path = EM.pydev_pathproperty(name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH')
-        ext_path.append(EM.path(self.openerp_path() + '/server'))
+        ext_path.append(EM.path(self.openerp_path + '/server'))
         
         doc = EM.pydev_project (
             EM.pydev_property('Default', name='org.python.pydev.PYTHON_PROJECT_INTERPRETER'),
@@ -201,69 +210,69 @@ class Autobuild():
         
     def create_or_update_venv(self, conf, args):
 
-        if os.path.exists(self.virtualenv_path()) and os.path.exists(self.py_deps_cache_file()):
+        if os.path.exists(self.virtualenv_path) and os.path.exists(self.py_deps_cache_file):
             if args.no_update:
                 return
             
             is_config_changed = True
-            with open(self.py_deps_cache_file(),'r') as f:
+            with open(self.py_deps_cache_file,'r') as f:
                 last_run_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in json.load(f)])
                 current_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
                 is_config_changed = len(last_run_py_deps) != len(current_py_deps) or last_run_py_deps.symmetric_difference(current_py_deps) != set()
                 
             if not is_config_changed:
-                self._logger.info("virtualenv %s: No changes in Python dependencies, use it as is" % self.virtualenv_path())
+                self._logger.info("virtualenv %s: No changes in Python dependencies, use it as is" % self.virtualenv_path)
                 return
             
-            self._logger.info("virtualenv %s: Changes in Python dependencies, need to rebuild" % self.virtualenv_path())
-            shutil.rmtree(self.virtualenv_path())
-            os.remove(self.py_deps_cache_file())
+            self._logger.info("virtualenv %s: Changes in Python dependencies, need to rebuild" % self.virtualenv_path)
+            shutil.rmtree(self.virtualenv_path)
+            os.remove(self.py_deps_cache_file)
         
-        elif not os.path.exists(self.py_deps_cache_file()):
+        elif not os.path.exists(self.py_deps_cache_file):
             if args.no_update:
                 self._logger.error("Cannot run in no-update mode without last run Python dependencies cache file, try running without --no-update argument.")
                 sys.exit(1)
-            if os.path.exists(self.virtualenv_path()):
-                self._logger.info("virtualenv %s : No last run Python dependencies cache file, need to rebuild" % self.virtualenv_path())
-                shutil.rmtree(self.virtualenv_path())    
+            if os.path.exists(self.virtualenv_path):
+                self._logger.info("virtualenv %s : No last run Python dependencies cache file, need to rebuild" % self.virtualenv_path)
+                shutil.rmtree(self.virtualenv_path)    
             
         py_deps_string = " ".join(["'%s%s'" % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
-        self._logger.info("virtualenv %s : Create and install Python dependencies (%s)" % (self.virtualenv_path(), py_deps_string))
-        out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path(),
+        self._logger.info("virtualenv %s : Create and install Python dependencies (%s)" % (self.virtualenv_path, py_deps_string))
+        out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path,
                                    log_in=False, log_out=False, log_err=True)
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o.rstrip()))
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path, o.rstrip()))
         errors = False
         for e in re.split('\n(?=\S)', err):
             if len(e) > 0:
                 errors = True
-                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
+                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path, e.rstrip()))
         if errors:
             sys.exit(1)
         
-        out, err = self.call_command('LC_ALL=C %s install --egg -q --upgrade %s' % (self.virtual_pip(), py_deps_string),
+        out, err = self.call_command('LC_ALL=C %s install --egg -q --upgrade %s' % (self.virtual_pip, py_deps_string),
                                      log_in=False, log_out=False, log_err=False)
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path(), o.rstrip()))
+                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path, o.rstrip()))
         errors = False
         for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated', e, re.I):
                 # If an error is thrown because of using deprecated RepositoryFormat6() format, just warn and continue
-                self._logger.warning(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
+                self._logger.warning(u'virtualenv %s: %s' % (self.virtualenv_path, e.rstrip()))
             elif len(e) > 0:
                 errors = True
-                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path(), e.rstrip()))
+                self._logger.error(u'virtualenv %s: %s' % (self.virtualenv_path, e.rstrip()))
         if errors:
             sys.exit(1)
         
-        with open(self.py_deps_cache_file(),'w+') as f:
+        with open(self.py_deps_cache_file,'w+') as f:
             json.dump(list(self.python_deps), f)
     
     def kill_old_openerp(self, conf):
-        if os.path.exists(self.pid_file()) and os.path.isfile(self.pid_file()):
-            with open(self.pid_file(),"r") as f:
+        if os.path.exists(self.pid_file) and os.path.isfile(self.pid_file):
+            with open(self.pid_file,"r") as f:
                 pid = f.read()
                 pid = int(pid) if pid != '' else 0
             if pid != 0:
@@ -271,7 +280,7 @@ class Autobuild():
                     os.kill(pid,9)
                 except:
                     pass
-                with open(self.pid_file(),"w") as f:
+                with open(self.pid_file,"w") as f:
                     f.write("%d" % 0)
     
     def run_openerp(self, conf, args):
@@ -281,9 +290,9 @@ class Autobuild():
             self._logger.error('The OpenERP configuration does not exist : %s, use openerp-autobuild init to create it.' % static_params.OE_CONFIG_FILE)
             sys.exit(1)
         
-        if not os.path.exists(self.workspace_path()):
-            self._logger.info('Creating nonexistent openerp-autobuild workspace : %s', self.workspace_path())
-            os.makedirs(self.workspace_path())
+        if not os.path.exists(self.workspace_path):
+            self._logger.info('Creating nonexistent openerp-autobuild workspace : %s', self.workspace_path)
+            os.makedirs(self.workspace_path)
         
         if args.modules == "def-all":
             modules = ""
@@ -294,10 +303,10 @@ class Autobuild():
         else:
             modules = args.modules
             
-        addons_path = '%s/%s' % (self.openerp_path(), 'addons')
+        addons_path = '%s/%s' % (self.openerp_path, 'addons')
         for path in self.deps_addons_path:
-            addons_path = "%s,%s" % (addons_path, '%s/%s' % (self.deps_path(), path))
-        addons_path = "%s%s,%s" % (addons_path, ',.' if modules != '' else '', '%s/%s' % (self.openerp_path(), 'web/addons'))
+            addons_path = "%s,%s" % (addons_path, '%s/%s' % (self.deps_path, path))
+        addons_path = "%s%s,%s" % (addons_path, ',.' if modules != '' else '', '%s/%s' % (self.openerp_path, 'web/addons'))
         
         db_conf = self.user_conf[user_conf_schema.DATABASE]
         if args.func == "test":
@@ -334,7 +343,7 @@ class Autobuild():
                 conn.set_isolation_level(old_isolation_level)  
                 update_or_install = "i"
     
-            cmd = '%s %s/%s' % (self.virtual_python(), self.openerp_path(), 'server/openerp-server')
+            cmd = '%s %s/%s' % (self.virtual_python, self.openerp_path, 'server/openerp-server')
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' -d %s' % args.db_name
             cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
@@ -349,13 +358,13 @@ class Autobuild():
                 cmd += ' --stop-after-init'
             try:
                 self._logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file(), log_in=False, parse_tests=True)
+                openerp_output, _ = self.call_command(cmd, parse_log=args.analyze, register_pid=self.pid_file, log_in=False, parse_tests=True)
             except KeyboardInterrupt:
                 self._logger.info("OpenERP stopped from command line")
                 if args.func == "test" and args.analyze:
                     sys.exit(1)
         else:
-            cmd = '%s %s/%s -c .openerp-dev-default' % (self.virtual_python(), self.openerp_path(), 'server/openerp-server')
+            cmd = '%s %s/%s -c .openerp-dev-default' % (self.virtual_python, self.openerp_path, 'server/openerp-server')
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
             cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD, 'openerp')
@@ -368,7 +377,7 @@ class Autobuild():
             cmd += ' --netrpc-port=%d' % args.netrpc_port
             try:
                 self._logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(cmd, parse_log=False, register_pid=self.pid_file(), log_in=False)
+                openerp_output, _ = self.call_command(cmd, parse_log=False, register_pid=self.pid_file, log_in=False)
             except KeyboardInterrupt:
                 self._logger.info("OpenERP stopped after keyboard interrupt")
     
@@ -394,7 +403,7 @@ class Autobuild():
             try:
                 url = oe_conf.get(sp, {}).get(schema.URL, serie[sp])
                 bzr_rev = oe_conf.get(sp, {}).get(schema.BZR_REV, None)
-                self.bzr_checkout(url, '%s/%s' % (self.openerp_path(), sp), bzr_rev)
+                self.bzr_checkout(url, '%s/%s' % (self.openerp_path, sp), bzr_rev)
             except Exception, e:
                 self._logger.error(_ex('Cannot checkout from %s' % url, e))
                 sys.exit(1)
@@ -439,7 +448,7 @@ class Autobuild():
     
             source = dep[schema.SOURCE]
             deps_mapping[dep[schema.NAME]] = (from_project, dep)
-            destination = '%s/%s' % (self.deps_path().rstrip('/'), dep.get(schema.DESTINATION, dep[schema.NAME]))
+            destination = '%s/%s' % (self.deps_path.rstrip('/'), dep.get(schema.DESTINATION, dep[schema.NAME]))
             
             if source[schema.SCM] == schema.SCM_BZR:
                 try:
