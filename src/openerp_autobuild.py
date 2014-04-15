@@ -143,8 +143,7 @@ class Autobuild():
         os.mkdir(self.target_path)
         os.mkdir(self.target_addons_path)
         
-        dependency_file = open("%s/DEPENDENCY.txt" % (self.target_addons_path()),"w")
-        #[for python_dep["name"] in self.python_deps]:
+        dependency_file = open("%s/DEPENDENCY.txt" % (self.target_addons_path),"w")
         
         dependency_file.writelines(['%s\n' %(python_dep['name']) for python_dep in self.python_deps])
         dependency_file.close()
