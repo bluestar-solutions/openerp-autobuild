@@ -1,5 +1,5 @@
 {
-	"workspace": "~dev_workspace/openerp-autobuild",
+	"workspace": "~/openerp-autobuild-dev",
 	"custom-configuration-files": [],
 
 	"openerp": [
