@@ -11,7 +11,7 @@
     ],
     "user":"$USERNAME",
     "module_author":"$USERNAME",
-    "website":"$WEBSITE"
+    "website":"",
     "oebuild-version": "$VERSION",
     "custom-configuration-files": ["$USERNAME"],
     "openerp": [

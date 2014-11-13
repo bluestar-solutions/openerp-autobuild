@@ -96,14 +96,9 @@ class OEArgumentParser():
 
         parser_create_module = subparsers.add_parser('module-create', help="Create a new module")
         parser_create_module.add_argument('module_name', help="module base name")
-        parser_create_module.add_argument('-mn','--module_long_name', dest="module_long_name", required=False, help="long module name")
-        parser_create_module.add_argument('-c','--category', dest="category", required=False, help="The module category")
+        parser_create_module.add_argument('-mn', '--module_long_name', dest="module_long_name", required=False, help="long module name")
+        parser_create_module.add_argument('-c', '--category', dest="category", required=False, help="The module category")
         parser_create_module.set_defaults(func="create-module")
-
-        parser_create_module = subparsers.add_parser('module-add-class', help="Add a new class to the module")
-        parser_create_module.add_argument('module_name', help="module base name")
-        parser_create_module.add_argument('class_name', help="class name")
-        parser_create_module.set_defaults(func="module-add-class")
 
         argcomplete.autocomplete(parser)
         self.args = parser.parse_args()

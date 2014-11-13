@@ -30,7 +30,7 @@ from bzrlib.errors import NotBranchError
 from git import Repo
 from git.exc import InvalidGitRepositoryError
 import shutil
-from settings_parser.schema import user_conf_schema, oebuild_conf_schema as schema ,\
+from settings_parser.schema import user_conf_schema, oebuild_conf_schema as schema , \
     oebuild_conf_schema
 from settings_parser.user_conf_parser import UserConfParser
 from settings_parser.oebuild_conf_parser import OEBuildConfParser, IgnoreSubConf
@@ -81,7 +81,7 @@ class Autobuild():
         args = self._arg_parser.args
 
         self.oebuild_conf_parser = OEBuildConfParser(getattr(args, 'analyze', False))
-        
+
         self.user_conf = UserConfParser().load_user_config_file()
 
         self._logger.info('Entering %s mode' % args.func)
@@ -89,15 +89,8 @@ class Autobuild():
         if args.func == "create-module":
             conf = self.oebuild_conf_parser.load_oebuild_config_file(self.user_conf[user_conf_schema.CONF_FILES])
             self.create_module(conf, args)
-            sys.exit(0)
 
-        if args.func == "module-add-class":
-            conf = self.oebuild_conf_parser.load_oebuild_config_file(self.user_conf[user_conf_schema.CONF_FILES])
-            self.create_class(conf, args)
-            sys.exit(0)
-
-
-        if args.func == "init-new":
+        elif args.func == "init-new":
             overwrite = "no"
             if os.path.exists(params.OE_CONFIG_FILE):
                 overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % params.OE_CONFIG_FILE, overwrite)
@@ -156,7 +149,7 @@ class Autobuild():
         tar.add('custom-addons')
 
         if with_oe:
-            for oe in ['server','web','addons']:
+            for oe in ['server', 'web', 'addons']:
                 tar.add('%s/%s' % (self.openerp_path(), oe), arcname=oe)
 
         tar.close()
@@ -166,7 +159,6 @@ class Autobuild():
         if os.path.exists(module_path):
             self._logger.error("The module already exists")
             sys.exit(1)
-        os.mkdir(module_path)
 
         if args.module_long_name is None :
             module_long_name = args.module_name
@@ -184,9 +176,6 @@ class Autobuild():
 
         initpy = re.sub(r'\$HEADER', header, initpy)
 
-        with open("%s/__init__.py" % module_path, 'w+') as f:
-            f.write(initpy)
-
         with open(params.OPENERP_PY_TPL, 'r') as f:
             openerppy = f.read()
 
@@ -198,31 +187,13 @@ class Autobuild():
         if args.category is not None :
             openerppy = re.sub(r'\$CATEGORY', args.category, openerppy)
 
+        os.mkdir(module_path)
+
+        with open("%s/__init__.py" % module_path, 'w+') as f:
+            f.write(initpy)
+
         with open("%s/__openerp__.py" % module_path, 'w+') as f:
             f.write(openerppy)
-
-    def create_class(self, conf, args):
-        module_path = '%s/%s' % (self.src_path, args.module_name)
-        #class_def = args.class_name.split('/')
-        class_name = args.class_name
-        class_path = '%s/%s' % (module_path, class_name)
-        if os.path.exists(class_path):
-            self._logger.error("The  class already exists")
-            sys.exit(1)
-        with open(params.HEADER_PY_TPL, 'r') as f:
-            header = f.read()
-
-        header = re.sub(r'\$AUTHOR', self.user_conf[user_conf_schema.MODULE_AUTHOR], header)
-        header = re.sub(r'\$WEBSITE', self.user_conf[user_conf_schema.WEBSITE], header)
-
-        with open(params.CLASS_TPL, 'r') as f:
-            classfile = f.read()
-
-        classfile = re.sub(r'\$HEADER', header, classfile)
-        classfile = re.sub(r'\$CLASS_NAME', class_name, classfile)
-
-        with open(class_path, 'w+') as f:
-            f.write(classfile)
 
     def init_eclipse(self, conf):
         self.create_eclipse_project(conf)
@@ -275,7 +246,7 @@ class Autobuild():
                 return
 
             is_config_changed = True
-            with open(self.py_deps_cache_file(),'r') as f:
+            with open(self.py_deps_cache_file(), 'r') as f:
                 last_run_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in json.load(f)])
                 current_py_deps = set(['%s%s' % (dep[oebuild_conf_schema.NAME], dep.get(oebuild_conf_schema.SPECIFIER, '')) for dep in self.python_deps])
                 is_config_changed = len(last_run_py_deps) != len(current_py_deps) or last_run_py_deps.symmetric_difference(current_py_deps) != set()
@@ -327,20 +298,20 @@ class Autobuild():
         if errors:
             sys.exit(1)
 
-        with open(self.py_deps_cache_file(),'w+') as f:
+        with open(self.py_deps_cache_file(), 'w+') as f:
             json.dump(list(self.python_deps), f)
 
     def kill_old_openerp(self, conf):
         if os.path.exists(self.pid_file()) and os.path.isfile(self.pid_file()):
-            with open(self.pid_file(),"r") as f:
+            with open(self.pid_file(), "r") as f:
                 pid = f.read()
                 pid = int(pid) if pid != '' else 0
             if pid != 0:
                 try:
-                    os.kill(pid,9)
+                    os.kill(pid, 9)
                 except:
                     pass
-                with open(self.pid_file(),"w") as f:
+                with open(self.pid_file(), "w") as f:
                     f.write("%d" % 0)
 
     def run_openerp(self, conf, args):
@@ -358,7 +329,7 @@ class Autobuild():
             modules = ""
             for module in os.listdir("."):
                 if os.path.isdir(module) and not module.startswith('.'):
-                    modules = "%s,%s" % (module,modules)
+                    modules = "%s,%s" % (module, modules)
             modules = modules.rstrip(",")
         else:
             modules = args.modules
@@ -372,16 +343,16 @@ class Autobuild():
         if args.func == "test":
             update_or_install = "u"
             try:
-                conn = psycopg2.connect(host = db_conf.get(user_conf_schema.HOST, 'localhost'),
-                                        port = db_conf.get(user_conf_schema.PORT, '5432'),
-                                        user = db_conf.get(user_conf_schema.USER, 'openerp'),
-                                        password = db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
-                                        database = 'postgres')
+                conn = psycopg2.connect(host=db_conf.get(user_conf_schema.HOST, 'localhost'),
+                                        port=db_conf.get(user_conf_schema.PORT, '5432'),
+                                        user=db_conf.get(user_conf_schema.USER, 'openerp'),
+                                        password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
+                                        database='postgres')
             except:
                 self._logger.error("Unable to connect to the database.")
                 sys.exit(1)
 
-            cur = conn.cursor(cursor_factory = psycopg2.extras.DictCursor)
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cur.execute("select * from pg_database where datname = '%s'" % args.db_name)
             db_exists = cur.fetchall() or False
             if db_exists:
@@ -615,8 +586,8 @@ class Autobuild():
                                    stderr=subprocess.PIPE if parse_log else subprocess.STDOUT)
 
         if register_pid is not None:
-            with open(register_pid,"w") as f:
-                f.write("%d" % (process.pid+1)) # pid + 1 : shell=True -> pid of spawned shell
+            with open(register_pid, "w") as f:
+                f.write("%d" % (process.pid + 1))  # pid + 1 : shell=True -> pid of spawned shell
 
         if parse_log:
             out, err = process.communicate()

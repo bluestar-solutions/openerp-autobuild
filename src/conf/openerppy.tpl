@@ -3,7 +3,7 @@ $HEADER
 {
     'name': '$MODULE_LONG_NAME',
     'version': 'master',
-    "category" : '$WEBSITE',
+    "category" : '$CATEGORY',
     'complexity': "easy",
     'description': "",
     'author': '$AUTHOR',
