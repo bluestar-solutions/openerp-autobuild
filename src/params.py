@@ -22,27 +22,26 @@
 
 import os
 
-VERSION = '2.1'
 
-OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
-DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PATH
-DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
+class Params():
 
-USER_HOME_PATH = os.path.expanduser("~")
-USER_CONFIG_PATH = '%s/.config/openerp-autobuild' % USER_HOME_PATH
+    USER_HOME_PATH = os.path.expanduser("~")
+    USER_CONFIG_PATH = '%s/.config/openerp-autobuild' % USER_HOME_PATH
+    USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH
 
-ETC_CONFIG_FILE = "/etc/oebuild_config.json"
-USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH
+    ETC_CONFIG_FILE = "/etc/oebuild_config.json"
 
-OE_CONFIG_FILE = '.openerp-dev-default'
+    def __init__(self, user_home_path=None, etc_path=None):
 
-PROJECT_CONFIG_FILE = 'oebuild.conf'
-PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
+        if user_home_path:
+            self.USER_HOME_PATH = user_home_path
+            self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
+            self.USER_CONFIG_FILE = '%s/oebuild_config.json' % self.USER_CONFIG_PATH
 
-DEPRECATED_FILES = ('.project-dependencies',)
+        self.INIT_PY_TPL = '%s/.config/openerp-autobuild/initpy.tpl' % self.USER_HOME_PATH
+        self.OPENERP_PY_TPL = '%s/.config/openerp-autobuild/openerppy.tpl' % self.USER_HOME_PATH
+        self.HEADER_PY_TPL = '%s/.config/openerp-autobuild/header.tpl' % self.USER_HOME_PATH
+        self.CLASS_TPL = '%s/.config/openerp-autobuild/class.tpl' % self.USER_HOME_PATH
 
-INIT_PY_TPL = '%s/.config/openerp-autobuild/initpy.tpl' % USER_HOME_PATH
-OPENERP_PY_TPL = '%s/.config/openerp-autobuild/openerppy.tpl' % USER_HOME_PATH
-HEADER_PY_TPL = '%s/.config/openerp-autobuild/header.tpl' % USER_HOME_PATH
-CLASS_TPL = '%s/.config/openerp-autobuild/class.tpl' % USER_HOME_PATH
+        if etc_path:
+            self.ETC_CONFIG_FILE = "%s/oebuild_config.json" % etc_path

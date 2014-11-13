@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-import params
+import static_params
 
 OEBUILD_VERSION = "oebuild-version"
 URL = "url"
@@ -38,7 +38,7 @@ PORT = "port"
 USER = "user"
 PASSWORD = "password"
 PYTHON_DEPENDENCIES = "python-dependencies"
-NAME="name"
+NAME = "name"
 SPECIFIER = "specifier"
 COMMENT = "comment"
 
@@ -51,7 +51,7 @@ PYTHON_DEPENDENCY = {
     "required": [NAME],
     "additionalProperties" : False
 }
-OPENERP_TYPE = lambda default=True: {
+OPENERP_TYPE = lambda default = True: {
     "type": "object",
     "properties": {
         SERIE: {"type": "string"},
@@ -66,15 +66,15 @@ OPENERP_TYPE = lambda default=True: {
     "required": [SERIE, "server", "addons", "web", PYTHON_DEPENDENCIES] if default else [SERIE],
     "additionalProperties": False
 }
-USER_CONFIG_SCHEMA = lambda default=True: {
+USER_CONFIG_SCHEMA = lambda default = True: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
         COMMENT: {"type": "array", "items": {"type": "string"}},
         USER: {"type": "string"},
         MODULE_AUTHOR: {"type": "string"},
-        WEBSITE: {"type": "string","format": "url"},
-        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        WEBSITE: {"type": "string", "format": "url"},
+        OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",

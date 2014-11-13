@@ -25,7 +25,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import argcomplete
 import textwrap
 from bzrlib.plugin import load_plugins
-import params
+import static_params
 
 load_plugins()
 
@@ -47,7 +47,7 @@ class OEArgumentParser():
                     * Initailize configuration files for Eclipse (with PyDev plugin).
                     * Manage your module dependencies.
                     * Assembly your module with the desired OpenERP version and all dependencies.
-            ''' % (params.VERSION, '-' * len(params.VERSION))),
+            ''' % (static_params.VERSION, '-' * len(static_params.VERSION))),
             epilog=textwrap.dedent('''\
                 goal help:
                     %(prog)s GOAL -h
@@ -60,13 +60,15 @@ class OEArgumentParser():
 
                 Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
                 Released under GNU AGPLv3.
-            ''' % params.VERSION))
+            ''' % static_params.VERSION))
 
         shared_parser = ArgumentParser(add_help=False)
         shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
         shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
         shared_parser.add_argument("-n", "--netrpc-port", dest="netrpc_port", type=int, default="8070", help="NetRPC server port (default:8070).")
         shared_parser.add_argument("--no-update", action="store_true", dest="no_update", help="Bypass updates and try to launch with last parameters.")
+        shared_parser.add_argument("--home-config", dest="home_config", default="", help="Bypass default config with a specific configuration")
+        shared_parser.add_argument("--etc-config", dest="etc_config", default="", help="Bypass default config with a specific configuration")
 
         subparsers = parser.add_subparsers(metavar="GOAL")
 
@@ -91,7 +93,7 @@ class OEArgumentParser():
         parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
         parser_eclipse_init.set_defaults(func="init-eclipse")
 
-        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project")
+        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project", parents=[shared_parser])
         parser_init_new.set_defaults(func="init-new")
 
         parser_create_module = subparsers.add_parser('module-create', help="Create a new module")
