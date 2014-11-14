@@ -96,6 +96,12 @@ class OEArgumentParser():
         parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project", parents=[shared_parser])
         parser_init_new.set_defaults(func="init-new")
 
+        parser_create_module = subparsers.add_parser('module-create', help="Create a new module")
+        parser_create_module.add_argument('module_name', help="module base name")
+        parser_create_module.add_argument('-mn', '--module_long_name', dest="module_long_name", required=False, help="long module name")
+        parser_create_module.add_argument('-c', '--category', dest="category", required=False, help="The module category")
+        parser_create_module.set_defaults(func="create-module")
+
         argcomplete.autocomplete(parser)
         self.args = parser.parse_args()
 

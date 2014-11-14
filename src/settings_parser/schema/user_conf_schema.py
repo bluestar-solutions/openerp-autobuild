@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -15,7 +15,7 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
@@ -26,6 +26,9 @@ URL = "url"
 BZR_REV = "bzr-rev"
 OPENERP = "openerp"
 SERIE = "serie"
+USER = "user"
+MODULE_AUTHOR = "module_author"
+WEBSITE = "website"
 WORKSPACE = "workspace"
 CONF_FILES = "custom-configuration-files"
 DEFAULT_SERIE = "default-serie"
@@ -35,7 +38,7 @@ PORT = "port"
 USER = "user"
 PASSWORD = "password"
 PYTHON_DEPENDENCIES = "python-dependencies"
-NAME="name"
+NAME = "name"
 SPECIFIER = "specifier"
 COMMENT = "comment"
 
@@ -48,7 +51,7 @@ PYTHON_DEPENDENCY = {
     "required": [NAME],
     "additionalProperties" : False
 }
-OPENERP_TYPE = lambda default=True: {
+OPENERP_TYPE = lambda default = True: {
     "type": "object",
     "properties": {
         SERIE: {"type": "string"},
@@ -63,17 +66,20 @@ OPENERP_TYPE = lambda default=True: {
     "required": [SERIE, "server", "addons", "web", PYTHON_DEPENDENCIES] if default else [SERIE],
     "additionalProperties": False
 }
-USER_CONFIG_SCHEMA = lambda default=True: {
+USER_CONFIG_SCHEMA = lambda default = True: {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
         COMMENT: {"type": "array", "items": {"type": "string"}},
+        USER: {"type": "string"},
+        MODULE_AUTHOR: {"type": "string"},
+        WEBSITE: {"type": "string", "format": "url"},
         OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",
             "items": {"type": "string", "format": "uri"},
-        },                    
+        },
         OPENERP: {
             "type": "array",
             "items": OPENERP_TYPE(default),
