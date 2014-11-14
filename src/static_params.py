@@ -22,21 +22,15 @@
 
 import os
 
-class Params():
+OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
+DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
+DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PATH
+DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
 
-    USER_HOME_PATH = os.path.expanduser("~")
-    USER_CONFIG_PATH = '%s/.config/openerp-autobuild' % USER_HOME_PATH
-    USER_CONFIG_FILE = '%s/oebuild_config.json' % USER_CONFIG_PATH
+OE_CONFIG_FILE = '.openerp-dev-default'
 
-    ETC_CONFIG_FILE = "/etc/oebuild_config.json" 
-    
-    def __init__(self, user_home_path=None, etc_path=None):
-        
-        if user_home_path:
-            self.USER_HOME_PATH = user_home_path
-            self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
-            self.USER_CONFIG_FILE = '%s/oebuild_config.json' % self.USER_CONFIG_PATH
-            
-        if etc_path:
-            self.ETC_CONFIG_FILE = "%s/oebuild_config.json" % etc_path 
-        
+PROJECT_CONFIG_FILE = 'oebuild.conf'
+PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
+
+DEPRECATED_FILES = ('.project-dependencies',)
+VERSION = '2.1'

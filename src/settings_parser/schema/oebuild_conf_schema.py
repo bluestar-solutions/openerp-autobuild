@@ -19,7 +19,7 @@
 #
 ##############################################################################
 
-import params
+import static_params
 
 OEBUILD_VERSION = "oebuild-version"
 PROJECT = "project"
@@ -110,7 +110,7 @@ OEBUILD_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
-        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
         PROJECT: {"type": "string", "pattern": "^[a-z|0-9|-]+$"},
         OPENERP: {
             "type": "object",
@@ -140,7 +140,7 @@ OEBUILD_ALT_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
-        OEBUILD_VERSION: {"type": "string", "pattern": params.VERSION},
+        OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
         OPENERP: {
             "type": "object",
             "properties": {

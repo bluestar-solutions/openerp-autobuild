@@ -110,6 +110,8 @@ To create a new project with a default .openerp-dev-default, run (in a project f
 * **-p**, **--tcp-port** : XML_RPC port of the server (default:8069).
 * **-n**, **--netrpc-port** : NET_RPC port of the server (default:8070).
 * **--no-update**: Bypass updates and try to launch with last parameters. 
+* **--home-config**: Bypass default config with a specific configuration. 
+* **--etc-config**: Bypass default config with a specific configuration. 
 
 ### Run parameters
 

@@ -20,13 +20,14 @@
 ##############################################################################
 
 from settings_parser.schema import user_conf_schema
-import params
+
 import re
 import json_regex as jre
 
-USER_OEBUILD_CONFIG_FILE_1_7 = '%s/oebuild_config-1.7.json' % params.USER_CONFIG_PATH
+USER_OEBUILD_CONFIG_FILE_1_7 = lambda params: '%s/oebuild_config-1.7.json' % params.USER_CONFIG_PATH
 
-def update_from_1_7(conf, conf_1_7):
+def update_from_1_7(conf, conf_1_7, params):    
+    
     with open(params.USER_CONFIG_FILE) as f:
         content = f.read()
 
