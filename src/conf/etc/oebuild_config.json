@@ -15,10 +15,11 @@
     "workspace": "~/openerp-autobuild",
     "custom-configuration-files": [],
     "openerp": [{
-        "serie": "trunk",
-        "server": "lp:openobject-server",
-        "addons": "lp:openobject-addons",
-        "web": "lp:openerp-web",
+        "serie": "master",
+        "source": {
+        	"url": "https://github.com/odoo/odoo.git",
+        	"git-branch": "master"
+        },
         "python-dependencies": [
             {"name": "python-dateutil"},
             {"name": "feedparser"},
@@ -51,9 +52,10 @@
         ]
     },{
         "serie": "6.0",
-        "server": "lp:openobject-server/6.0",
-        "addons": "lp:openobject-addons/6.0",
-        "web": "lp:openerp-web/6.0",
+        "source": {
+        	"url": "https://github.com/odoo/odoo.git",
+        	"git-branch": "6.0"
+        },
         "python-dependencies": [
             {"name": "python-dateutil"},
             {"name": "feedparser"},
@@ -86,9 +88,10 @@
         ]
     },{
         "serie": "6.1",
-        "server": "lp:openobject-server/6.1",
-        "addons": "lp:openobject-addons/6.1",
-        "web": "lp:openerp-web/6.1",
+        "source": {
+        	"url": "https://github.com/odoo/odoo.git",
+        	"git-branch": "6.1"
+        },
         "python-dependencies": [
             {"name": "python-dateutil"},
             {"name": "feedparser"},
@@ -121,9 +124,10 @@
         ]
     },{
         "serie": "7.0",
-        "server": "lp:openobject-server/7.0",
-        "addons": "lp:openobject-addons/7.0",
-        "web": "lp:openerp-web/7.0",
+        "source": {
+        	"url": "https://github.com/odoo/odoo.git",
+        	"git-branch": "7.0"
+        },
         "python-dependencies": [
             {"name": "python-dateutil"},
             {"name": "feedparser"},

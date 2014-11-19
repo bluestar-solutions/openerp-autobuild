@@ -353,7 +353,7 @@ class Autobuild():
         addons_path = '%s/%s' % (self.openerp_path, 'addons')
         for path in self.deps_addons_path:
             addons_path = "%s,%s" % (addons_path, '%s/%s' % (self.deps_path, path))
-        addons_path = "%s%s,%s" % (addons_path, ',.' if modules != '' else '', '%s/%s' % (self.openerp_path, 'web/addons'))
+        addons_path = "%s%s" % (addons_path, ',.' if modules != '' else '')
 
         db_conf = self.user_conf[user_conf_schema.DATABASE]
         if args.func == "test":
@@ -390,7 +390,7 @@ class Autobuild():
                 conn.set_isolation_level(old_isolation_level)
                 update_or_install = "i"
 
-            cmd = '%s %s/%s' % (self.virtual_python, self.openerp_path, 'server/openerp-server')
+            cmd = '%s %s/%s' % (self.virtual_python, self.openerp_path, 'openerp-server')
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' -d %s' % args.db_name
             cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
@@ -411,7 +411,7 @@ class Autobuild():
                 if args.func == "test" and args.analyze:
                     sys.exit(1)
         else:
-            cmd = '%s %s/%s -c .openerp-dev-default' % (self.virtual_python, self.openerp_path, 'server/openerp-server')
+            cmd = '%s %s/%s -c .openerp-dev-default' % (self.virtual_python, self.openerp_path, 'openerp-server')
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER, 'openerp')
             cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD, 'openerp')
@@ -442,18 +442,20 @@ class Autobuild():
             if tmp_serie[user_conf_schema.SERIE] == serie_name:
                 serie = tmp_serie
                 break
-        if not serie :
+        if not serie:
             self._logger.error('The serie "%s" does not exists' % (serie_name))
             sys.exit(1)
 
-        for sp in ('server', 'addons', 'web'):
-            try:
-                url = oe_conf.get(sp, {}).get(schema.URL, serie[sp])
-                bzr_rev = oe_conf.get(sp, {}).get(schema.BZR_REV, None)
-                self.bzr_checkout(url, '%s/%s' % (self.openerp_path, sp), bzr_rev)
-            except Exception, e:
-                self._logger.error(_ex('Cannot checkout from %s' % url, e))
-                sys.exit(1)
+        try:
+            user_source = oe_conf.get(schema.SOURCE, {})
+            serie_source = serie[schema.SOURCE]
+
+            url = user_source.get(schema.URL, serie_source[schema.URL])
+            git_branch = user_source.get(schema.GIT_BRANCH, serie_source[schema.GIT_BRANCH])
+            self.git_checkout(url, self.openerp_path, git_branch)
+        except Exception, e:
+            self._logger.error(_ex('Cannot checkout from %s' % url, e))
+            sys.exit(1)
 
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
         self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
@@ -565,18 +567,22 @@ class Autobuild():
         if os.path.exists(destination):
             try:
                 local = Repo(destination)
-                self._logger.info('%s : Pull from %s...' % (destination, source))
-                local.remotes.origin.pull()
-                if branch:
-                    self._logger.info('%s : Checkout branch %s...' % (destination, branch))
-                    local.git.checkout(branch)
-                return
+                local.remotes.origin.fetch()
+
+                local_sha = local.rev_parse(branch or 'master')
+                remote_sha = local.rev_parse('origin/%s' % (branch or 'master'))
+
+                if local_sha == remote_sha:
+                    self._logger.info('%s : Branch already up-to-date', destination)
+                    return
+
+                shutil.rmtree(destination)
             except InvalidGitRepositoryError:
                 shutil.rmtree(destination)
 
         os.makedirs(destination)
         self._logger.info('%s : Clone from %s...' % (destination, source))
-        local = Repo.clone_from(source, destination)
+        local = Repo.clone_from(source, destination, depth=1, b=branch or 'master')
         if branch:
             self._logger.info('%s : Checkout branch %s...' % (destination, branch))
             local.git.checkout(branch)

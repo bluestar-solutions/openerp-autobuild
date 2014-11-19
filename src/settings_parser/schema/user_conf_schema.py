@@ -20,6 +20,7 @@
 ##############################################################################
 
 import static_params
+from settings_parser.schema.oebuild_conf_schema import SOURCE, OPENERP_TYPE
 
 OEBUILD_VERSION = "oebuild-version"
 URL = "url"
@@ -51,19 +52,17 @@ PYTHON_DEPENDENCY = {
     "required": [NAME],
     "additionalProperties" : False
 }
-OPENERP_TYPE = lambda default = True: {
+OPENERP_CONF_TYPE = lambda default = True: {
     "type": "object",
     "properties": {
         SERIE: {"type": "string"},
-        "server": {"type": "string", "format": "uri"},
-        "addons": {"type": "string", "format": "uri"},
-        "web": {"type": "string", "format": "uri"},
+        SOURCE: OPENERP_TYPE,
         PYTHON_DEPENDENCIES: {
             "type": "array",
             "items": PYTHON_DEPENDENCY
         },
     },
-    "required": [SERIE, "server", "addons", "web", PYTHON_DEPENDENCIES] if default else [SERIE],
+    "required": [SERIE, SOURCE, PYTHON_DEPENDENCIES] if default else [SERIE],
     "additionalProperties": False
 }
 USER_CONFIG_SCHEMA = lambda default = True: {
@@ -82,7 +81,7 @@ USER_CONFIG_SCHEMA = lambda default = True: {
         },
         OPENERP: {
             "type": "array",
-            "items": OPENERP_TYPE(default),
+            "items": OPENERP_CONF_TYPE(default),
         },
         DEFAULT_SERIE: {"type": "string"},
         DATABASE: {
