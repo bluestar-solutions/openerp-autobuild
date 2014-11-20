@@ -139,6 +139,10 @@ class Autobuild():
 
         self._logger.info('Terminate %s mode' % args.func)
 
+    def exclude_git(self, filename):
+        excludes = ['.git', '.gitignore']
+        return any([exclude in filename for exclude in excludes])
+
     def assembly(self, conf, with_oe=False):
         if os.path.exists(self.target_path):
             shutil.rmtree(self.target_path)
@@ -163,11 +167,10 @@ class Autobuild():
 
         os.chdir(self.target_path)
         tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
-        tar.add('custom-addons')
+        tar.add('custom-addons', exclude=self.exclude_git)
 
         if with_oe:
-            for oe in ['server', 'web', 'addons']:
-                tar.add('%s/%s' % (self.openerp_path, oe), arcname=oe)
+            tar.add(self.openerp_path, arcname="openerp", exclude=self.exclude_git)
         tar.close()
 
     def create_module(self, conf, args):
@@ -575,10 +578,9 @@ class Autobuild():
                 if local_sha == remote_sha:
                     self._logger.info('%s : Branch already up-to-date', destination)
                     return
-
-                shutil.rmtree(destination)
             except InvalidGitRepositoryError:
-                shutil.rmtree(destination)
+                pass
+            shutil.rmtree(destination)
 
         os.makedirs(destination)
         self._logger.info('%s : Clone from %s...' % (destination, source))
