@@ -75,6 +75,9 @@ class OEArgumentParser():
         parser_run = subparsers.add_parser('run', help="Run openERP server normally (default)", parents=[shared_parser])
         parser_run.set_defaults(func="run")
 
+        parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
+        parser_debug.set_defaults(func="debug")
+
         parser_test = subparsers.add_parser('test', help="Run openERP server, perform tests, stop the server and display tests results", parents=[shared_parser])
         parser_test.add_argument("--test-commit", action="store_true", dest="commit", help="Commit test results in DB.")
         parser_test.add_argument("--db-name", dest="db_name", help="Database name for tests.", default='autobuild_%s' % os.getcwd().split('/')[-1])
@@ -83,24 +86,21 @@ class OEArgumentParser():
         parser_test.add_argument("--stop-after-init", action="store_true", dest="stopafterinit", help="Force OpenERP server to stop when tests are done.")
         parser_test.set_defaults(func="test")
 
-        parser_debug = subparsers.add_parser('debug', help="Run openERP server with full debug messages", parents=[shared_parser])
-        parser_debug.set_defaults(func="debug")
+        parser_init_new = subparsers.add_parser('project-init', help="Initialize an empty OpenERP project", parents=[shared_parser])
+        parser_init_new.set_defaults(func="init-new")
 
-        parser_assembly = subparsers.add_parser('assembly', help="Prepare all files to deploy in target folder", parents=[shared_parser])
+        parser_assembly = subparsers.add_parser('project-assembly', help="Prepare all files to deploy in target folder", parents=[shared_parser])
         parser_assembly.add_argument("--with-oe", action="store_true", dest="with_oe", help="Include OpenERP files")
         parser_assembly.set_defaults(func="assembly")
-
-        parser_eclipse_init = subparsers.add_parser('init-eclipse', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
-        parser_eclipse_init.set_defaults(func="init-eclipse")
-
-        parser_init_new = subparsers.add_parser('init', help="Initialize an empty OpenERP project", parents=[shared_parser])
-        parser_init_new.set_defaults(func="init-new")
 
         parser_create_module = subparsers.add_parser('module-create', help="Create a new module")
         parser_create_module.add_argument('module_name', help="module base name")
         parser_create_module.add_argument('-mn', '--module_long_name', dest="module_long_name", required=False, help="long module name")
         parser_create_module.add_argument('-c', '--category', dest="category", required=False, help="The module category")
         parser_create_module.set_defaults(func="create-module")
+
+        parser_eclipse_init = subparsers.add_parser('eclipse-init', help="Initialize an Eclipse Pyedv project", parents=[shared_parser])
+        parser_eclipse_init.set_defaults(func="init-eclipse")
 
         argcomplete.autocomplete(parser)
         self.args = parser.parse_args()
