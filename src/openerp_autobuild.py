@@ -423,8 +423,8 @@ class Autobuild():
             cmd += ' -u %s' % modules
             cmd += ' --log-level=%s' % ('info' if args.func == "run" else 'debug')
             cmd += ' --log-handler=%s' % (':INFO' if args.func == "run" else ':DEBUG')
-            cmd += ' --xmlrpc-port=%d' % args.tcp_port
-            cmd += ' --netrpc-port=%d' % args.netrpc_port
+            cmd += (' --xmlrpc-port=%d' % args.tcp_port) if args.tcp_port != -1 else ''
+            cmd += (' --netrpc-port=%d' % args.netrpc_port) if args.netrpc_port != -1 else ''
             try:
                 self._logger.info('Start OpenERP ...')
                 openerp_output, _ = self.call_command(cmd, parse_log=False, register_pid=self.pid_file, log_in=False)

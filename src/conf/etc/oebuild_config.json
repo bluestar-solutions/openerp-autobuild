@@ -158,6 +158,46 @@
             {"name": "httplib2"},
             {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"}
         ]
+    },{
+        "serie": "8.0",
+        "source": {
+        	"url": "https://github.com/odoo/odoo.git",
+        	"git-branch": "8.0"
+        },
+        "python-dependencies": [
+            {"name": "python-dateutil"},
+            {"name": "feedparser"},
+            {"name": "gdata"},
+            {"name": "python-ldap"},
+            {"name": "lxml"},
+            {"name": "Mako"},
+            {"name": "python-openid"},
+            {"name": "psycopg2"},
+            {"name": "Babel"},
+            {"name": "pydot"},
+            {"name": "pyparsing"},
+            {"name": "reportlab"},
+            {"name": "simplejson"},
+            {"name": "pytz"},
+            {"name": "vatnumber"},
+            {"name": "vobject"},
+            {"name": "PyWebDAV"},
+            {"name": "Werkzeug"},
+            {"name": "xlwt"},
+            {"name": "PyYAML"},
+            {"name": "docutils"},
+            {"name": "psutil"},
+            {"name": "unittest2"},
+            {"name": "mock"},
+            {"name": "Jinja2"},
+            {"name": "Pillow"},
+            {"name": "httplib2"},
+            {"name": "decorator"},
+            {"name": "requests"},
+            {"name": "passlib"},
+            {"name": "pyPdf"},
+            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart"}
+        ]
     }],
     "default-serie": "7.0",
     "database": {

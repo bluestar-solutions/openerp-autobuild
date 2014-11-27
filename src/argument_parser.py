@@ -64,8 +64,8 @@ class OEArgumentParser():
 
         shared_parser = ArgumentParser(add_help=False)
         shared_parser.add_argument("-m", "--modules", dest="modules", default="def-all", help="Modules to use. If omitted, all modules will be used.")
-        shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="8069", help="TCP server port (default:8069).")
-        shared_parser.add_argument("-n", "--netrpc-port", dest="netrpc_port", type=int, default="8070", help="NetRPC server port (default:8070).")
+        shared_parser.add_argument("-p", "--tcp-port", dest="tcp_port", type=int, default="-1", help="TCP server port (default:8069).")
+        shared_parser.add_argument("-n", "--netrpc-port", dest="netrpc_port", type=int, default="-1", help="NetRPC server port (default:8070). Warning: not compatible with serie 8.0")
         shared_parser.add_argument("--no-update", action="store_true", dest="no_update", help="Bypass updates and try to launch with last parameters.")
         shared_parser.add_argument("--home-config", dest="home_config", default="", help="Bypass default config with a specific configuration")
         shared_parser.add_argument("--etc-config", dest="etc_config", default="", help="Bypass default config with a specific configuration")
