@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -15,7 +15,7 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
@@ -44,8 +44,9 @@ OPENERP_TYPE = {
     "type": "object",
     "properties": {
         URL: {"type": "string", "format": "uri"},
-        BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
+        GIT_BRANCH: {"type": "string"},
     },
+    "required": [URL],
     "additionalProperties" : False
 }
 PYTHON_DEPENDENCY = {
@@ -64,9 +65,9 @@ DEPENDENCY = {
         DESTINATION: {"type": "string", "format": "uri"},
         ADDONS_PATH: {"type": "string", "format": "uri"},
         SOURCE: {
-            "type": "object", 
+            "type": "object",
             "oneOf": [
-                {"$ref": "#/definitions/gitDependency"}, 
+                {"$ref": "#/definitions/gitDependency"},
                 {"$ref": "#/definitions/bzrDependency"},
                 {"$ref": "#/definitions/localDependency"}
             ],
@@ -104,7 +105,7 @@ DEPENCENCY_DEFINITIONS = {
         },
         "required": [SCM, URL],
         "additionalProperties" : False
-    }        
+    }
 }
 OEBUILD_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -116,9 +117,7 @@ OEBUILD_SCHEMA = {
             "type": "object",
             "properties": {
                 SERIE: {"type": "string"},
-                "server": OPENERP_TYPE,
-                "addons": OPENERP_TYPE,
-                "web": OPENERP_TYPE,
+                SOURCE: OPENERP_TYPE
             },
             "required": [SERIE],
             "additionalProperties" : False
@@ -144,9 +143,7 @@ OEBUILD_ALT_SCHEMA = {
         OPENERP: {
             "type": "object",
             "properties": {
-                "server": OPENERP_TYPE,
-                "addons": OPENERP_TYPE,
-                "web": OPENERP_TYPE,
+                SOURCE: OPENERP_TYPE
             },
             "additionalProperties" : False
         },
