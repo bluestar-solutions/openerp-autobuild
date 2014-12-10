@@ -37,9 +37,9 @@ used to override default settings defined in "/etc/oebuild_config.json".
   oebuild.conf will be read and overrided firstly by oebuild-mycompany.conf (if file exists), and then by oebuild-me.conf (if file exists).
 * ``openerp``: List of configured OpenERP series 
     * ``serie``: The serie name. If the name is defined in default configuration file, the following options will override the default.
-    * ``server``: Bazaar url for the OpenERP server branch.
-    * ``addons``: Bazaar url for the OpenERP addons branch.
-    * ``web``: Bazaar url for the OpenERP web branch.
+    * ``source``: Git settings for the OpenERP repository.
+    	* ``url``: Git url for the OpenERP repository.
+    	* ``branch``: Branch name for the OpenERP repository.
     * ``python-dependencies``: List of Python dependencies for this serie (will be downloaded and installed in virtualenv by pip).
         * ``name``: The pip name of the Python library.
         * ``specifier``: The pip version constraint specifier.
@@ -65,15 +65,9 @@ To create a new project with a default oebuild.conf, run (in a new project folde
 * ``project``: The project name.
 * ``openerp``: OpenERP serie to use for this project.
     * ``serie``: The serie name. This name have to be defined in default configuration fil or in user configuration file.
-        * ``server``: Bazaar settings for the OpenERP server branch.
-            * ``url``: Bazaar url to use.
-            * ``bzr-rev``: Bazaar branch revision to use.        
-        * ``addons``: Bazaar settings for the OpenERP addons branch.
-            * ``url``: Bazaar url to use.
-            * ``bzr-rev``: Bazaar branch revision to use.    
-        * ``web``: Bazaar settings for the OpenERP web branch.
-            * ``url``: Bazaar url to use.
-            * ``bzr-rev``: Bazaar branch revision to use.          
+        * ``source``: Git settings for the OpenERP repository.
+            * ``url``: Git url for the OpenERP repository.
+            * ``branch``: Branch name for the OpenERP repository.               
 * ``python-dependencies``: List of Python dependencies for this project (will be downloaded and installed in virtualenv by pip).
     * ``name``: The pip name of the Python library.
     * ``specifier``: The pip version constraint specifier.
@@ -100,15 +94,16 @@ To create a new project with a default .openerp-dev-default, run (in a project f
 * **run** : Run OpenERP server with default parameters. Logs only INFO level messages.
 * **debug** : Same as run but also logs DEBUG level messages.
 * **test** : Run OpenERP server in test mode. In this mode, the server will use another database (named after your project's name) to load demo data and perform designated tests.
-* **assembly** : Build a package with your custom addons and their dependencies in order to deploy the application.
-* **init** : Initialize an empty OpenERP project with default configuration files
-* **init-eclipse** : Initialize an existing project as a _Eclipse Pydev Project_
+* **project-assembly** : Build a package with your custom addons and their dependencies in order to deploy the application.
+* **project-init** : Initialize an empty OpenERP project with default configuration files
+* **eclipse-init** : Initialize an existing project as a _Eclipse Pydev Project_
+* **module-create** : Create a new empty module
 
 ### Shared parameters
 
 * **-m**, **--modules** : Specify which custom module to load. If omitted, all custom modules will be loaded.
 * **-p**, **--tcp-port** : XML_RPC port of the server (default:8069).
-* **-n**, **--netrpc-port** : NET_RPC port of the server (default:8070).
+* **-n**, **--netrpc-port** : NET_RPC port of the server (default:8070). Warning : deprecated in version 2.1
 * **--no-update**: Bypass updates and try to launch with last parameters. 
 * **--home-config**: Bypass default config with a specific configuration. 
 * **--etc-config**: Bypass default config with a specific configuration. 
@@ -129,17 +124,23 @@ None
 * **--analyze** : Analyze logs and stop OpenERP. Use it with continuous integration.
 * **--stop-after-init** : Force OpenERP server to stop when tests are done.
 
-### Assembly parameters
+### Project-Assembly parameters
 
 * **--with-oe** : Build the package with current version of OpenERP in order to deploy a fully runnable application.
 
-### Init parameters
+### Project-Init parameters
 
 None
 
-### Init-eclipse parameters
+### Eclipse-Init parameters
 
 None
+
+### Module-Create parameters
+
+* **--module-name**: Module base name
+* **-mn**: Long module name
+* **-c**: Module category
 
 ### Some examples
 
