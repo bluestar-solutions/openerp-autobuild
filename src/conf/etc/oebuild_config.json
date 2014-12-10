@@ -12,7 +12,7 @@
         " **************************************************************************************** "
     ],
     "oebuild-version": "2.1",
-    "workspace": "~/openerp-autobuild",
+    "workspace": "/var/oebuild",
     "custom-configuration-files": [],
     "openerp": [{
         "serie": "master",

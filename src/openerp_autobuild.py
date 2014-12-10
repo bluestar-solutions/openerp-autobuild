@@ -149,10 +149,21 @@ class Autobuild():
         os.mkdir(self.target_path)
         os.mkdir(self.target_addons_path)
 
-        dependency_file = open("%s/DEPENDENCY.txt" % (self.target_addons_path), "w")
+        dependency_file = open("%s/DEPENDENCY.txt" % (self.target_path), "w")
 
         dependency_file.writelines(['%s\n' % (python_dep['name']) for python_dep in self.python_deps])
         dependency_file.close()
+
+        shell_file = open("%s/install_deps.sh" % self.target_path, "w")
+        shell_file.write("""#!/bin/sh
+if [ "$(/usr/bin/id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+pip install -r DEPENDENCY.txt && echo "Successfully installed all dependencies" || echo "An error occured. Please review the log above to find what went wrong."
+""")
+        shell_file.close()
 
         full_path = self.src_path
         for addon in os.listdir(full_path):
@@ -168,6 +179,8 @@ class Autobuild():
         os.chdir(self.target_path)
         tar = tarfile.open('%s.tar.gz' % ('openerp-install' if with_oe else 'custom-addons'), "w:gz")
         tar.add('custom-addons', exclude=self.exclude_git)
+
+        tar.add('install_deps.sh')
 
         if with_oe:
             tar.add(self.openerp_path, arcname="openerp", exclude=self.exclude_git)
