@@ -27,4 +27,4 @@ remove_param = lambda p_name: (r'"%s"\s*:\s*".*"\s*,?\s*\n?' % p_name, r'')
 add_param_before = lambda p_name, p_value, before_p_name: (r'(\n?)(\s*)("%s"\s*:)' % (before_p_name), r'\n\2"%s": "%s"\n\2\3' % (p_name, p_value))
 set_param_value = lambda p_name, p_value: (r'("%s"\s*:\s*)(".*")' % (p_name), r'\1"%s"' % (p_value))
 set_param_array = lambda p_name, p_array: (r'("%s"\s*:\s*)(\[.*\])' % (p_name), r'\1%s' % (json.dumps(p_array)))
-
+remove_param_array = lambda p_name: (r'(,?\s*)?"%s"\s*:\s*\{\s*.*\s*\}' % p_name, r'')

@@ -35,7 +35,7 @@ class UserConfParser():
     _logger = logging.getLogger(__name__)
     params = None
 
-    def __init__(self, params):        
+    def __init__(self, params):
         self.params = params;
         self._verify()
 
@@ -107,21 +107,21 @@ class UserConfParser():
                 outfile.write(line.replace("$VERSION", static_params.VERSION).replace("$USERNAME", getpass.getuser()))
             infile.close()
             outfile.close()
-            
+
             if os.path.exists(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7(self.params)):
                 conf = self.load_user_config_file()
-                conf_1_7 = self._read_conf(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7)
+                conf_1_7 = self._read_conf(user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7(self.params))
                 user_conf_1_7_update.update_from_1_7(conf, conf_1_7, self.params)
                 self._clean_after_update()
-            
+
             user_conf = self._load_conf(self.params.USER_CONFIG_FILE, False)
             if user_conf[user_conf_schema.OEBUILD_VERSION] != static_params.VERSION:
                 self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
-                
+
     def _clean_after_update(self):
-        keep = [self.params.USER_CONFIG_FILE, 
+        keep = [self.params.USER_CONFIG_FILE,
                 user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7]
-        
+
         for f in [f for f in os.listdir(self.params.USER_CONFIG_PATH) if os.path.join(self.params.USER_CONFIG_PATH, f) not in keep]:
             path = os.path.join(self.params.USER_CONFIG_PATH, f)
             if os.path.isdir(path):
