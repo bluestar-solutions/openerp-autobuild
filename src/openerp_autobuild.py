@@ -468,7 +468,8 @@ pip install -r DEPENDENCY.txt && echo "Successfully installed all dependencies" 
 
             url = user_source.get(schema.URL, serie_source[schema.URL])
             git_branch = user_source.get(schema.GIT_BRANCH, serie_source[schema.GIT_BRANCH])
-            self.git_checkout(url, self.openerp_path, git_branch)
+            git_commit = user_source.get(schema.GIT_COMMIT, serie_source.get(schema.GIT_COMMIT, None))
+            self.git_checkout(url, self.openerp_path, git_branch, git_commit)
         except Exception, e:
             self._logger.error(_ex('Cannot checkout from %s' % url, e))
             sys.exit(1)
@@ -528,7 +529,7 @@ pip install -r DEPENDENCY.txt && echo "Successfully installed all dependencies" 
                     pass
             elif source[schema.SCM] == schema.SCM_GIT:
                 try:
-                    self.git_checkout(source[schema.URL], destination, source.get(schema.GIT_BRANCH, None))
+                    self.git_checkout(source[schema.URL], destination, source.get(schema.GIT_BRANCH, None), source.get(schema.GIT_COMMIT, None))
                 except Exception, e:
                     self._logger.error(_ex('Cannot checkout from %s' % source[schema.URL], e))
                     sys.exit(1)
@@ -579,10 +580,19 @@ pip install -r DEPENDENCY.txt && echo "Successfully installed all dependencies" 
         self._logger.info('%s : Checkout from %s (revno : %s)...' % (destination, source, revno))
         remote.create_checkout(destination, remote.get_rev_id(revno), True, accelerator_tree)
 
-    def git_checkout(self, source, destination, branch=None):
-        if os.path.exists(destination):
-            try:
-                local = Repo(destination)
+    def is_git_uptodate(self, source, destination, branch, commit):
+        if all([branch, commit]):
+            self._logger.error("Branch and commit cannot be both specified in the same time.")
+            sys.exit(1)
+
+        try:
+            local = Repo(destination)
+
+            if commit:
+                if local.head.commit.hexsha == commit:
+                    self._logger.info('%s : Commit already up-to-date', destination)
+                    return True
+            else:
                 local.remotes.origin.fetch()
 
                 local_sha = local.rev_parse(branch or 'master')
@@ -590,17 +600,31 @@ pip install -r DEPENDENCY.txt && echo "Successfully installed all dependencies" 
 
                 if local_sha == remote_sha:
                     self._logger.info('%s : Branch already up-to-date', destination)
-                    return
-            except InvalidGitRepositoryError:
-                pass
+                    return True
+        except InvalidGitRepositoryError:
+            pass
+
+        return False
+
+    def git_checkout(self, source, destination, branch=None, commit=None):
+        if os.path.exists(destination):
+            if self.is_git_uptodate(source, destination, branch, commit):
+                return
             shutil.rmtree(destination)
 
         os.makedirs(destination)
         self._logger.info('%s : Clone from %s...' % (destination, source))
-        local = Repo.clone_from(source, destination, depth=1, b=branch or 'master')
-        if branch:
-            self._logger.info('%s : Checkout branch %s...' % (destination, branch))
-            local.git.checkout(branch)
+
+        if commit:
+            local = Repo.clone_from(source, destination, b=branch or 'master')
+            self._logger.info('%s : Checkout commit %s...' % (destination, commit))
+            local.git.checkout(commit)
+        else:
+            local = Repo.clone_from(source, destination, depth=1, b=branch or 'master')
+            if branch:
+                self._logger.info('%s : Checkout branch %s...' % (destination, branch))
+                local.git.checkout(branch)
+
 
     def local_copy(self, source, destination):
         self._logger.info('%s : Copy from %s...' % (destination, source))
