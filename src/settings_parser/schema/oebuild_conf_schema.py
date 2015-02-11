@@ -34,6 +34,7 @@ SCM_LOCAL = "local"
 URL = "url"
 BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
+GIT_COMMIT = "commit"
 DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
@@ -45,8 +46,14 @@ OPENERP_TYPE = {
     "properties": {
         URL: {"type": "string", "format": "uri"},
         GIT_BRANCH: {"type": "string"},
+        GIT_COMMIT: {"type": "string", "pattern": "[a-z0-9]{40}"}
     },
     "required": [URL],
+    "not": {
+        "anyOf": [
+            {"required": [GIT_BRANCH, GIT_COMMIT]}
+        ]
+    },
     "additionalProperties" : False
 }
 PYTHON_DEPENDENCY = {
@@ -83,8 +90,14 @@ DEPENCENCY_DEFINITIONS = {
             SCM: {"type": "string", "pattern": SCM_GIT},
             URL: {"type": "string", "format": "uri"},
             GIT_BRANCH: {"type": "string"},
+            GIT_COMMIT: {"type": "string", "pattern": "[a-z0-9]{40}"}
         },
         "required": [SCM, URL],
+        "not": {
+            "anyOf": [
+                {"required": [GIT_BRANCH, GIT_COMMIT]}
+            ]
+        },
         "additionalProperties" : False
     },
     "bzrDependency": {
