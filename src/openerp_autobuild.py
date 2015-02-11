@@ -176,7 +176,6 @@ class Autobuild():
     def set_version(self, new_version):
         version_pattern = r"(['\"]version['\"]\s*:\s*['\"])(.*)(['\"])"
         version_result = r"\g<1>%s\g<3>" % new_version
-        print version_result
         for root, _, filenames in os.walk('.'):
             for filename in filenames:
                 if filename == '__openerp__.py':
