@@ -30,8 +30,10 @@ import re
 import json_regex as jre
 import static_params
 
+
 class IgnoreSubConf(Exception):
     pass
+
 
 class OEBuildConfParser():
 
@@ -44,7 +46,8 @@ class OEBuildConfParser():
         self.params = params
         for dfile in static_params.DEPRECATED_FILES:
             if os.path.exists(dfile):
-                self._logger.warning('File %s is deprecated, you can remove it from the project' % dfile)
+                self._logger.warning('File %s is deprecated, you can remove '
+                                     'it from the project' % dfile)
 
     def _load_file(self, file_name, strict_mode=True, alt_schema=False):
         conf = None
@@ -53,14 +56,20 @@ class OEBuildConfParser():
                 conf = json.load(source_file)
             except ValueError, e:
                 if strict_mode:
-                    self._logger.error(_ex('%s is not JSON valid' % file_name, e))
+                    self._logger.error(
+                        _ex('%s is not JSON valid' % file_name, e)
+                    )
                     sys.exit(1)
                 else:
-                    self._logger.warning(_ex('%s is not JSON valid and will be ignored' % file_name, e))
+                    self._logger.warning(
+                        _ex('%s is not JSON valid and will be ignored' %
+                            file_name, e)
+                    )
                     raise IgnoreSubConf()
 
         if conf.get(schema.OEBUILD_VERSION, None) != static_params.VERSION:
-            conf = self._update_file(conf.get(schema.OEBUILD_VERSION, None), file_name, alt_schema)
+            conf = self._update_file(conf.get(schema.OEBUILD_VERSION, None),
+                                     file_name, alt_schema)
         self._validate_conf(conf, file_name, strict_mode, alt_schema)
 
         return conf
@@ -71,7 +80,8 @@ class OEBuildConfParser():
 
         for componant in ['server', 'addons', 'web']:
             if componant in conf[schema.OPENERP]:
-                new_conf[schema.OPENERP][componant].update(conf[schema.OPENERP][componant])
+                new_conf[schema.OPENERP][componant].\
+                    update(conf[schema.OPENERP][componant])
 
         for dep2 in conf[schema.DEPENDENCIES]:
             for dep in new_conf[schema.DEPENDENCIES]:
@@ -80,27 +90,40 @@ class OEBuildConfParser():
 
         return new_conf
 
-    def _validate_conf(self, conf, file_name, strict_mode=True, alt_schema=False):
+    def _validate_conf(self, conf, file_name, strict_mode=True,
+                       alt_schema=False):
         try:
-            jsonschema.validate(conf, schema.OEBUILD_ALT_SCHEMA if alt_schema else schema.OEBUILD_SCHEMA)
+            jsonschema.validate(conf, schema.OEBUILD_ALT_SCHEMA if alt_schema
+                                else schema.OEBUILD_SCHEMA)
         except Exception, e:
             if strict_mode:
-                self._logger.error(_ex('%s is not a valid configuration file' % file_name, e))
+                self._logger.error(
+                    _ex('%s is not a valid configuration file' % file_name, e)
+                )
                 sys.exit(1)
             else:
-                self._logger.warning(_ex('%s will be ignored because it is not a valid configuration file' % file_name, e))
+                self._logger.warning(
+                    _ex('%s will be ignored because it is not a valid '
+                        'configuration file' % file_name, e)
+                )
                 raise IgnoreSubConf()
 
     def load_oebuild_config_file(self, conf_file_list):
-        if not (os.path.exists(static_params.PROJECT_CONFIG_FILE) and os.path.isfile(static_params.PROJECT_CONFIG_FILE)):
-            self._logger.error('The project configuration does not exist : %s' % static_params.PROJECT_CONFIG_FILE)
+        if not (os.path.exists(static_params.PROJECT_CONFIG_FILE) and
+                os.path.isfile(static_params.PROJECT_CONFIG_FILE)):
+            self._logger.error(
+                'The project configuration does not exist : %s' %
+                static_params.PROJECT_CONFIG_FILE
+            )
             sys.exit(1)
 
         conf = self._load_file(static_params.PROJECT_CONFIG_FILE)
 
         for conf_name in conf_file_list:
-            conf_file_name = static_params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name
-            if os.path.exists(conf_file_name) and os.path.isfile(conf_file_name):
+            conf_file_name = (static_params.PROJECT_ALT_CONFIF_FILE_PATTERN %
+                              conf_name)
+            if (os.path.exists(conf_file_name) and
+                    os.path.isfile(conf_file_name)):
                 try:
                     conf = self._load_alt_file(conf, conf_file_name)
                 except IgnoreSubConf:
@@ -108,17 +131,25 @@ class OEBuildConfParser():
 
         return conf
 
-    def load_transitive_oebuild_config_file(self, conf_file_path, conf_file_list):
-        conf_file = '%s/%s' % (conf_file_path, static_params.PROJECT_CONFIG_FILE)
+    def load_transitive_oebuild_config_file(self, conf_file_path,
+                                            conf_file_list):
+        conf_file = '%s/%s' % (conf_file_path,
+                               static_params.PROJECT_CONFIG_FILE)
         if not (os.path.exists(conf_file) and os.path.isfile(conf_file)):
             # Probably not an oebuild project
-            self._logger.info('%s : %s file not found. It is probably not a oebuild module' % (conf_file_path, static_params.PROJECT_CONFIG_FILE))
+            self._logger.info(
+                '%s : %s file not found. It is probably not a oebuild module' %
+                (conf_file_path, static_params.PROJECT_CONFIG_FILE)
+            )
             raise IgnoreSubConf()
 
         conf = self._load_file(conf_file)
 
         for conf_name in conf_file_list:
-            conf_file = '%s/%s' % (conf_file_path, static_params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name)
+            conf_file = '%s/%s' % (
+                conf_file_path,
+                static_params.PROJECT_ALT_CONFIF_FILE_PATTERN % conf_name
+            )
             if os.path.exists(conf_file) and os.path.isfile(conf_file):
                 try:
                     conf = self._load_alt_file(conf, conf_file)
@@ -130,56 +161,80 @@ class OEBuildConfParser():
     def create_oebuild_config_file(self, default_serie):
         overwrite = "no"
         if os.path.exists(static_params.PROJECT_CONFIG_FILE):
-            overwrite = dialogs.query_yes_no("%s file already exists, overwrite it with default one ?" % static_params.PROJECT_CONFIG_FILE, overwrite)
-        if os.path.exists(static_params.PROJECT_CONFIG_FILE) and overwrite == "no":
+            overwrite = dialogs.query_yes_no(
+                "%s file already exists, overwrite it with default one ?" %
+                static_params.PROJECT_CONFIG_FILE, overwrite
+            )
+        if (os.path.exists(static_params.PROJECT_CONFIG_FILE) and
+                overwrite == "no"):
             return
 
         with open(static_params.DEFAULT_PROJECT_CONFIG_FILE, 'r') as f:
             content = f.read()
 
         content = re.sub(r'\$OEBUILD_VERSION', static_params.VERSION, content)
-        content = re.sub(r'\$PROJECT_NAME', os.getcwd().split('/')[-1], content)
+        content = re.sub(r'\$PROJECT_NAME',
+                         os.getcwd().split('/')[-1], content)
         content = re.sub(r'\$SERIE', default_serie, content)
 
         with open(static_params.PROJECT_CONFIG_FILE, 'w+') as f:
             f.write(content)
 
     def _update_file(self, version_from, file_name, alt_schema=False):
-        self._logger.info(('%s is in version %s and openerp-autobuild is in version %s') %
-                             (file_name, version_from, static_params.VERSION))
+        self._logger.info(
+            '%s is in version %s and openerp-autobuild is in version %s' %
+            (file_name, version_from, static_params.VERSION)
+        )
 
-        valid_keys = self.UPDATE_ALT_FROM.keys() if alt_schema else self.UPDATE_FROM.keys()
+        valid_keys = (self.UPDATE_ALT_FROM.keys() if alt_schema
+                      else self.UPDATE_FROM.keys())
         if version_from not in valid_keys:
-            self._logger.warning("Cannot update from version %s: %s will be ignored" % (version_from, file_name))
+            self._logger.warning(
+                "Cannot update from version %s: %s will be ignored" %
+                (version_from, file_name)
+            )
             raise IgnoreSubConf()
 
         updated_fname = file_name + ".updated"
         with open(file_name, "r") as source_file:
             with open(updated_fname, "w+") as updated_file:
                 content = source_file.read()
-                regs = self.UPDATE_ALT_FROM[version_from] if alt_schema else self.UPDATE_FROM[version_from]
+                regs = (self.UPDATE_ALT_FROM[version_from] if alt_schema
+                        else self.UPDATE_FROM[version_from])
                 for pattern, replace in regs:
                     content = re.sub(pattern, replace, content)
                 updated_file.write(content)
 
         answer = dialogs.ANSWER_NO
         if len(file_name.split('/')) == 1 and not self._analyze:
-            answer = dialogs.query_yes_no("Do you want to replace the project configuration files by the updated version " +
-                                          "(otherwise the updated versions will be saved to new files) ?", default=dialogs.ANSWER_NO)
+            answer = dialogs.query_yes_no(
+                "Do you want to replace the project configuration files "
+                "by the updated version (otherwise the updated versions "
+                "will be saved to new files) ?", default=dialogs.ANSWER_NO
+            )
         if answer == dialogs.ANSWER_YES:
             os.rename(updated_fname, file_name)
             updated_fname = file_name
-            self._logger.info('%s has been updated to version %s' % (file_name, static_params.VERSION))
+            self._logger.info(
+                '%s has been updated to version %s' %
+                (file_name, static_params.VERSION)
+            )
         else:
-            self._logger.info('An updated version of %s will be used and stored in %s' % (file_name, updated_fname))
+            self._logger.info(
+                'An updated version of %s will be used and stored in %s' %
+                (file_name, updated_fname)
+            )
 
         with open(updated_fname, "r") as updated_file:
             return json.load(updated_file)
 
     UPDATE_FROM = {
         "1.7": [jre.update_version("1.7", "2.1"),
-                (r'(\n?)(\s*)("dependencies"\s*:)', r'\1\2"python-dependencies": [],\1\2\3'),
-                jre.remove_param_array('server'), jre.remove_param_array('addons'), jre.remove_param_array('web')]
+                (r'(\n?)(\s*)("dependencies"\s*:)',
+                 r'\1\2"python-dependencies": [],\1\2\3'),
+                jre.remove_param_array('server'),
+                jre.remove_param_array('addons'),
+                jre.remove_param_array('web')]
     }
 
     UPDATE_ALT_FROM = {
@@ -187,3 +242,5 @@ class OEBuildConfParser():
                 jre.remove_param("project"),
                 jre.remove_param("serie")]
     }
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

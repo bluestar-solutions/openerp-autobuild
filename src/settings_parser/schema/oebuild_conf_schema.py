@@ -54,7 +54,7 @@ OPENERP_TYPE = {
             {"required": [GIT_BRANCH, GIT_COMMIT]}
         ]
     },
-    "additionalProperties" : False
+    "additionalProperties": False
 }
 PYTHON_DEPENDENCY = {
     "type": "object",
@@ -63,7 +63,7 @@ PYTHON_DEPENDENCY = {
         SPECIFIER: {"type": "string"}
     },
     "required": [NAME],
-    "additionalProperties" : False
+    "additionalProperties": False
 }
 DEPENDENCY = {
     "type": "object",
@@ -81,7 +81,7 @@ DEPENDENCY = {
         },
     },
     "required": [NAME],
-    "additionalProperties" : False
+    "additionalProperties": False
 }
 DEPENCENCY_DEFINITIONS = {
     "gitDependency": {
@@ -98,7 +98,7 @@ DEPENCENCY_DEFINITIONS = {
                 {"required": [GIT_BRANCH, GIT_COMMIT]}
             ]
         },
-        "additionalProperties" : False
+        "additionalProperties": False
     },
     "bzrDependency": {
         "type": "object",
@@ -108,7 +108,7 @@ DEPENCENCY_DEFINITIONS = {
             BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
         },
         "required": [SCM, URL],
-        "additionalProperties" : False
+        "additionalProperties": False
     },
     "localDependency": {
         "type": "object",
@@ -117,7 +117,7 @@ DEPENCENCY_DEFINITIONS = {
             URL: {"type": "string", "format": "uri"},
         },
         "required": [SCM, URL],
-        "additionalProperties" : False
+        "additionalProperties": False
     }
 }
 OEBUILD_SCHEMA = {
@@ -133,7 +133,7 @@ OEBUILD_SCHEMA = {
                 SOURCE: OPENERP_TYPE
             },
             "required": [SERIE],
-            "additionalProperties" : False
+            "additionalProperties": False
         },
         PYTHON_DEPENDENCIES: {
             "type": "array",
@@ -145,7 +145,7 @@ OEBUILD_SCHEMA = {
         }
     },
     "required": [OEBUILD_VERSION, PROJECT, DEPENDENCIES],
-    "additionalProperties" : False,
+    "additionalProperties": False,
     "definitions": DEPENCENCY_DEFINITIONS
 }
 OEBUILD_ALT_SCHEMA = {
@@ -158,7 +158,7 @@ OEBUILD_ALT_SCHEMA = {
             "properties": {
                 SOURCE: OPENERP_TYPE
             },
-            "additionalProperties" : False
+            "additionalProperties": False
         },
         DEPENDENCIES: {
             "type": "array",
@@ -166,6 +166,8 @@ OEBUILD_ALT_SCHEMA = {
         }
     },
     "required": [OEBUILD_VERSION, DEPENDENCIES],
-    "additionalProperties" : False,
+    "additionalProperties": False,
     "definitions": DEPENCENCY_DEFINITIONS
 }
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

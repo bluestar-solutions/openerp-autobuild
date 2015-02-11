@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -16,7 +16,7 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
@@ -24,7 +24,8 @@ import os
 
 OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
-DEFAULT_PROJECT_CONFIG_FILE = '%s/conf/default_project_config.json' % OE_HOME_PATH
+DEFAULT_PROJECT_CONFIG_FILE = ('%s/conf/default_project_config.json' %
+                               OE_HOME_PATH)
 DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
 
 OE_CONFIG_FILE = '.openerp-dev-default'
@@ -34,3 +35,5 @@ PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
 
 DEPRECATED_FILES = ('.project-dependencies',)
 VERSION = '2.1'
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
