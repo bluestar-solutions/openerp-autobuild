@@ -143,7 +143,7 @@ Released under GNU AGPLv3.
             parents=[shared_parser]
         )
         parser_project_version.add_argument(
-            '--new-version', dest="new_version", required=True,
+            'new_version', metavar='VERSION',
             help="The modules new version"
         )
         parser_project_version.set_defaults(func="project-version")

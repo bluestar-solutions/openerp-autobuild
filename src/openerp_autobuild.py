@@ -180,6 +180,9 @@ class Autobuild():
             for filename in filenames:
                 if filename == '__openerp__.py':
                     filepath = os.path.join(root, filename)
+                    self._logger.info(
+                        'Change version to %s in %s' % (new_version, filepath)
+                    )
                     with open(filepath, 'r') as f:
                         content = f.read()
                     new_content = re.sub(
