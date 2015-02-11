@@ -138,6 +138,16 @@ Released under GNU AGPLv3.
         )
         parser_init_new.set_defaults(func="init-new")
 
+        parser_project_version = subparsers.add_parser(
+            'project-version', help="Set the version of all project modules",
+            parents=[shared_parser]
+        )
+        parser_project_version.add_argument(
+            '--new-version', dest="new_version", required=True,
+            help="The modules new version"
+        )
+        parser_project_version.set_defaults(func="project-version")
+
         parser_assembly = subparsers.add_parser(
             'project-assembly',
             help="Prepare all files to deploy in target folder",
