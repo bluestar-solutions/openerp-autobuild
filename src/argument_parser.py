@@ -3,7 +3,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -54,13 +54,13 @@ A developer tool for OpenERP with many features:
 goal help:
     %(prog)s GOAL -h
 
-Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 Released under GNU AGPLv3.
             ''',
             version='''\
 OpenERP Autobuild %s
 
-Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 Released under GNU AGPLv3.
             ''' % static_params.VERSION)
 
