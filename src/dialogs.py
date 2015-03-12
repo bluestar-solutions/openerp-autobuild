@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##############################################################################
-#    
+#
 #    OpenERP Autobuild
 #    Copyright (C) 2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
@@ -15,7 +15,7 @@
 #    GNU Affero General Public License for more details.
 #
 #    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.     
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
 
@@ -26,15 +26,16 @@ ANSWER_NO = "no"
 
 VALID_ENTRIES = {
     "yes": ANSWER_YES,
-    "y":   ANSWER_YES,
-    "ye":  ANSWER_YES,
-    "no":  ANSWER_NO,
-    "n":   ANSWER_NO
+    "y": ANSWER_YES,
+    "ye": ANSWER_YES,
+    "no": ANSWER_NO,
+    "n": ANSWER_NO
 }
 
+
 def query_yes_no(question, default=ANSWER_YES):
-    
-    if default == None:
+
+    if default is None:
         prompt = " [y/n] "
     elif default == ANSWER_YES:
         prompt = " [Y/n] "
@@ -51,5 +52,7 @@ def query_yes_no(question, default=ANSWER_YES):
         elif choice in VALID_ENTRIES.keys():
             return VALID_ENTRIES[choice]
         else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "\
+            sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

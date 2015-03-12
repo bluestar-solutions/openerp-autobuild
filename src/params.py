@@ -36,12 +36,19 @@ class Params():
         if user_home_path:
             self.USER_HOME_PATH = user_home_path
             self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
-            self.USER_CONFIG_FILE = '%s/oebuild_config.json' % self.USER_CONFIG_PATH
+            self.USER_CONFIG_FILE = ('%s/oebuild_config.json' %
+                                     self.USER_CONFIG_PATH)
 
-        self.INIT_PY_TPL = '%s/.config/openerp-autobuild/initpy.tpl' % self.USER_HOME_PATH
-        self.OPENERP_PY_TPL = '%s/.config/openerp-autobuild/openerppy.tpl' % self.USER_HOME_PATH
-        self.HEADER_PY_TPL = '%s/.config/openerp-autobuild/header.tpl' % self.USER_HOME_PATH
-        self.CLASS_TPL = '%s/.config/openerp-autobuild/class.tpl' % self.USER_HOME_PATH
+        self.INIT_PY_TPL = ('%s/.config/openerp-autobuild/initpy.tpl' %
+                            self.USER_HOME_PATH)
+        self.OPENERP_PY_TPL = ('%s/.config/openerp-autobuild/openerppy.tpl' %
+                               self.USER_HOME_PATH)
+        self.HEADER_PY_TPL = ('%s/.config/openerp-autobuild/header.tpl' %
+                              self.USER_HOME_PATH)
+        self.CLASS_TPL = ('%s/.config/openerp-autobuild/class.tpl' %
+                          self.USER_HOME_PATH)
 
         if etc_path:
             self.ETC_CONFIG_FILE = "%s/oebuild_config.json" % etc_path
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

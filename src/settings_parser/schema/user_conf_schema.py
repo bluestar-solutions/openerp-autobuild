@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -50,7 +50,7 @@ PYTHON_DEPENDENCY = {
         SPECIFIER: {"type": "string"}
     },
     "required": [NAME],
-    "additionalProperties" : False
+    "additionalProperties": False
 }
 OPENERP_CONF_TYPE = lambda default = True: {
     "type": "object",
@@ -92,9 +92,12 @@ USER_CONFIG_SCHEMA = lambda default = True: {
                 USER: {"type": "string"},
                 PASSWORD: {"type": "string"},
             },
-            "additionalProperties" : False
+            "additionalProperties": False
         }
     },
-    "required": [WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE, DATABASE] if default else [CONF_FILES, OPENERP, DATABASE],
-    "additionalProperties" : False
+    "required": ([WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE, DATABASE]
+                 if default else [CONF_FILES, OPENERP, DATABASE]),
+    "additionalProperties": False
 }
+
+# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
