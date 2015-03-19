@@ -121,6 +121,8 @@ class Autobuild():
             self.oebuild_conf_parser.create_oebuild_config_file(
                 self.user_conf[user_conf_schema.DEFAULT_SERIE]
             )
+        elif args.func == 'project-version':
+            self.set_version(args.new_version)
         else:
             conf = self.oebuild_conf_parser.load_oebuild_config_file(
                 self.user_conf[user_conf_schema.CONF_FILES]
@@ -170,6 +172,24 @@ class Autobuild():
     def exclude_git(self, filename):
         excludes = ['.git', '.gitignore']
         return any([exclude in filename for exclude in excludes])
+
+    def set_version(self, new_version):
+        version_pattern = r"(['\"]version['\"]\s*:\s*['\"])(.*)(['\"])"
+        version_result = r"\g<1>%s\g<3>" % new_version
+        for root, _, filenames in os.walk('.'):
+            for filename in filenames:
+                if filename == '__openerp__.py':
+                    filepath = os.path.join(root, filename)
+                    self._logger.info(
+                        'Change version to %s in %s' % (new_version, filepath)
+                    )
+                    with open(filepath, 'r') as f:
+                        content = f.read()
+                    new_content = re.sub(
+                        version_pattern, version_result, content
+                    )
+                    with open(filepath, 'w') as f:
+                        f.write(new_content)
 
     def assembly(self, conf, with_oe=False):
         if os.path.exists(self.target_path):
