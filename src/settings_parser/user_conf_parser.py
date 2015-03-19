@@ -124,6 +124,14 @@ class UserConfParser():
         return merged_conf
 
     def _verify(self):
+        user_login = getpass.getuser()
+        user_name = user_login
+        if os.name == 'posix':
+            # Use user full name on posix systems.
+            import pwd
+            user_name = pwd.getpwuid(os.getuid())[4].split(',')[0]\
+                .decode('utf-8').encode('utf-8')
+
         if not os.path.exists(self.params.USER_CONFIG_PATH):
             os.makedirs(self.params.USER_CONFIG_PATH)
         if not os.path.exists(self.params.USER_CONFIG_PATH):
@@ -133,10 +141,10 @@ class UserConfParser():
             outfile = open(self.params.USER_CONFIG_FILE, 'w')
             for line in infile:
                 outfile.write(
-                    line.replace(
-                        "$VERSION", static_params.VERSION).replace(
-                            "$USERNAME", getpass.getuser()
-                    )
+                    line
+                    .replace("$VERSION", static_params.VERSION)
+                    .replace("$USERLOGIN", user_login)
+                    .replace("$USERNAME", user_name)
                 )
             infile.close()
             outfile.close()

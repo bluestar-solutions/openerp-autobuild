@@ -6,18 +6,29 @@ Autobuild for OpenERP is an utility script designed to simply configure, debug, 
 
 ### From Ubuntu PPA
 
+#### Stable
+
 	sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild
 	sudo apt-get update
 	sudo apt-get install openerp-autobuild
+	
+#### Release Candidate
 
-### From archive
+	sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild-rc
+	sudo apt-get update
+	sudo apt-get install openerp-autobuild
+	
+### Download From GitHub
 
-Download archive, extract it and run install.sh script
+https://github.com/bluestar-solutions/openerp-autobuild
+
+* Download the archive and extract it or clone the git repository
+* Run install.sh script
 
 #### Requirements
 
 * **Source headers**: Python 2.7 (python), OpenLDAP (libldap2), libsasl2, libxml2, libxslt
-* **Softwares**: pip, Bazaar (bzr), PostgreSQL version information tool (pg_config), virtualenv
+* **Softwares**: pip, Git (Git), Bazaar (bzr), PostgreSQL version information tool (pg_config), virtualenv
 * **Python libraries**: jsonschema, psycopg2, GitPython, argcomplete
 
 The Python libraries can be installed with pip.
@@ -32,18 +43,22 @@ used to override default settings defined in "/etc/oebuild_config.json".
 #### Options
 
 * ``oebuild-version``: Specify the version of openerp-autobuild targeted by the configuration file.
-* ``workspace``: Specify the directory used to store builded virtual environment (with OpenERP and dependencies) for each project.
+* ``workspace``: If set, override the default directory used to store builded virtual environment (with OpenERP and dependencies) for each project.
 * ``custom-configuration-files``: A list of alternative project configuration names. For instance, if you specify ``["mycompany", "me"]``, 
   oebuild.conf will be read and overrided firstly by oebuild-mycompany.conf (if file exists), and then by oebuild-me.conf (if file exists).
-* ``openerp``: List of configured OpenERP series 
+* ``module_author``: Specify the author to set for module.create goal.
+* ``website``: Specify the author website to set for module.create goal.
+* ``openerp``: List of configured OpenERP series. You can override settings of a default serie or add a custom one.
     * ``serie``: The serie name. If the name is defined in default configuration file, the following options will override the default.
     * ``source``: Git settings for the OpenERP repository.
-    	* ``url``: Git url for the OpenERP repository.
-    	* ``branch``: Branch name for the OpenERP repository.
+    	* ``url``: Git URL for the OpenERP repository.
+    	* ``git-branch``: Branch name for the OpenERP repository.
+    	* ``git-commit``: Commit SHA-1 to use (override git-branch if defined).
     * ``python-dependencies``: List of Python dependencies for this serie (will be downloaded and installed in virtualenv by pip).
         * ``name``: The pip name of the Python library.
         * ``specifier``: The pip version constraint specifier.
-* ``default-serie``: The default serie used to configure new project by init goal.
+        * ``options``: Add options for pip call.
+* ``default-serie``: If set, override the default serie used to configure new project by init goal.
 * ``database``: The database connection settings.
     * ``host``: The database host (default localhost).
     * ``port``: The database port (default 5432).
@@ -64,13 +79,15 @@ To create a new project with a default oebuild.conf, run (in a new project folde
 * ``oebuild-version``: Specify the version of openerp-autobuild targeted by the configuration file.
 * ``project``: The project name.
 * ``openerp``: OpenERP serie to use for this project.
-    * ``serie``: The serie name. This name have to be defined in default configuration fil or in user configuration file.
-        * ``source``: Git settings for the OpenERP repository.
+    * ``serie``: The serie name. This name have to be defined in default configuration file or in user configuration file.
+        * ``source``: Git settings for the OpenERP repository. Used to override serie default settings.
             * ``url``: Git url for the OpenERP repository.
-            * ``branch``: Branch name for the OpenERP repository.               
+            * ``git-branch``: Branch name to use.        
+            * ``git-commit``: Commit SHA-1 to use (override git-branch if defined).
 * ``python-dependencies``: List of Python dependencies for this project (will be downloaded and installed in virtualenv by pip).
     * ``name``: The pip name of the Python library.
     * ``specifier``: The pip version constraint specifier.
+    * ``options``: Add options for pip call.
 * ``dependencies``: List of other OpenERP addons project dependency.
     * ``name``: The addons project name.
     * ``source``: The addons project source location.
@@ -89,75 +106,28 @@ To create a new project with a default .openerp-dev-default, run (in a project f
 
 	oebuild init
 
-### Goals
-
-* **run** : Run OpenERP server with default parameters. Logs only INFO level messages.
-* **debug** : Same as run but also logs DEBUG level messages.
-* **test** : Run OpenERP server in test mode. In this mode, the server will use another database (named after your project's name) to load demo data and perform designated tests.
-* **project-assembly** : Build a package with your custom addons and their dependencies in order to deploy the application.
-* **project-init** : Initialize an empty OpenERP project with default configuration files
-* **eclipse-init** : Initialize an existing project as a _Eclipse Pydev Project_
-* **module-create** : Create a new empty module
-
-### Shared parameters
-
-* **-m**, **--modules** : Specify which custom module to load. If omitted, all custom modules will be loaded.
-* **-p**, **--tcp-port** : XML_RPC port of the server (default:8069).
-* **-n**, **--netrpc-port** : NET_RPC port of the server (default:8070). Warning : do not use with Odoo >= 8.0
-* **--no-update**: Bypass updates and try to launch with last parameters. 
-* **--home-config**: Bypass default config with a specific configuration. 
-* **--etc-config**: Bypass default config with a specific configuration. 
-
-### Run parameters
-
-None
-
-### Debug parameters
-
-None
-
-### Test parameters
-
-* **--test-commit** : Commit changes made during tests to database. If omitted, database will remain the same as before the tests.
-* **--db-name** : Specify custom database name for the tests. ***WARNING*** if database alread exists, it's data may be altered.
-* **--force-install** : Force a new install of the modules. The database will be dropped if existing and built-in tests will be run.
-* **--analyze** : Analyze logs and stop OpenERP. Use it with continuous integration.
-* **--stop-after-init** : Force OpenERP server to stop when tests are done.
-
-### Project-Assembly parameters
-
-* **--with-oe** : Build the package with current version of OpenERP in order to deploy a fully runnable application.
-
-### Project-Init parameters
-
-None
-
-### Eclipse-Init parameters
-
-None
-
-### Module-Create parameters
-
-* **--module-name**: Module base name
-* **-mn**: Long module name
-* **-c**: Module category
-
 ### Some examples
 
-Run server and load _mymodule_ and _othermodule_  
-`oebuild run --modules mymodule,othermodule`
+Run server and update _mymodule_ and _othermodule_  
+`oebuild run -u mymodule,othermodule`
 
-Run server in test mode on a new database named _my-custom-tests_ for continuous integration  
-`oebuild test --db-name my-custom-tests --force-install --analyze`
+Run server in test mode on a new database named _my-custom-tests_ for continuous integration with all modules of your project  
+`oebuild run.test --db-name my-custom-tests --force-install --analyze -i`
 
 Build a fully runnable package  
-`oebuild assembly --with-oe`
+`oebuild projet.assembly --include-odoo`
+
+See docs, man page or help for details
 
 ## Credits
 
 Bluestar Solutions Sàrl  
 Rue de la Maladière 23  
 CH-2000 Neuchâtel
+
+## Copyright
+
+Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 
 ## License
 

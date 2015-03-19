@@ -23,10 +23,11 @@
 import os
 
 OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_OE_CONFIG_FILE = '%s/conf/default_openerp_config' % OE_HOME_PATH
-DEFAULT_PROJECT_CONFIG_FILE = ('%s/conf/default_project_config.json' %
-                               OE_HOME_PATH)
-DEFAULT_USER_CONFIG_FILE = '%s/conf/default_user_config.json' % OE_HOME_PATH
+DEFAULT_CONF_PATH = '%s/conf' % OE_HOME_PATH
+DEFAULT_OE_CONFIG_FILE = '%s/default_openerp_config' % DEFAULT_CONF_PATH
+DEFAULT_PROJECT_CONFIG_FILE = ('%s/default_project_config.json' %
+                               DEFAULT_CONF_PATH)
+DEFAULT_USER_CONFIG_FILE = '%s/default_user_config.json' % DEFAULT_CONF_PATH
 
 OE_CONFIG_FILE = '.openerp-dev-default'
 
@@ -35,5 +36,12 @@ PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
 
 DEPRECATED_FILES = ('.project-dependencies',)
 VERSION = '2.1'
+
+OE_VERSION = {
+    "OpenERP Server 6.0": '6.0',
+    "OpenERP Server 6.1": '6.1',
+    "OpenERP Server 7.0": '7.0',
+    "Odoo Server 8.0": '8.0',
+}
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

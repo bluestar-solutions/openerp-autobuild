@@ -37,137 +37,147 @@ class OEArgumentParser():
 
         parser = ArgumentParser(
             formatter_class=RawDescriptionHelpFormatter,
-            description='''\
-OpenERP Autobuild version %s
---------------------------%s
-A developer tool for OpenERP with many features:
-
-    * Run OpenERP locally with options and user defined settings.
-    * Run OpenERP with automated tests for your modules.
-    * Initialize a new OpenERP project with autobuild settings.
-    * Initailize configuration files for Eclipse (with PyDev plugin).
-    * Manage your module dependencies.
-    * Assembly your module with the desired OpenERP version
-      and all dependencies.
-            ''' % (static_params.VERSION, '-' * len(static_params.VERSION)),
+            description="A developer tool for Odoo/OpenERP "
+            "with many features.",
             epilog='''\
 goal help:
-    %(prog)s GOAL -h
+    %(prog)s <goal> -h
 
 Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 Released under GNU AGPLv3.
             ''',
             version='''\
-OpenERP Autobuild %s
+Odoo Autobuild %s
 
 Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 Released under GNU AGPLv3.
             ''' % static_params.VERSION)
 
-        shared_parser = ArgumentParser(add_help=False)
-        shared_parser.add_argument(
-            "-m", "--modules", dest="modules", default="def-all",
-            help="Modules to use. If omitted, all modules will be used."
-        )
-        shared_parser.add_argument(
-            "-p", "--tcp-port", dest="tcp_port", type=int, default="-1",
-            help="TCP server port (default:8069)."
-        )
-        shared_parser.add_argument(
-            "-n", "--netrpc-port", dest="netrpc_port", type=int, default="-1",
-            help="NetRPC server port (default:8070). "
-            "Warning: not compatible with serie 8.0"
-        )
-        shared_parser.add_argument(
-            "--no-update", action="store_true", dest="no_update",
-            help="Bypass updates and try to launch with last parameters."
-        )
-        shared_parser.add_argument(
-            "--home-config", dest="home_config", default="",
-            help="Bypass default config with a specific configuration"
-        )
-        shared_parser.add_argument(
-            "--etc-config", dest="etc_config", default="",
-            help="Bypass default config with a specific configuration"
+        parser_shared = ArgumentParser(add_help=False)
+        parser_shared.add_argument(
+            '-A', "--alternate-config", dest="alternate_config",
+            nargs='?', metavar='<path>',
+            const='./devconf', default=None,
+            help="Use an alternate directory to find configuration files "
+            "instead of /etc and /home/user (for development purpose). "
+            "Don't specify <path> to use './devconf' with supplied files."
         )
 
-        subparsers = parser.add_subparsers(metavar="GOAL")
+        subparsers = parser.add_subparsers(metavar="<goal>")
+
+        parser_run_shared = ArgumentParser(add_help=False)
+        parser_run_shared.add_argument(
+            "-u", "--update", dest="run_update",
+            nargs='?', metavar='all|<module1>[,<module2>…]',
+            const='project-all', default=None,
+            help="Modules to install. Don't specify any module to use "
+            "the module list of the current project. --database is required."
+        )
+        parser_run_shared.add_argument(
+            '-i', "--init", dest="run_init",
+            nargs='?', metavar='all|<module1>[,<module2>…]',
+            const='project-all', default=None,
+            help="Modules to update. Don't specify any module to use "
+            "the module list of the current project. --database is required."
+        )
+        parser_run_shared.add_argument(
+            '-l', "--local", action="store_true", dest="run_local",
+            help="Bypass remote updates checks "
+            "and try to launch with last parameters."
+        )
 
         parser_run = subparsers.add_parser(
-            'run', help="Run openERP server normally (default)",
-            parents=[shared_parser]
+            'run', help="Run Odoo server normally.",
+            parents=[parser_shared, parser_run_shared]
+        )
+        parser_run.add_argument(
+            "-d", "--database", dest="run_database",
+            metavar='<database>', default=None,
+            help="Database used when installing or updating modules."
+        )
+        parser_run.add_argument(
+            "-a", "--auto-reload", action="store_true", dest="run_auto_reload",
+            help="Enable auto-reloading of python files and xml files "
+            "without having to restart the server. Requires pyinotify. "
+            "Available since Odoo version 8.0"
         )
         parser_run.set_defaults(func="run")
 
-        parser_debug = subparsers.add_parser(
-            'debug', help="Run openERP server with full debug messages",
-            parents=[shared_parser]
-        )
-        parser_debug.set_defaults(func="debug")
-
         parser_test = subparsers.add_parser(
-            'test', help="Run openERP server, perform tests, "
-            "stop the server and display tests results",
-            parents=[shared_parser]
+            'run.test', help="Run Odoo server, perform tests, "
+            "stop the server and display tests results.",
+            parents=[parser_shared, parser_run_shared]
         )
         parser_test.add_argument(
-            "--test-commit", action="store_true", dest="commit",
+            '-c', "--test-commit", action="store_true", dest="run_test_commit",
             help="Commit test results in DB."
         )
         parser_test.add_argument(
-            "--db-name", dest="db_name", help="Database name for tests.",
+            '-d', "--database", dest="run_database",
+            metavar='<database>',
+            help="Database name for tests."
+            "Use autobuild_{PROJECT_NAME} if not specified.",
             default='autobuild_%s' % os.getcwd().split('/')[-1]
         )
         parser_test.add_argument(
-            "--force-install", action="store_true", dest="install",
-            help="Force new install."
+            '-n', "--new-install", action="store_true",
+            dest="run_test_new_install",
+            help="Force new install. This will delete the database if "
+            "it exists."
         )
         parser_test.add_argument(
-            "--analyze", action="store_true", dest="analyze",
-            help="Analyze log and stop OpenERP, for continuous integration."
+            '-a', "--analyze", action="store_true", dest="run_test_analyze",
+            help="Analyze log and stop OpenERP, exit with status 0 if all "
+            "test successfully pass, 1 otherwise. Used for "
+            "continuous integration."
         )
         parser_test.add_argument(
-            "--stop-after-init", action="store_true", dest="stopafterinit",
-            help="Force OpenERP server to stop when tests are done."
+            '-C', "--continue", action="store_true", dest="run_test_continue",
+            help="Continue running OpenERP server when tests are done."
         )
         parser_test.set_defaults(func="test")
 
         parser_init_new = subparsers.add_parser(
-            'project-init', help="Initialize an empty OpenERP project",
-            parents=[shared_parser]
+            'project.init', help="Initialize an empty OpenERP project.",
+            parents=[parser_shared]
         )
         parser_init_new.set_defaults(func="init-new")
 
         parser_assembly = subparsers.add_parser(
-            'project-assembly',
-            help="Prepare all files to deploy in target folder",
-            parents=[shared_parser]
+            'project.assembly',
+            help="Prepare all files to deploy in target folder.",
+            parents=[parser_shared]
         )
         parser_assembly.add_argument(
-            "--with-oe", action="store_true", dest="with_oe",
-            help="Include OpenERP files"
+            '-i', "--include-odoo", action="store_true",
+            dest="project_assembly_include_odoo",
+            help="Include OpenERP in target."
         )
         parser_assembly.set_defaults(func="assembly")
 
         parser_create_module = subparsers.add_parser(
-            'module-create', help="Create a new module"
+            'module.create', help="Create a new module.",
+            parents=[parser_shared]
         )
         parser_create_module.add_argument(
-            'module_name', help="module base name"
+            'module_create_name',
+            metavar='<name>', help="The module name."
         )
         parser_create_module.add_argument(
-            '-mn', '--module_long_name', dest="module_long_name",
-            required=False, help="long module name"
+            '-l', '--long_name', dest="module_create_long_name",
+            metavar='<long-name>',
+            required=False, help="The module long name"
         )
         parser_create_module.add_argument(
-            '-c', '--category', dest="category", required=False,
+            '-c', '--category', dest="module_create_category",
+            metavar='<category>', required=False,
             help="The module category"
         )
         parser_create_module.set_defaults(func="create-module")
 
         parser_eclipse_init = subparsers.add_parser(
-            'eclipse-init', help="Initialize an Eclipse Pyedv project",
-            parents=[shared_parser]
+            'eclipse.init', help="Initialize an Eclipse PyDev project.",
+            parents=[parser_shared]
         )
         parser_eclipse_init.set_defaults(func="init-eclipse")
 
