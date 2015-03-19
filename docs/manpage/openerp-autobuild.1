@@ -63,6 +63,10 @@ Run Odoo server, perform tests, stop the server and display tests results\.
 Initialize an empty Odoo project\.
 .
 .TP
+\fBproject\.version\fR
+Set the version of all project modules\.
+.
+.TP
 \fBproject\.assembly\fR
 Prepare all files to deploy in target folder\.
 .
@@ -157,6 +161,20 @@ Continue running Odoo server when tests are done\.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Prints usage and options for the goal\.
+.
+.TP
+\fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
+Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
+.
+.SS "project\.version"
+.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints usage and options for the goal\.
+.
+.TP
+\fB\-n\fR [\fIversion\fR], \fB\-\-new\-version\fR=[\fIversion\fR]
+The modules new version\.
 .
 .TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]

@@ -42,6 +42,8 @@ on the same defined version.
     display tests results.
 * `project.init`:
     Initialize an empty Odoo project.
+* `project.version`:
+    Set the version of all project modules.
 * `project.assembly`:
     Prepare all files to deploy in target folder.
 * `module.create`:
@@ -121,6 +123,18 @@ on the same defined version.
 
 * `-h`, `--help`:
     Prints usage and options for the goal.
+* `-A` [<path>], `--alternate-config`=[<path>]:
+    Use an alternate directory to find configuration files
+    instead of /etc and /home/user (for development
+    purpose). Don't specify <path> to use './devconf' with
+    supplied files.
+    
+### project.version
+
+* `-h`, `--help`:
+    Prints usage and options for the goal.
+* `-n` [<version>], `--new-version`=[<version>]:
+    The modules new version.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development

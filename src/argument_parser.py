@@ -144,11 +144,11 @@ Released under GNU AGPLv3.
         parser_init_new.set_defaults(func="init-new")
 
         parser_project_version = subparsers.add_parser(
-            'project-version', help="Set the version of all project modules",
-            parents=[shared_parser]
+            'project.version', help="Set the version of all project modules",
+            parents=[parser_shared]
         )
         parser_project_version.add_argument(
-            'new_version', metavar='VERSION',
+            '-n', '--new_version', metavar='<version>',
             help="The modules new version"
         )
         parser_project_version.set_defaults(func="project-version")

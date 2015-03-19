@@ -118,6 +118,7 @@ on the same defined version.</p>
 <dt><code>run.test</code></dt><dd>  Run Odoo server, perform tests, stop the server and
   display tests results.</dd>
 <dt><code>project.init</code></dt><dd>  Initialize an empty Odoo project.</dd>
+<dt><code>project.version</code></dt><dd>  Set the version of all project modules.</dd>
 <dt><code>project.assembly</code></dt><dd>  Prepare all files to deploy in target folder.</dd>
 <dt><code>module.create</code></dt><dd>  Create a new module.</dd>
 <dt><code>eclipse.init</code></dt><dd>  Initialize an Eclipse PyDev project.</dd>
@@ -184,6 +185,18 @@ on the same defined version.</p>
 
 <dl>
 <dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="project-version">project.version</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-n</code> [<var>version</var>], <code>--new-version</code>=[<var>version</var>]</dt><dd>  The modules new version.</dd>
 <dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
   instead of /etc and /home/user (for development
   purpose). Don't specify <var>path</var> to use './devconf' with
