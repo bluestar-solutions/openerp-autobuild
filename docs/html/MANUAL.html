@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>build and run Odoo/OpenERP projects </title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#OPTIONS">OPTIONS</a>
+    <a href="#GOALS">GOALS</a>
+    <a href="#GOALS-OPTIONS">GOALS OPTIONS</a>
+    <a href="#FAQ">FAQ</a>
+    <a href="#AUTHORS">AUTHORS</a>
+    <a href="#COPYRIGHT">COPYRIGHT</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>openerp-autobuild</li>
+    <li class='tc'>OpenERP Autobuild</li>
+    <li class='tr'>openerp-autobuild</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>openerp-autobuild</code> - <span class="man-whatis">build and run Odoo/OpenERP projects </span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>openerp-autobuild</code> [--version] [--help]<br />
+<code>oebuild</code> [--version] [--help]<br />
+<code>openerp-autobuild</code> <var>goal</var> [--help]  ...<br />
+<code>oebuild</code> <var>goal</var> [--help]  ...</p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p>A tool to build and run Odoo/OpenERP projects.</p>
+
+<p>The main goals of OpenERP Autobuild are:</p>
+
+<ul>
+<li>Improve the collaboration in development teams.</li>
+<li>Permit the use of various VCS (currently git and bazaar).</li>
+<li>Enable the use of continuous integration solutions.</li>
+</ul>
+
+
+<p>Inspired by solutions like composer (http://getcomposer.org) this tool is made
+for OpenERP modules developers. It manages the dependencies and the run goal
+of your project. By enabling the possibility to define precisely the revision
+of OpenERP you want to use in your project and by managing your custom
+dependencies and their transitive dependencies, it improves teams
+collaboration on projects ensuring developments and test are made
+on the same defined version.</p>
+
+<h2 id="OPTIONS">OPTIONS</h2>
+
+<dl>
+<dt><code>-v</code>, <code>--version</code></dt><dd>  Prints openerp-autobuild version.</dd>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints the synopsis and the list of goals.</dd>
+</dl>
+
+
+<h2 id="GOALS">GOALS</h2>
+
+<dl>
+<dt class="flush"><code>run</code></dt><dd>  Run Odoo server normally.</dd>
+<dt><code>run.test</code></dt><dd>  Run Odoo server, perform tests, stop the server and
+  display tests results.</dd>
+<dt><code>project.init</code></dt><dd>  Initialize an empty Odoo project.</dd>
+<dt><code>project.version</code></dt><dd>  Set the version of all project modules.</dd>
+<dt><code>project.assembly</code></dt><dd>  Prepare all files to deploy in target folder.</dd>
+<dt><code>module.create</code></dt><dd>  Create a new module.</dd>
+<dt><code>eclipse.init</code></dt><dd>  Initialize an Eclipse PyDev project.</dd>
+</dl>
+
+
+<h2 id="GOALS-OPTIONS">GOALS OPTIONS</h2>
+
+<h3 id="run">run</h3>
+
+<p><code>openerp-autobuild</code> run [-h] [-A [<var>path</var>]] [-u [all|<var>module1</var>[,<var>module2</var>…]]]
+[-i [all|<var>module1</var>[,<var>module2</var>…]]] [-l] [-d <var>database</var>] [-a]<br />
+<code>oebuild</code> run [-h] [-A [<var>path</var>]] [-u [all|<var>module1</var>[,<var>module2</var>…]]]
+[-i [all|<var>module1</var>[,<var>module2</var>…]]] [-l] [-d <var>database</var>] [-a]</p>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-d</code> <var>database</var>, <code>--database</code>=<var>database</var></dt><dd>  Database used when installing or updating modules.</dd>
+<dt><code>-u</code> [all|<var>module1</var>[,<var>module2</var>...]], <code>--update</code>=[all|<var>module1</var>[,<var>module2</var>...]]</dt><dd>  Modules to install. Don't specify any module to use
+  the module list of the current project. <code>--database</code> is
+  required.</dd>
+<dt><code>-i</code> [all|<var>module1</var>[,<var>module2</var>...]], <code>--init</code>=[all|<var>module1</var>[,<var>module2</var>...]]</dt><dd>  Modules to update. Don't specify any module to use the
+  module list of the current project. <code>--database</code> is
+  required.</dd>
+<dt><code>-a</code>, <code>--auto-reload</code></dt><dd>  Enable auto-reloading of python files and xml files
+  without having to restart the server. Requires
+  pyinotify. Available since Odoo version 8.0</dd>
+<dt><code>-l</code>, <code>--local</code></dt><dd>  Bypass remote updates checks and try to launch with
+  last parameters.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="run-test">run.test</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-d</code> <var>database</var>, <code>--database</code>=<var>database</var></dt><dd>  Database name for tests.Use autobuild_{PROJECT_NAME} if not specified.</dd>
+<dt><code>-u</code> [all|<var>module1</var>[,<var>module2</var>...]], <code>--update</code>=[all|<var>module1</var>[,<var>module2</var>...]]</dt><dd>  Modules to install. Don't specify any module to use
+  the module list of the current project. <code>--database</code> is
+  required.</dd>
+<dt><code>-i</code> [all|<var>module1</var>[,<var>module2</var>...]], <code>--init</code>=[all|<var>module1</var>[,<var>module2</var>...]]</dt><dd>  Modules to update. Don't specify any module to use the
+  module list of the current project. <code>--database</code> is
+  required.</dd>
+<dt><code>-l</code>, <code>--local</code></dt><dd>  Bypass remote updates checks and try to launch with
+  last parameters.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+<dt><code>-c</code>, <code>--test-commit</code></dt><dd>  Commit test results in DB.</dd>
+<dt><code>-n</code>, <code>--new-install</code></dt><dd>   Force new install. This will delete the database if it exists.</dd>
+<dt><code>-a</code>, <code>--analyze</code></dt><dd>  Analyze log and stop Odoo, exit with status 0 if all
+  test successfully pass, 1 otherwise. Used for
+  continuous integration.</dd>
+<dt><code>-C</code>, <code>--continue</code></dt><dd>  Continue running Odoo server when tests are done.</dd>
+</dl>
+
+
+<h3 id="project-init">project.init</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="project-version">project.version</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-n</code> [<var>version</var>], <code>--new-version</code>=[<var>version</var>]</dt><dd>  The modules new version.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="project-assembly">project.assembly</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-i</code>, <code>--include-odoo</code></dt><dd>  Include Odoo/OpenERP in target.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="module-create">module.create</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-l</code> [<var>long-name</var>], <code>--long-name</code>=[<var>long-name</var>]</dt><dd>  The module long name.</dd>
+<dt><code>-c</code> [<var>category</var>], <code>--category</code>=[<var>category</var>]</dt><dd>  The module long name.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h3 id="eclipse-init">eclipse.init</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+</dl>
+
+
+<h2 id="FAQ">FAQ</h2>
+
+<h3 id="Where-Odoo-OpenERP-is-installed-">Where Odoo/OpenERP is installed ?</h3>
+
+<p>It is located in a workspace outside of the project.
+By default /var/oebuild/[your-project-name]/openerp</p>
+
+<p>You can override the default value (~/tec/oebuild_config.json) in your
+user configuration file (~/.config/openerp-autobuild/oebuild_config.json).</p>
+
+<h3 id="Where-is-the-code-of-my-project-dependencies-">Where is the code of my project dependencies ?</h3>
+
+<p>It is in a workspace outside of the project.
+By default : /var/oebuild/[your-project-name]/deps</p>
+
+<p>You can override the default value (~/tec/oebuild_config.json) in your
+user configuration file (~/.config/openerp-autobuild/oebuild_config.json).</p>
+
+<h3 id="Is-OpenERP-Autobuild-compatible-with-previous-versions-">Is OpenERP Autobuild compatible with previous versions ?</h3>
+
+<p>OpenERP Autobuild configuration files are not compatible with previous version,
+but OpenERP Autobuild will automatically update your project configuration
+files. If dependencies have previous configuration files autobuild will
+update these in the workspace to use it.</p>
+
+<h2 id="AUTHORS">AUTHORS</h2>
+
+<p>OpenERP Autobuild was started an maintained by Bluestar Solutions Sàrl
+(<a href="http://www.blues2.ch" data-bare-link="true">http://www.blues2.ch</a>), an Odoo partner who develops custom-made modules.</p>
+
+<p>Project and sources: <a href="https://github.com/bluestar-solutions/openerp-autobuild" data-bare-link="true">https://github.com/bluestar-solutions/openerp-autobuild</a></p>
+
+<h2 id="COPYRIGHT">COPYRIGHT</h2>
+
+<p>Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<a href="http://www.blues2.ch" data-bare-link="true">http://www.blues2.ch</a>).
+Released under GNU AGPLv3.</p>
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'>Bluestar Solutions Sàrl</li>
+    <li class='tc'>March 2015</li>
+    <li class='tr'>openerp-autobuild</li>
+  </ol>
+
+  </div>
+</body>
+</html>

@@ -34,12 +34,13 @@ SCM_LOCAL = "local"
 URL = "url"
 BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
-GIT_COMMIT = "commit"
+GIT_COMMIT = "git-commit"
 DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
 SOURCE = "source"
 SPECIFIER = "specifier"
+OPTIONS = "options"
 
 OPENERP_TYPE = {
     "type": "object",
@@ -48,19 +49,14 @@ OPENERP_TYPE = {
         GIT_BRANCH: {"type": "string"},
         GIT_COMMIT: {"type": "string", "pattern": "[a-z0-9]{40}"}
     },
-    "required": [URL],
-    "not": {
-        "anyOf": [
-            {"required": [GIT_BRANCH, GIT_COMMIT]}
-        ]
-    },
     "additionalProperties": False
 }
 PYTHON_DEPENDENCY = {
     "type": "object",
     "properties": {
         NAME: {"type": "string"},
-        SPECIFIER: {"type": "string"}
+        SPECIFIER: {"type": "string"},
+        OPTIONS: {"type": "string"}
     },
     "required": [NAME],
     "additionalProperties": False

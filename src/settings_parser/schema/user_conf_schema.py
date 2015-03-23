@@ -20,8 +20,9 @@
 ##############################################################################
 
 import static_params
-from settings_parser.schema.oebuild_conf_schema import SOURCE, OPENERP_TYPE
-
+from settings_parser.schema.oebuild_conf_schema import (
+    SOURCE, GIT_BRANCH, GIT_COMMIT
+)
 OEBUILD_VERSION = "oebuild-version"
 URL = "url"
 BZR_REV = "bzr-rev"
@@ -36,18 +37,29 @@ DEFAULT_SERIE = "default-serie"
 DATABASE = "database"
 HOST = "host"
 PORT = "port"
-USER = "user"
 PASSWORD = "password"
 PYTHON_DEPENDENCIES = "python-dependencies"
 NAME = "name"
 SPECIFIER = "specifier"
+OPTIONS = "options"
 COMMENT = "comment"
 
+OPENERP_TYPE = {
+    "type": "object",
+    "properties": {
+        URL: {"type": "string", "format": "uri"},
+        GIT_BRANCH: {"type": "string"},
+        GIT_COMMIT: {"type": "string", "pattern": "[a-z0-9]{40}"}
+    },
+    "required": [URL],
+    "additionalProperties": False
+}
 PYTHON_DEPENDENCY = {
     "type": "object",
     "properties": {
         NAME: {"type": "string"},
-        SPECIFIER: {"type": "string"}
+        SPECIFIER: {"type": "string"},
+        OPTIONS: {"type": "string"}
     },
     "required": [NAME],
     "additionalProperties": False
@@ -70,7 +82,6 @@ USER_CONFIG_SCHEMA = lambda default = True: {
     "type": "object",
     "properties": {
         COMMENT: {"type": "array", "items": {"type": "string"}},
-        USER: {"type": "string"},
         MODULE_AUTHOR: {"type": "string"},
         WEBSITE: {"type": "string", "format": "url"},
         OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},

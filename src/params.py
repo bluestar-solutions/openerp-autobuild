@@ -21,6 +21,8 @@
 ##############################################################################
 
 import os
+import shutil
+import static_params
 
 
 class Params():
@@ -31,24 +33,25 @@ class Params():
 
     ETC_CONFIG_FILE = "/etc/oebuild_config.json"
 
-    def __init__(self, user_home_path=None, etc_path=None):
+    def __init__(self, alternate_config_path=None):
 
-        if user_home_path:
-            self.USER_HOME_PATH = user_home_path
+        if alternate_config_path:
+            self.USER_HOME_PATH = '%s/home' % alternate_config_path
             self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
             self.USER_CONFIG_FILE = ('%s/oebuild_config.json' %
                                      self.USER_CONFIG_PATH)
+            self.ETC_CONFIG_FILE = ("%s/etc/oebuild_config.json" %
+                                    alternate_config_path)
 
-        self.INIT_PY_TPL = ('%s/.config/openerp-autobuild/initpy.tpl' %
-                            self.USER_HOME_PATH)
-        self.OPENERP_PY_TPL = ('%s/.config/openerp-autobuild/openerppy.tpl' %
-                               self.USER_HOME_PATH)
-        self.HEADER_PY_TPL = ('%s/.config/openerp-autobuild/header.tpl' %
-                              self.USER_HOME_PATH)
-        self.CLASS_TPL = ('%s/.config/openerp-autobuild/class.tpl' %
-                          self.USER_HOME_PATH)
+        self.INIT_PY_TPL = self.get_user_config_file('initpy.tpl')
+        self.OPENERP_PY_TPL = self.get_user_config_file('openerppy.tpl')
+        self.HEADER_PY_TPL = self.get_user_config_file('header.tpl')
 
-        if etc_path:
-            self.ETC_CONFIG_FILE = "%s/oebuild_config.json" % etc_path
+    def get_user_config_file(self, name):
+        path = '%s/%s' % (self.USER_CONFIG_PATH, name)
+        if not (os.path.exists(path) and os.path.isfile(path)):
+            shutil.copyfile('%s/%s' % (static_params.DEFAULT_CONF_PATH, name),
+                            path)
+        return path
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

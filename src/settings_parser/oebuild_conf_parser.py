@@ -78,11 +78,6 @@ class OEBuildConfParser():
         conf = self._load_file(file_name, strict_mode=False, alt_schema=True)
         new_conf = dict(source_conf)
 
-        for componant in ['server', 'addons', 'web']:
-            if componant in conf[schema.OPENERP]:
-                new_conf[schema.OPENERP][componant].\
-                    update(conf[schema.OPENERP][componant])
-
         for dep2 in conf[schema.DEPENDENCIES]:
             for dep in new_conf[schema.DEPENDENCIES]:
                 if dep[schema.NAME] == dep2[schema.NAME]:

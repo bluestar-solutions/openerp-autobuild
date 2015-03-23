@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Generate manpages and HTML documentation from .md files.
+# ronn is needed (sudo apt-get install ruby-ronn).
+# See http://rtomayko.github.io/ronn/ for usage.
+
+rm -Rf manpage html
+mkdir manpage html
+
+cp MANUAL.md openerp-autobuild.1.ronn
+cp MANUAL.md oebuild.1.ronn
+ronn -r *.ronn --manual="OpenERP Autobuild" --organization="Bluestar Solutions Sàrl"
+mv *.1 manpage/
+rm *.ronn
+
+ronn -5 *.md --manual="OpenERP Autobuild" --organization="Bluestar Solutions Sàrl"
+mv *.html html/
