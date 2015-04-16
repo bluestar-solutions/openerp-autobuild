@@ -12,6 +12,7 @@
         " **************************************************************************************** "
     ],
     "oebuild-version": "2.1",
+    "oebuild-log-level": "DEBUG",
     "workspace": "/var/oebuild",
     "custom-configuration-files": [],
     "openerp": [{
