@@ -28,7 +28,7 @@ from bzrlib.plugin import load_plugins
 from bzrlib.bzrdir import BzrDir
 from bzrlib.errors import NotBranchError
 from git import Repo
-from git.exc import InvalidGitRepositoryError
+from git import RemoteProgress
 import shutil
 from settings_parser.schema import (
     user_conf_schema, oebuild_conf_schema as schema,
@@ -98,6 +98,11 @@ class Autobuild():
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
+        self._logger.setLevel(
+            getattr(logging, self.user_conf[
+                user_conf_schema.OEBUILD_LOG_LEVEL
+            ])
+        )
         self.workspace_path = (
             self.user_conf[user_conf_schema.WORKSPACE].replace(
                 '~', self.params.USER_HOME_PATH
@@ -672,7 +677,10 @@ pip install -r DEPENDENCY.txt \
             )
             self.git_checkout(url, self.openerp_path, git_branch, git_commit)
         except Exception, e:
-            self._logger.error(_ex('Cannot checkout from %s' % url, e))
+            self._logger.error(
+                _ex('Cannot checkout from %s' % url, e),
+                exc_info=self._logger.isEnabledFor(logging.DEBUG)
+            )
             sys.exit(1)
 
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
@@ -830,27 +838,42 @@ pip install -r DEPENDENCY.txt \
     def is_git_uptodate(self, source, destination, branch, commit):
         try:
             local = Repo(destination)
+            origin = local.remotes.origin
+        except:
+            self._logger.warning('%s : Invalid git repository!' % (
+                destination
+            ))
+            return False
 
-            if commit:
-                if local.head.commit.hexsha == commit:
-                    self._logger.info('%s : Commit already up-to-date',
-                                      destination)
-                    return True
-            else:
-                local.remotes.origin.fetch()
+        if origin.url != source:
+            self._logger.info('%s : Source URL has changed',
+                              destination)
+            return False
 
-                local_sha = local.rev_parse(branch or 'master')
-                remote_sha = local.rev_parse('origin/%s' %
-                                             (branch or 'master'))
+        if commit:
+            if local.head.commit.hexsha == commit:
+                self._logger.info('%s : Commit already up-to-date',
+                                  destination)
+                return True
 
-                if local_sha == remote_sha:
-                    self._logger.info('%s : Branch already up-to-date',
-                                      destination)
-                    return True
-        except InvalidGitRepositoryError:
-            pass
+        self._logger.info('%s : Checkout %s %s...' % (
+            destination, commit and 'commit' or 'branch',
+            commit or branch or 'master'
+        ))
 
-        return False
+        try:
+            local.git.reset('--hard')
+            local.git.clean('-xdf')  # Remove untracked files, including .pyc
+            origin.pull()
+        except:
+            self._logger.warning('%s : Checkout %s %s failed!' % (
+                destination, commit and 'commit' or 'branch',
+                commit or branch or 'master'
+            ))
+            return False
+
+        local.git.checkout(commit or branch or 'master')
+        return True
 
     def git_checkout(self, source, destination, branch=None, commit=None):
         if os.path.exists(destination):
@@ -859,20 +882,17 @@ pip install -r DEPENDENCY.txt \
             shutil.rmtree(destination)
 
         os.makedirs(destination)
-        self._logger.info('%s : Clone from %s...' % (destination, source))
 
-        if commit:
-            local = Repo.clone_from(source, destination, b=branch or 'master')
-            self._logger.info('%s : Checkout commit %s...' % (destination,
-                                                              commit))
-            local.git.checkout(commit)
-        else:
-            local = Repo.clone_from(source, destination, depth=1, b=branch or
-                                    'master')
-            if branch:
-                self._logger.info('%s : Checkout branch %s...' % (destination,
-                                                                  branch))
-                local.git.checkout(branch)
+        self._logger.info('%s : Clone from %s...' % (destination, source))
+        with OEBuildRemoteProgress() as progress:
+            local = Repo.clone_from(source, destination,
+                                    progress=progress)
+
+        self._logger.info('%s : Checkout %s %s...' % (
+            destination, commit and 'commit' or 'branch',
+            commit or branch or 'master'
+        ))
+        local.git.checkout(commit or branch or 'master')
 
     def local_copy(self, source, destination):
         self._logger.info('%s : Copy from %s...' % (destination, source))
@@ -933,6 +953,30 @@ pip install -r DEPENDENCY.txt \
                               (COLORIZED('INFO', 'SUCCESS') if test_ok
                                else COLORIZED('ERROR', 'FAILED')))
             return (None, None)
+
+
+class OEBuildRemoteProgress(RemoteProgress):
+
+    _re_parse = re.compile(r'(.*):\s*[0-9]*.*')
+
+    def _parse_progress_line(self, line):
+        if self._line_up:
+            sys.stdout.write("\033[F")
+        else:
+            self._line_up = True
+        print u'> %s' % line
+
+        sys.stdout.flush()
+
+    def __enter__(self):
+        self._msg_type = None
+        self._line_up = False
+        return self
+
+    def __exit__(self, *_):
+        if self._line_up:
+            sys.stdout.write("\033[F")
+
 
 if __name__ == "__main__":
     arg_parser = OEArgumentParser()

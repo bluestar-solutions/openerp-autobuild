@@ -24,6 +24,7 @@ from settings_parser.schema.oebuild_conf_schema import (
     SOURCE, GIT_BRANCH, GIT_COMMIT
 )
 OEBUILD_VERSION = "oebuild-version"
+OEBUILD_LOG_LEVEL = "oebuild-log-level"
 URL = "url"
 BZR_REV = "bzr-rev"
 OPENERP = "openerp"
@@ -85,6 +86,7 @@ USER_CONFIG_SCHEMA = lambda default = True: {
         MODULE_AUTHOR: {"type": "string"},
         WEBSITE: {"type": "string", "format": "url"},
         OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
+        OEBUILD_LOG_LEVEL: {"enum": ["DEBUG", "INFO", "WARNING", "ERROR"]},
         WORKSPACE: {"type": "string", "format": "uri"},
         CONF_FILES: {
             "type": "array",

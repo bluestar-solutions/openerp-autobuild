@@ -83,7 +83,7 @@ class ColoredFormatter(logging.Formatter):
 
 class ColoredLogger(logging.Logger):
     def __init__(self, name):
-        logging.Logger.__init__(self, name, logging.DEBUG)
+        logging.Logger.__init__(self, name)
 
         fmt = ColoredFormatter(
             '%(asctime)s %(process)d %(levelname)s ? %(module)s: %(message)s'
@@ -101,12 +101,11 @@ class ColoredLogger(logging.Logger):
         h2.addFilter(f2)
         self.addHandler(h2)
 
-        # Set the logger for bzrlib
-        h_bzr = logging.StreamHandler(sys.stderr)
-        h_bzr.setFormatter(fmt)
-        f_bzr = SingleLevelFilter(logging.ERROR, False)
-        h_bzr.addFilter(f_bzr)
-        logging.getLogger('bzr').addHandler(h_bzr)
+        # Set the logger for external libraries
+        h_ext = logging.StreamHandler(sys.stderr)
+        h_ext.setFormatter(fmt)
+        logging.getLogger('bzr').addHandler(h_ext)
+        logging.getLogger('git.cmd').addHandler(h_ext)
 
 logging.setLoggerClass(ColoredLogger)
 
