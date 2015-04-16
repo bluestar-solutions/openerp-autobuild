@@ -199,7 +199,7 @@
             {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
         ]
     }],
-    "default-serie": "7.0",
+    "default-serie": "8.0",
     "database": {
         "host": "localhost",
         "port": "5432",
