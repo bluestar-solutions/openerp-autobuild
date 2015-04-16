@@ -37,11 +37,13 @@ class Params():
 
         if alternate_config_path:
             self.USER_HOME_PATH = '%s/home' % alternate_config_path
-            self.USER_CONFIG_PATH = '%s' % self.USER_HOME_PATH
+            self.USER_CONFIG_PATH = self.USER_HOME_PATH
             self.USER_CONFIG_FILE = ('%s/oebuild_config.json' %
                                      self.USER_CONFIG_PATH)
             self.ETC_CONFIG_FILE = ("%s/etc/oebuild_config.json" %
                                     alternate_config_path)
+            if not os.path.exists(self.USER_HOME_PATH):
+                os.makedirs(self.USER_HOME_PATH)
 
         self.INIT_PY_TPL = self.get_user_config_file('initpy.tpl')
         self.OPENERP_PY_TPL = self.get_user_config_file('openerppy.tpl')
@@ -49,7 +51,7 @@ class Params():
 
     def get_user_config_file(self, name):
         path = '%s/%s' % (self.USER_CONFIG_PATH, name)
-        if not (os.path.exists(path) and os.path.isfile(path)):
+        if not os.path.isfile(path):
             shutil.copyfile('%s/%s' % (static_params.DEFAULT_CONF_PATH, name),
                             path)
         return path
