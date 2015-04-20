@@ -59,7 +59,7 @@ load_plugins()
 
 class Autobuild():
 
-    _logger = logging.getLogger(__name__)
+    _logger = logging.getLogger('Autobuild')
     _arg_parser = None
 
     user_conf = None

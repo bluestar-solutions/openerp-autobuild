@@ -37,7 +37,7 @@ class IgnoreSubConf(Exception):
 
 class OEBuildConfParser():
 
-    _logger = logging.getLogger(__name__)
+    _logger = logging.getLogger('OEBuildConfParser')
     _analyze = False
     params = None
 
