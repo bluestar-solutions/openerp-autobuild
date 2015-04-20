@@ -33,7 +33,7 @@ import static_params
 
 class UserConfParser():
 
-    _logger = logging.getLogger(__name__)
+    _logger = logging.getLogger('UserConfParser')
     params = None
 
     def __init__(self, params):
