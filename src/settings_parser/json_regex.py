@@ -29,7 +29,7 @@ update_version = lambda v_from, v_to: (
 remove_param = lambda p_name: (r'"%s"\s*:\s*".*"\s*,?\s*\n?' % p_name, r'')
 add_param_before = lambda p_name, p_value, before_p_name: (
     r'(\n?)(\s*)("%s"\s*:)' % (before_p_name),
-    r'\n\2"%s": "%s"\n\2\3' % (p_name, p_value)
+    r'\n\2"%s": "%s",\n\2\3' % (p_name, p_value)
 )
 set_param_value = lambda p_name, p_value: (
     r'("%s"\s*:\s*)(".*")' % (p_name), r'\1"%s"' % (p_value)
