@@ -108,5 +108,6 @@ class ColoredLogger(logging.Logger):
         logging.getLogger('git.cmd').addHandler(h_ext)
 
 logging.setLoggerClass(ColoredLogger)
+logger = logging.getLogger('openerp-autobuild')
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

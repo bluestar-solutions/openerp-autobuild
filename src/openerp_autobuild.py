@@ -48,7 +48,7 @@ import dialogs
 import json
 from params import Params
 import static_params
-from oebuild_logger import _ex, logging, LOG_PARSER, COLORIZED
+from oebuild_logger import _ex, logging, logger, LOG_PARSER, COLORIZED
 import re
 from argument_parser import OEArgumentParser
 import codecs
@@ -59,7 +59,6 @@ load_plugins()
 
 class Autobuild():
 
-    _logger = logging.getLogger('Autobuild')
     _arg_parser = None
 
     user_conf = None
@@ -98,7 +97,7 @@ class Autobuild():
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
-        self._logger.setLevel(
+        logger.setLevel(
             getattr(logging, self.user_conf[
                 user_conf_schema.OEBUILD_LOG_LEVEL
             ])
@@ -109,7 +108,7 @@ class Autobuild():
             )
         )
 
-        self._logger.info('Entering %s mode' % args.func)
+        logger.info('Entering %s mode' % args.func)
 
         if args.func == "create-module":
             conf = self.oebuild_conf_parser.load_oebuild_config_file(
@@ -159,8 +158,8 @@ class Autobuild():
                     with open(self.deps_cache_file, 'r') as f:
                         self.deps_addons_path = json.loads(f.read())
                 except Exception, e:
-                    self._logger.error(_ex('Impossible to read %s' %
-                                           self.deps_cache_file, e))
+                    logger.error(_ex('Impossible to read %s' %
+                                     self.deps_cache_file, e))
                     sys.exit(1)
             else:
                 self.get_deps(conf)
@@ -168,8 +167,8 @@ class Autobuild():
                     with open(self.deps_cache_file, 'w') as f:
                         f.write(json.dumps(self.deps_addons_path))
                 except Exception, e:
-                    self._logger.warning(_ex('Impossible to write %s' %
-                                             self.deps_cache_file, e))
+                    logger.warning(_ex('Impossible to write %s' %
+                                       self.deps_cache_file, e))
             if args.func == "init-eclipse":
                 self.init_eclipse(conf)
             elif args.func == "assembly":
@@ -178,7 +177,7 @@ class Autobuild():
                 self.kill_old_openerp(conf)
                 self.run_openerp(conf, args)
 
-        self._logger.info('Terminate %s mode' % args.func)
+        logger.info('Terminate %s mode' % args.func)
 
     def exclude_git(self, filename):
         excludes = ['.git', '.gitignore']
@@ -191,7 +190,7 @@ class Autobuild():
             for filename in filenames:
                 if filename == '__openerp__.py':
                     filepath = os.path.join(root, filename)
-                    self._logger.info(
+                    logger.info(
                         'Change version to %s in %s' % (new_version, filepath)
                     )
                     with open(filepath, 'r') as f:
@@ -260,7 +259,7 @@ pip install -r DEPENDENCY.txt \
     def create_module(self, conf, args):
         module_path = '%s/%s' % (self.src_path, args.module_create_name)
         if os.path.exists(module_path):
-            self._logger.error("The module already exists")
+            logger.error("The module already exists")
             sys.exit(1)
 
         if args.module_create_long_name is None:
@@ -383,13 +382,13 @@ pip install -r DEPENDENCY.txt \
                 )
 
             if not is_config_changed:
-                self._logger.info(
+                logger.info(
                     "virtualenv %s: No changes in Python dependencies, "
                     "use it as is" % self.virtualenv_path
                 )
                 return
 
-            self._logger.info(
+            logger.info(
                 "virtualenv %s: Changes in Python dependencies, "
                 "need to rebuild" % self.virtualenv_path
             )
@@ -398,14 +397,14 @@ pip install -r DEPENDENCY.txt \
 
         elif not os.path.exists(self.py_deps_cache_file):
             if args.run_local:
-                self._logger.error(
+                logger.error(
                     "Cannot run in no-update mode without last run Python "
                     "dependencies cache file, try running without "
                     "--no-update argument."
                 )
                 sys.exit(1)
             if os.path.exists(self.virtualenv_path):
-                self._logger.info(
+                logger.info(
                     "virtualenv %s : No last run Python dependencies "
                     "cache file, need to rebuild" % self.virtualenv_path
                 )
@@ -419,7 +418,7 @@ pip install -r DEPENDENCY.txt \
             dep.get(oebuild_conf_schema.OPTIONS)
             for dep in self.python_deps if dep.get(oebuild_conf_schema.OPTIONS)
         ])
-        self._logger.info(
+        logger.info(
             "virtualenv %s : Create and install Python dependencies (%s %s)" %
             (self.virtualenv_path, py_deps_string, py_options_string)
         )
@@ -427,13 +426,13 @@ pip install -r DEPENDENCY.txt \
                                      log_in=False, log_out=False, log_err=True)
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path,
-                                                         o.rstrip()))
+                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
+                                                   o.rstrip()))
         errors = False
         for e in re.split('\n(?=\S)', err):
             if len(e) > 0:
                 errors = True
-                self._logger.error(u'virtualenv %s: %s' % (
+                logger.error(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
         if errors:
@@ -446,20 +445,20 @@ pip install -r DEPENDENCY.txt \
         )
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                self._logger.info("virtualenv %s: %s" % (self.virtualenv_path,
-                                                         o.rstrip()))
+                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
+                                                   o.rstrip()))
         errors = False
         for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated',
                          e, re.I):
                 # If an error is thrown because of using deprecated
                 # RepositoryFormat6() format, just warn and continue
-                self._logger.warning(u'virtualenv %s: %s' % (
+                logger.warning(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
             elif len(e) > 0:
                 errors = True
-                self._logger.error(u'virtualenv %s: %s' % (
+                logger.error(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
         if errors:
@@ -492,22 +491,22 @@ pip install -r DEPENDENCY.txt \
         self.create_or_update_venv(conf, args)
 
         if not os.path.exists(static_params.OE_CONFIG_FILE):
-            self._logger.error('The OpenERP configuration does not exist : '
-                               '%s, use openerp-autobuild init to create it.' %
-                               static_params.OE_CONFIG_FILE)
+            logger.error('The OpenERP configuration does not exist : '
+                         '%s, use openerp-autobuild init to create it.' %
+                         static_params.OE_CONFIG_FILE)
             sys.exit(1)
 
         if not os.path.exists(self.workspace_path):
-            self._logger.info('Creating nonexistent openerp-autobuild '
-                              'workspace : %s', self.workspace_path)
+            logger.info('Creating nonexistent openerp-autobuild '
+                        'workspace : %s', self.workspace_path)
             os.makedirs(self.workspace_path)
 
         init_modules = None
         update_modules = None
         if args.run_init or args.run_update:
             if not args.run_database:
-                self._logger.error('--database is mandatory if you want to '
-                                   'install or update modules.')
+                logger.error('--database is mandatory if you want to '
+                             'install or update modules.')
                 sys.exit(1)
             if args.run_init:
                 if args.run_init == "project-all":
@@ -521,9 +520,9 @@ pip install -r DEPENDENCY.txt \
                     update_modules = args.run_update
 
         if init_modules:
-            self._logger.info('Modules to install: %s' % init_modules)
+            logger.info('Modules to install: %s' % init_modules)
         if update_modules:
-            self._logger.info('Modules to update: %s' % update_modules)
+            logger.info('Modules to update: %s' % update_modules)
 
         addons_path = '%s/%s' % (self.openerp_path, 'addons')
         for path in self.deps_addons_path:
@@ -543,7 +542,7 @@ pip install -r DEPENDENCY.txt \
                     database='postgres'
                 )
             except:
-                self._logger.error("Unable to connect to the database.")
+                logger.error("Unable to connect to the database.")
                 sys.exit(1)
 
             cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -551,11 +550,11 @@ pip install -r DEPENDENCY.txt \
                         args.run_test_database)
             db_exists = cur.fetchall() or False
             if db_exists:
-                self._logger.info('Database %s exists' %
-                                  args.run_test_database)
+                logger.info('Database %s exists' %
+                            args.run_test_database)
             else:
-                self._logger.info('Database %s does not exist' %
-                                  args.run_test_database)
+                logger.info('Database %s does not exist' %
+                            args.run_test_database)
 
             if not db_exists or args.run_test_install:
                 old_isolation_level = conn.isolation_level
@@ -593,14 +592,14 @@ pip install -r DEPENDENCY.txt \
             if not args.run_test_continue:
                 cmd += ' --stop-after-init'
             try:
-                self._logger.info('Start OpenERP ...')
+                logger.info('Start OpenERP ...')
                 openerp_output, _ = self.call_command(
                     cmd, parse_log=args.run_test_analyze,
                     register_pid=self.pid_file,
                     log_in=False, parse_tests=True
                 )
             except KeyboardInterrupt:
-                self._logger.info("OpenERP stopped from command line")
+                logger.info("OpenERP stopped from command line")
                 if args.func == "test" and args.run_test_analyze:
                     sys.exit(1)
         else:
@@ -631,19 +630,19 @@ pip install -r DEPENDENCY.txt \
                     ), parse_log=True, log_in=False, log_out=False
                 )
                 if static_params.OE_VERSION[openerp_version.rstrip()] < '8.0':
-                    self._logger.error("--auto-reload is not available for %s"
-                                       % openerp_version)
+                    logger.error("--auto-reload is not available for %s" %
+                                 openerp_version)
                     sys.exit(1)
                 cmd += ' --auto-reload'
 
             try:
-                self._logger.info('Start OpenERP ...')
+                logger.info('Start OpenERP ...')
                 openerp_output, _ = self.call_command(
                     cmd, parse_log=False,
                     register_pid=self.pid_file, log_in=False
                 )
             except KeyboardInterrupt:
-                self._logger.info("OpenERP stopped after keyboard interrupt")
+                logger.info("OpenERP stopped after keyboard interrupt")
 
         if args.func == "test" and args.run_test_analyze:
             if 'ERROR' in openerp_output:
@@ -660,7 +659,7 @@ pip install -r DEPENDENCY.txt \
                 serie = tmp_serie
                 break
         if not serie:
-            self._logger.error('The serie "%s" does not exists' % (serie_name))
+            logger.error('The serie "%s" does not exists' % (serie_name))
             sys.exit(1)
 
         try:
@@ -677,9 +676,9 @@ pip install -r DEPENDENCY.txt \
             )
             self.git_checkout(url, self.openerp_path, git_branch, git_commit)
         except Exception, e:
-            self._logger.error(
+            logger.error(
                 _ex('Cannot checkout from %s' % url, e),
-                exc_info=self._logger.isEnabledFor(logging.DEBUG)
+                exc_info=logger.isEnabledFor(logging.DEBUG)
             )
             sys.exit(1)
 
@@ -693,7 +692,7 @@ pip install -r DEPENDENCY.txt \
             if dep['name'] in existing_names:
                 existing_dep = [idep for idep in self.python_deps
                                 if idep['name'] == dep['name']][0]
-                self._logger.warning(
+                logger.warning(
                     "Dependency %s%s is hidden by %s%s and will ignored" %
                     (dep[oebuild_conf_schema.NAME],
                      dep.get(oebuild_conf_schema.SPECIFIER, ''),
@@ -725,7 +724,7 @@ pip install -r DEPENDENCY.txt \
                 ):
                     reason = 'git branch'
                 if reason:
-                    self._logger.warning(
+                    logger.warning(
                         "Dependency %s from %s is hidden by a %s dependency "
                         "which use another %s and will ignored" %
                         (dep[schema.NAME], from_project,
@@ -744,8 +743,8 @@ pip install -r DEPENDENCY.txt \
                     self.bzr_checkout(source[schema.URL], destination,
                                       source.get(schema.BZR_REV, None))
                 except Exception, e:
-                    self._logger.error(_ex('Cannot checkout from %s' %
-                                           source[schema.URL], e))
+                    logger.error(_ex('Cannot checkout from %s' %
+                                     source[schema.URL], e))
                     sys.exit(1)
                 try:
                     subconf = self.oebuild_conf_parser.\
@@ -765,8 +764,8 @@ pip install -r DEPENDENCY.txt \
                                       source.get(schema.GIT_BRANCH, None),
                                       source.get(schema.GIT_COMMIT, None))
                 except Exception, e:
-                    self._logger.error(_ex('Cannot checkout from %s' %
-                                           source[schema.URL], e))
+                    logger.error(_ex('Cannot checkout from %s' %
+                                     source[schema.URL], e))
                     sys.exit(1)
                 try:
                     subconf = self.oebuild_conf_parser.\
@@ -783,8 +782,8 @@ pip install -r DEPENDENCY.txt \
                 try:
                     self.local_copy(source[schema.URL], destination)
                 except Exception, e:
-                    self._logger.error(_ex('Cannot copy from %s' %
-                                           source[schema.URL], e))
+                    logger.error(_ex('Cannot copy from %s' %
+                                     source[schema.URL], e))
                     sys.exit(1)
                 try:
                     subconf = self.oebuild_conf_parser.\
@@ -818,8 +817,8 @@ pip install -r DEPENDENCY.txt \
                     local_tree.last_revision()
                 )
                 if revno == local_revno:
-                    self._logger.info('%s : Up-to-date from %s (revno : %s)' %
-                                      (destination, source, local_revno))
+                    logger.info('%s : Up-to-date from %s (revno : %s)' %
+                                (destination, source, local_revno))
                     return
                 else:
                     shutil.rmtree(destination)
@@ -829,7 +828,7 @@ pip install -r DEPENDENCY.txt \
         if not os.path.exists(destination):
             os.makedirs(destination)
 
-        self._logger.info('%s : Checkout from %s (revno : %s)...' % (
+        logger.info('%s : Checkout from %s (revno : %s)...' % (
             destination, source, revno)
         )
         remote.create_checkout(destination, remote.get_rev_id(revno),
@@ -840,23 +839,21 @@ pip install -r DEPENDENCY.txt \
             local = Repo(destination)
             origin = local.remotes.origin
         except:
-            self._logger.warning('%s : Invalid git repository!' % (
+            logger.warning('%s : Invalid git repository!' % (
                 destination
             ))
             return False
 
         if origin.url != source:
-            self._logger.info('%s : Source URL has changed',
-                              destination)
+            logger.info('%s : Source URL has changed', destination)
             return False
 
         if commit:
             if local.head.commit.hexsha == commit:
-                self._logger.info('%s : Commit already up-to-date',
-                                  destination)
+                logger.info('%s : Commit already up-to-date', destination)
                 return True
 
-        self._logger.info('%s : Checkout %s %s...' % (
+        logger.info('%s : Checkout %s %s...' % (
             destination, commit and 'commit' or 'branch',
             commit or branch or 'master'
         ))
@@ -866,7 +863,7 @@ pip install -r DEPENDENCY.txt \
             local.git.clean('-xdf')  # Remove untracked files, including .pyc
             origin.pull()
         except:
-            self._logger.warning('%s : Checkout %s %s failed!' % (
+            logger.warning('%s : Checkout %s %s failed!' % (
                 destination, commit and 'commit' or 'branch',
                 commit or branch or 'master'
             ))
@@ -883,19 +880,19 @@ pip install -r DEPENDENCY.txt \
 
         os.makedirs(destination)
 
-        self._logger.info('%s : Clone from %s...' % (destination, source))
+        logger.info('%s : Clone from %s...' % (destination, source))
         with OEBuildRemoteProgress() as progress:
             local = Repo.clone_from(source, destination,
                                     progress=progress)
 
-        self._logger.info('%s : Checkout %s %s...' % (
+        logger.info('%s : Checkout %s %s...' % (
             destination, commit and 'commit' or 'branch',
             commit or branch or 'master'
         ))
         local.git.checkout(commit or branch or 'master')
 
     def local_copy(self, source, destination):
-        self._logger.info('%s : Copy from %s...' % (destination, source))
+        logger.info('%s : Copy from %s...' % (destination, source))
         shutil.rmtree(destination)
         os.mkdir(destination)
         for module in [m for m in os.listdir(source) if (
@@ -912,7 +909,7 @@ pip install -r DEPENDENCY.txt \
     def call_command(self, command, log_in=True, log_out=True, log_err=True,
                      parse_log=True, register_pid=None, parse_tests=False):
         if log_in:
-            self._logger.info(command)
+            logger.info(command)
         process = subprocess.Popen(command,
                                    shell=True,
                                    stdout=subprocess.PIPE,
@@ -927,9 +924,9 @@ pip install -r DEPENDENCY.txt \
         if parse_log:
             out, err = process.communicate()
             if log_err and err:
-                self._logger.error(err)
+                logger.error(err)
             if log_out and out:
-                self._logger.info(out)
+                logger.info(out)
             return (out, err)
         else:
             test_ok = True
