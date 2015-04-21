@@ -133,8 +133,6 @@ class UserConfParser():
 
         if not os.path.exists(self.params.USER_CONFIG_PATH):
             os.makedirs(self.params.USER_CONFIG_PATH)
-        if not os.path.exists(self.params.USER_CONFIG_PATH):
-            os.makedirs(self.params.USER_CONFIG_PATH)
         if not os.path.exists(self.params.USER_CONFIG_FILE):
             infile = open(static_params.DEFAULT_USER_CONFIG_FILE)
             outfile = open(self.params.USER_CONFIG_FILE, 'w')
