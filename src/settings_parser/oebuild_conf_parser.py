@@ -23,7 +23,7 @@ import os
 import sys
 import json
 import jsonschema
-from oebuild_logger import _ex, logging
+from oebuild_logger import _ex, logger
 from settings_parser.schema import oebuild_conf_schema as schema
 import dialogs
 import re
@@ -37,7 +37,6 @@ class IgnoreSubConf(Exception):
 
 class OEBuildConfParser():
 
-    _logger = logging.getLogger('OEBuildConfParser')
     _analyze = False
     params = None
 
@@ -46,8 +45,8 @@ class OEBuildConfParser():
         self.params = params
         for dfile in static_params.DEPRECATED_FILES:
             if os.path.exists(dfile):
-                self._logger.warning('File %s is deprecated, you can remove '
-                                     'it from the project' % dfile)
+                logger.warning('File %s is deprecated, you can remove '
+                               'it from the project' % dfile)
 
     def _load_file(self, file_name, strict_mode=True, alt_schema=False):
         conf = None
@@ -56,12 +55,12 @@ class OEBuildConfParser():
                 conf = json.load(source_file)
             except ValueError, e:
                 if strict_mode:
-                    self._logger.error(
+                    logger.error(
                         _ex('%s is not JSON valid' % file_name, e)
                     )
                     sys.exit(1)
                 else:
-                    self._logger.warning(
+                    logger.warning(
                         _ex('%s is not JSON valid and will be ignored' %
                             file_name, e)
                     )
@@ -92,12 +91,12 @@ class OEBuildConfParser():
                                 else schema.OEBUILD_SCHEMA)
         except Exception, e:
             if strict_mode:
-                self._logger.error(
+                logger.error(
                     _ex('%s is not a valid configuration file' % file_name, e)
                 )
                 sys.exit(1)
             else:
-                self._logger.warning(
+                logger.warning(
                     _ex('%s will be ignored because it is not a valid '
                         'configuration file' % file_name, e)
                 )
@@ -106,7 +105,7 @@ class OEBuildConfParser():
     def load_oebuild_config_file(self, conf_file_list):
         if not (os.path.exists(static_params.PROJECT_CONFIG_FILE) and
                 os.path.isfile(static_params.PROJECT_CONFIG_FILE)):
-            self._logger.error(
+            logger.error(
                 'The project configuration does not exist : %s' %
                 static_params.PROJECT_CONFIG_FILE
             )
@@ -132,7 +131,7 @@ class OEBuildConfParser():
                                static_params.PROJECT_CONFIG_FILE)
         if not (os.path.exists(conf_file) and os.path.isfile(conf_file)):
             # Probably not an oebuild project
-            self._logger.info(
+            logger.info(
                 '%s : %s file not found. It is probably not a oebuild module' %
                 (conf_file_path, static_params.PROJECT_CONFIG_FILE)
             )
@@ -176,7 +175,7 @@ class OEBuildConfParser():
             f.write(content)
 
     def _update_file(self, version_from, file_name, alt_schema=False):
-        self._logger.info(
+        logger.info(
             '%s is in version %s and openerp-autobuild is in version %s' %
             (file_name, version_from, static_params.VERSION)
         )
@@ -184,7 +183,7 @@ class OEBuildConfParser():
         valid_keys = (self.UPDATE_ALT_FROM.keys() if alt_schema
                       else self.UPDATE_FROM.keys())
         if version_from not in valid_keys:
-            self._logger.warning(
+            logger.warning(
                 "Cannot update from version %s: %s will be ignored" %
                 (version_from, file_name)
             )
@@ -210,12 +209,12 @@ class OEBuildConfParser():
         if answer == dialogs.ANSWER_YES:
             os.rename(updated_fname, file_name)
             updated_fname = file_name
-            self._logger.info(
+            logger.info(
                 '%s has been updated to version %s' %
                 (file_name, static_params.VERSION)
             )
         else:
-            self._logger.info(
+            logger.info(
                 'An updated version of %s will be used and stored in %s' %
                 (file_name, updated_fname)
             )

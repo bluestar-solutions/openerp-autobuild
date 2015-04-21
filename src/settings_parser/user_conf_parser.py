@@ -24,7 +24,7 @@ import sys
 import getpass
 import json
 import jsonschema
-from oebuild_logger import _ex, logging
+from oebuild_logger import _ex, logger
 from settings_parser.schema import user_conf_schema
 import user_conf_1_7_update
 import shutil
@@ -33,7 +33,6 @@ import static_params
 
 class UserConfParser():
 
-    _logger = logging.getLogger('UserConfParser')
     params = None
 
     def __init__(self, params):
@@ -45,8 +44,8 @@ class UserConfParser():
             try:
                 return json.load(source_file)
             except ValueError, error:
-                self._logger.error('%s is not JSON valid : %s' %
-                                   (file_name, error))
+                logger.error('%s is not JSON valid : %s' %
+                             (file_name, error))
                 sys.exit(1)
 
     def _load_conf(self, conf_file, default=True):
@@ -58,20 +57,20 @@ class UserConfParser():
                     conf, user_conf_schema.USER_CONFIG_SCHEMA(default)
                 )
             except ValueError, error:
-                self._logger.error(
+                logger.error(
                     '%s is not a valid user configuration file : %s' %
                     (conf_file, error)
                 )
                 sys.exit(1)
         except IOError, e:
-            self._logger.error(_ex(conf_file, e))
+            logger.error(_ex(conf_file, e))
             sys.exit(1)
         return conf
 
     def load_user_config_file(self):
         if not (os.path.exists(self.params.USER_CONFIG_FILE) and
                 os.path.isfile(self.params.USER_CONFIG_FILE)):
-            self._logger.error(
+            logger.error(
                 'User openerp configuration file does not exist : %s' %
                 self.params.USER_CONFIG_FILE
             )
