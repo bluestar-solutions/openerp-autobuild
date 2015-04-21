@@ -20,7 +20,7 @@
 ##############################################################################
 
 from settings_parser.schema import user_conf_schema
-
+from oebuild_logger import logger
 import re
 import json_regex as jre
 
@@ -42,6 +42,12 @@ def update_from_1_7(conf, conf_1_7, params):
                                        conf_1_7[user_conf_schema.WORKSPACE],
                                        user_conf_schema.CONF_FILES)
             content = re.sub(reg[0], reg[1], content)
+            logger.warning("Your workspace is %s, but the recommended "
+                           "value for version 2.1 is %s, check your "
+                           "configuration file: %s",
+                           conf_1_7[user_conf_schema.WORKSPACE],
+                           user_conf_schema.WORKSPACE,
+                           params.USER_CONFIG_FILE)
         if conf[user_conf_schema.CONF_FILES] != conf_1_7.get(
                 user_conf_schema.CONF_FILES, conf[user_conf_schema.CONF_FILES]
         ):
