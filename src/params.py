@@ -42,8 +42,9 @@ class Params():
                                      self.USER_CONFIG_PATH)
             self.ETC_CONFIG_FILE = ("%s/etc/oebuild_config.json" %
                                     alternate_config_path)
-            if not os.path.exists(self.USER_HOME_PATH):
-                os.makedirs(self.USER_HOME_PATH)
+
+        if not os.path.exists(self.USER_CONFIG_PATH):
+            os.makedirs(self.USER_CONFIG_PATH)
 
         self.INIT_PY_TPL = self.get_user_config_file('initpy.tpl')
         self.OPENERP_PY_TPL = self.get_user_config_file('openerppy.tpl')
