@@ -456,6 +456,11 @@ pip install -r DEPENDENCY.txt \
                 logger.warning(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
+            elif re.search(r'InsecurePlatformWarning:',
+                           e, re.I):
+                logger.warning(u'virtualenv %s: %s' % (
+                    self.virtualenv_path, e.rstrip())
+                )
             elif len(e) > 0:
                 errors = True
                 logger.error(u'virtualenv %s: %s' % (
