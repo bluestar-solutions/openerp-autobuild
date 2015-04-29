@@ -552,26 +552,26 @@ pip install -r DEPENDENCY.txt \
 
             cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cur.execute("select * from pg_database where datname = '%s'" %
-                        args.run_test_database)
+                        args.run_database)
             db_exists = cur.fetchall() or False
             if db_exists:
                 logger.info('Database %s exists' %
-                            args.run_test_database)
+                            args.run_database)
             else:
                 logger.info('Database %s does not exist' %
-                            args.run_test_database)
+                            args.run_database)
 
-            if not db_exists or args.run_test_install:
+            if not db_exists or args.run_test_new_install:
                 old_isolation_level = conn.isolation_level
                 conn.set_isolation_level(0)
 
                 if db_exists:
-                    cur.execute('drop database "%s"' % args.run_test_database)
+                    cur.execute('drop database "%s"' % args.run_database)
                     conn.commit()
 
                 cur.execute('create database "%s" owner "%s" '
                             'encoding \'unicode\'' %
-                            (args.run_test_database,
+                            (args.run_database,
                              db_conf[user_conf_schema.USER]))
                 conn.commit()
 
