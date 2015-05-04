@@ -195,6 +195,21 @@ class OEBuildConfParser():
                 content = source_file.read()
                 regs = (self.UPDATE_ALT_FROM[version_from] if alt_schema
                         else self.UPDATE_FROM[version_from])
+
+                if not alt_schema and version_from == "1.7":
+                    python_deps_file = ('%s/default_python_deps.json' %
+                                        self.params.USER_CONFIG_PATH)
+                    if (os.path.exists(python_deps_file) and
+                            os.path.isfile(python_deps_file)):
+                        with open(python_deps_file, "r") as f:
+                            python_deps = json.load(f)
+                    else:
+                        python_deps = []
+
+                    regs.append((r'(\n?)(\s*)("dependencies"\s*:)',
+                                 r'\1\2"python-dependencies": %s,\1\2\3' %
+                                 json.dumps(python_deps)))
+
                 for pattern, replace in regs:
                     content = re.sub(pattern, replace, content)
                 updated_file.write(content)
@@ -224,8 +239,6 @@ class OEBuildConfParser():
 
     UPDATE_FROM = {
         "1.7": [jre.update_version("1.7", "2.1"),
-                (r'(\n?)(\s*)("dependencies"\s*:)',
-                 r'\1\2"python-dependencies": [],\1\2\3'),
                 jre.remove_param_array('server'),
                 jre.remove_param_array('addons'),
                 jre.remove_param_array('web')]
