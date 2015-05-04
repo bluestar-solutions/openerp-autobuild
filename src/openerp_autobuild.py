@@ -93,7 +93,7 @@ class Autobuild():
         self.params = Params(args.alternate_config)
 
         self.oebuild_conf_parser = OEBuildConfParser(self.params, getattr(
-            args, 'analyze', False)
+            args, 'analyze', args.run_test_analyze)
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
@@ -961,22 +961,33 @@ class OEBuildRemoteProgress(RemoteProgress):
 
     _re_parse = re.compile(r'(.*):\s*[0-9]*.*')
 
+    def __init__(self, analyze=False):
+        super(OEBuildRemoteProgress, self).__init__()
+        self._analyze = analyze
+
     def _parse_progress_line(self, line):
-        if self._line_up:
+        if (not self._analyze) and self._line_up:
             sys.stdout.write("\033[F")
         else:
             self._line_up = True
-        print u'> %s' % line
+
+        line_out = ('> %s' % line).encode('utf-8')
+        line_out_len = len(line_out)
+        if line_out_len < self._last_line_len:
+            line_out += ' ' * (self._last_line_len - line_out_len)
+        print line_out
+        self._last_line_len = line_out_len
 
         sys.stdout.flush()
 
     def __enter__(self):
         self._msg_type = None
         self._line_up = False
+        self._last_line_len = 0
         return self
 
     def __exit__(self, *_):
-        if self._line_up:
+        if (not self._analyze) and self._line_up:
             sys.stdout.write("\033[F")
 
 
