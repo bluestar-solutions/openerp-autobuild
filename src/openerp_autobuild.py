@@ -566,9 +566,11 @@ pip install -r DEPENDENCY.txt \
                 conn.set_isolation_level(0)
 
                 if db_exists:
+                    logger.info('Drop database %s' % args.run_database)
                     cur.execute('drop database "%s"' % args.run_database)
                     conn.commit()
 
+                logger.info('Create database %s' % args.run_database)
                 cur.execute('create database "%s" owner "%s" '
                             'encoding \'unicode\'' %
                             (args.run_database,
