@@ -92,8 +92,8 @@ class Autobuild():
 
         self.params = Params(args.alternate_config)
 
-        self.oebuild_conf_parser = OEBuildConfParser(self.params, getattr(
-            args, 'analyze', args.run_test_analyze)
+        self.oebuild_conf_parser = OEBuildConfParser(
+            self.params, args.run_test_analyze
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
@@ -132,7 +132,7 @@ class Autobuild():
                 self.user_conf[user_conf_schema.DEFAULT_SERIE]
             )
         elif args.func == 'project-version':
-            self.set_version(args.new_version)
+            self.set_version(args.project_version_new_version)
         else:
             conf = self.oebuild_conf_parser.load_oebuild_config_file(
                 self.user_conf[user_conf_schema.CONF_FILES]
@@ -162,7 +162,7 @@ class Autobuild():
                                      self.deps_cache_file, e))
                     sys.exit(1)
             else:
-                self.get_deps(conf)
+                self.get_deps(args, conf)
                 try:
                     with open(self.deps_cache_file, 'w') as f:
                         f.write(json.dumps(self.deps_addons_path))
@@ -656,7 +656,7 @@ pip install -r DEPENDENCY.txt \
                 sys.exit(1)
         sys.exit(0)
 
-    def get_deps(self, conf):
+    def get_deps(self, args, conf):
         oe_conf = conf[schema.OPENERP]
         serie_name = oe_conf[schema.SERIE]
 
@@ -681,7 +681,8 @@ pip install -r DEPENDENCY.txt \
             git_commit = user_source.get(schema.GIT_COMMIT, serie_source.get(
                 schema.GIT_COMMIT, None)
             )
-            self.git_checkout(url, self.openerp_path, git_branch, git_commit)
+            self.git_checkout(args, url, self.openerp_path,
+                              git_branch, git_commit)
         except Exception, e:
             logger.error(
                 _ex('Cannot checkout from %s' % url, e),
@@ -691,7 +692,7 @@ pip install -r DEPENDENCY.txt \
 
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
         self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
-        self.get_ext_deps(self.project, conf[schema.DEPENDENCIES])
+        self.get_ext_deps(args, self.project, conf[schema.DEPENDENCIES])
 
     def add_python_deps(self, python_deps):
         existing_names = [idep['name'] for idep in self.python_deps]
@@ -709,7 +710,7 @@ pip install -r DEPENDENCY.txt \
                 continue
             self.python_deps.append(dep)
 
-    def get_ext_deps(self, from_project, deps, deps_mapping=None):
+    def get_ext_deps(self, args, from_project, deps, deps_mapping=None):
         if not deps_mapping:
             deps_mapping = {}
 
@@ -760,14 +761,15 @@ pip install -r DEPENDENCY.txt \
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
                     self.get_ext_deps(
-                        subconf[schema.PROJECT],
+                        args, subconf[schema.PROJECT],
                         subconf[schema.DEPENDENCIES], deps_mapping
                     )
                 except IgnoreSubConf:
                     pass
             elif source[schema.SCM] == schema.SCM_GIT:
                 try:
-                    self.git_checkout(source[schema.URL], destination,
+                    self.git_checkout(args,
+                                      source[schema.URL], destination,
                                       source.get(schema.GIT_BRANCH, None),
                                       source.get(schema.GIT_COMMIT, None))
                 except Exception, e:
@@ -780,7 +782,8 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
-                    self.get_ext_deps(subconf[schema.PROJECT],
+                    self.get_ext_deps(args,
+                                      subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
                                       deps_mapping)
                 except IgnoreSubConf:
@@ -798,7 +801,8 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
-                    self.get_ext_deps(subconf[schema.PROJECT],
+                    self.get_ext_deps(args,
+                                      subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
                                       deps_mapping)
                 except IgnoreSubConf:
@@ -879,7 +883,8 @@ pip install -r DEPENDENCY.txt \
         local.git.checkout(commit or branch or 'master')
         return True
 
-    def git_checkout(self, source, destination, branch=None, commit=None):
+    def git_checkout(self, args, source, destination,
+                     branch=None, commit=None):
         if os.path.exists(destination):
             if self.is_git_uptodate(source, destination, branch, commit):
                 return
@@ -888,7 +893,7 @@ pip install -r DEPENDENCY.txt \
         os.makedirs(destination)
 
         logger.info('%s : Clone from %s...' % (destination, source))
-        with OEBuildRemoteProgress() as progress:
+        with OEBuildRemoteProgress(args.run_test_analyze) as progress:
             local = Repo.clone_from(source, destination,
                                     progress=progress)
 
