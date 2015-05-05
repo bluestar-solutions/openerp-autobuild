@@ -82,6 +82,7 @@ Released under GNU AGPLv3.
         )
         parser_run_shared.add_argument(
             '-l', "--local", action="store_true", dest="run_local",
+            default=False,
             help="Bypass remote updates checks "
             "and try to launch with last parameters."
         )
@@ -97,6 +98,7 @@ Released under GNU AGPLv3.
         )
         parser_run.add_argument(
             "-a", "--auto-reload", action="store_true", dest="run_auto_reload",
+            default=False,
             help="Enable auto-reloading of python files and xml files "
             "without having to restart the server. Requires pyinotify. "
             "Available since Odoo version 8.0"
@@ -110,6 +112,7 @@ Released under GNU AGPLv3.
         )
         parser_test.add_argument(
             '-c', "--test-commit", action="store_true", dest="run_test_commit",
+            default=False,
             help="Commit test results in DB."
         )
         parser_test.add_argument(
@@ -121,18 +124,20 @@ Released under GNU AGPLv3.
         )
         parser_test.add_argument(
             '-n', "--new-install", action="store_true",
-            dest="run_test_new_install",
+            dest="run_test_new_install", default=False,
             help="Force new install. This will delete the database if "
             "it exists."
         )
         parser_test.add_argument(
             '-a', "--analyze", action="store_true", dest="run_test_analyze",
+            default=False,
             help="Analyze log and stop OpenERP, exit with status 0 if all "
             "test successfully pass, 1 otherwise. Used for "
             "continuous integration."
         )
         parser_test.add_argument(
             '-C', "--continue", action="store_true", dest="run_test_continue",
+            default=False,
             help="Continue running OpenERP server when tests are done."
         )
         parser_test.set_defaults(func="test")
@@ -148,7 +153,8 @@ Released under GNU AGPLv3.
             parents=[parser_shared]
         )
         parser_project_version.add_argument(
-            '-n', '--new_version', metavar='<version>',
+            '-n', '--new-version', metavar='<version>',
+            dest="project_version_new_version", default=None,
             help="The modules new version"
         )
         parser_project_version.set_defaults(func="project-version")
@@ -160,7 +166,7 @@ Released under GNU AGPLv3.
         )
         parser_assembly.add_argument(
             '-i', "--include-odoo", action="store_true",
-            dest="project_assembly_include_odoo",
+            dest="project_assembly_include_odoo", default=False,
             help="Include OpenERP in target."
         )
         parser_assembly.set_defaults(func="assembly")
@@ -170,17 +176,17 @@ Released under GNU AGPLv3.
             parents=[parser_shared]
         )
         parser_create_module.add_argument(
-            'module_create_name',
-            metavar='<name>', help="The module name."
+            'module_create_name', metavar='<name>', default=None,
+            help="The module name."
         )
         parser_create_module.add_argument(
             '-l', '--long_name', dest="module_create_long_name",
-            metavar='<long-name>',
+            metavar='<long-name>', default=None,
             required=False, help="The module long name"
         )
         parser_create_module.add_argument(
             '-c', '--category', dest="module_create_category",
-            metavar='<category>', required=False,
+            metavar='<category>', required=False, default=None,
             help="The module category"
         )
         parser_create_module.set_defaults(func="create-module")
