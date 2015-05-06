@@ -93,7 +93,7 @@ class Autobuild():
         self.params = Params(args.alternate_config)
 
         self.oebuild_conf_parser = OEBuildConfParser(
-            self.params, args.run_test_analyze
+            self.params, args.func == 'test' and args.run_test_analyze
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
@@ -895,7 +895,8 @@ pip install -r DEPENDENCY.txt \
         os.makedirs(destination)
 
         logger.info('%s : Clone from %s...' % (destination, source))
-        with OEBuildRemoteProgress(args.run_test_analyze) as progress:
+        with OEBuildRemoteProgress(args.func == 'test' and
+                                   args.run_test_analyze) as progress:
             local = Repo.clone_from(source, destination,
                                     progress=progress)
 
