@@ -82,7 +82,6 @@ Released under GNU AGPLv3.
         )
         parser_run_shared.add_argument(
             '-l', "--local", action="store_true", dest="run_local",
-            default=False,
             help="Bypass remote updates checks "
             "and try to launch with last parameters."
         )
@@ -98,7 +97,6 @@ Released under GNU AGPLv3.
         )
         parser_run.add_argument(
             "-a", "--auto-reload", action="store_true", dest="run_auto_reload",
-            default=False,
             help="Enable auto-reloading of python files and xml files "
             "without having to restart the server. Requires pyinotify. "
             "Available since Odoo version 8.0"
@@ -112,7 +110,6 @@ Released under GNU AGPLv3.
         )
         parser_test.add_argument(
             '-c', "--test-commit", action="store_true", dest="run_test_commit",
-            default=False,
             help="Commit test results in DB."
         )
         parser_test.add_argument(
@@ -124,20 +121,18 @@ Released under GNU AGPLv3.
         )
         parser_test.add_argument(
             '-n', "--new-install", action="store_true",
-            dest="run_test_new_install", default=False,
+            dest="run_test_new_install",
             help="Force new install. This will delete the database if "
             "it exists."
         )
         parser_test.add_argument(
             '-a', "--analyze", action="store_true", dest="run_test_analyze",
-            default=False,
             help="Analyze log and stop OpenERP, exit with status 0 if all "
             "test successfully pass, 1 otherwise. Used for "
             "continuous integration."
         )
         parser_test.add_argument(
             '-C', "--continue", action="store_true", dest="run_test_continue",
-            default=False,
             help="Continue running OpenERP server when tests are done."
         )
         parser_test.set_defaults(func="test")
@@ -166,7 +161,7 @@ Released under GNU AGPLv3.
         )
         parser_assembly.add_argument(
             '-i', "--include-odoo", action="store_true",
-            dest="project_assembly_include_odoo", default=False,
+            dest="project_assembly_include_odoo",
             help="Include OpenERP in target."
         )
         parser_assembly.set_defaults(func="assembly")

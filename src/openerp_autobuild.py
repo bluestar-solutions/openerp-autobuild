@@ -93,7 +93,7 @@ class Autobuild():
         self.params = Params(args.alternate_config)
 
         self.oebuild_conf_parser = OEBuildConfParser(
-            self.params, args.run_test_analyze
+            self.params, args.func == 'test' and args.run_test_analyze
         )
 
         self.user_conf = UserConfParser(self.params).load_user_config_file()
@@ -524,10 +524,8 @@ pip install -r DEPENDENCY.txt \
                 else:
                     update_modules = args.run_update
 
-        if init_modules:
-            logger.info('Modules to install: %s' % init_modules)
-        if update_modules:
-            logger.info('Modules to update: %s' % update_modules)
+        logger.info('Modules to install: %s' % (init_modules or '(None)'))
+        logger.info('Modules to update: %s' % (update_modules or '(None)'))
 
         addons_path = '%s/%s' % (self.openerp_path, 'addons')
         for path in self.deps_addons_path:
@@ -591,8 +589,10 @@ pip install -r DEPENDENCY.txt \
                                                  'localhost')
             cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT,
                                                  '5432')
-            cmd += ' -i %s' % init_modules
-            cmd += ' -u %s' % update_modules
+            if init_modules:
+                cmd += ' -i %s' % init_modules
+            if update_modules:
+                cmd += ' -u %s' % update_modules
             cmd += ' --log-level=test --test-enable'
             if args.run_test_commit:
                 cmd += ' --test-commit'
@@ -628,8 +628,10 @@ pip install -r DEPENDENCY.txt \
             )
             if args.run_database:
                 cmd += ' -d %s' % args.run_database
-                cmd += ' -i %s' % init_modules
-                cmd += ' -u %s' % update_modules
+                if init_modules:
+                    cmd += ' -i %s' % init_modules
+                if update_modules:
+                    cmd += ' -u %s' % update_modules
             if args.run_auto_reload:
                 openerp_version, _ = self.call_command(
                     '%s/%s --version' % (
@@ -893,7 +895,8 @@ pip install -r DEPENDENCY.txt \
         os.makedirs(destination)
 
         logger.info('%s : Clone from %s...' % (destination, source))
-        with OEBuildRemoteProgress(args.run_test_analyze) as progress:
+        with OEBuildRemoteProgress(args.func == 'test' and
+                                   args.run_test_analyze) as progress:
             local = Repo.clone_from(source, destination,
                                     progress=progress)
 
