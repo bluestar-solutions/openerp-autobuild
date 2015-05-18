@@ -29,6 +29,7 @@ import dialogs
 import re
 import json_regex as jre
 import static_params
+import difflib
 
 
 class IgnoreSubConf(Exception):
@@ -191,8 +192,9 @@ class OEBuildConfParser():
 
         updated_fname = file_name + ".updated"
         with open(file_name, "r") as source_file:
+            orig_content = source_file.read()
             with open(updated_fname, "w+") as updated_file:
-                content = source_file.read()
+                content = orig_content
                 regs = (self.UPDATE_ALT_FROM[version_from] if alt_schema
                         else self.UPDATE_FROM[version_from])
 
@@ -211,9 +213,13 @@ class OEBuildConfParser():
                                  json.dumps(python_deps)))
 
                 for pattern, replace in regs:
+                    old_content = content
                     content = re.sub(pattern, replace, content)
                 updated_file.write(content)
 
+        diff = ''.join(difflib.unified_diff(orig_content.splitlines(1),
+                                            old_content.splitlines(1)))
+        logger.warning("Changes to apply on file '%s':\n%s", file_name, diff)
         answer = dialogs.ANSWER_NO
         if len(file_name.split('/')) == 1 and not self._analyze:
             answer = dialogs.query_yes_no(

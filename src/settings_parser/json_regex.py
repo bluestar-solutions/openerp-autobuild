@@ -38,7 +38,7 @@ set_param_array = lambda p_name, p_array: (
     r'("%s"\s*:\s*)(\[.*\])' % (p_name), r'\1%s' % (json.dumps(p_array))
 )
 remove_param_array = lambda p_name: (
-    r'(,?\s*)?"%s"\s*:\s*\{\s*.*\s*\}' % p_name, r''
+    r'(,?\s*)?"%s"\s*:\s*\{(.|\s)*?\}' % p_name, r''
 )
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:
