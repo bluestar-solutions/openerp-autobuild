@@ -153,7 +153,7 @@ class Autobuild():
             self.virtual_pip = '%s/%s' % (self.virtualenv_path, 'bin/pip')
             self.pid_file = '%s/%s' % ('/tmp', '%s.pid' % self.project)
 
-            if args.run_local:
+            if args.local:
                 try:
                     with open(self.deps_cache_file, 'r') as f:
                         self.deps_addons_path = json.loads(f.read())
@@ -359,7 +359,7 @@ pip install -r DEPENDENCY.txt \
 
         if (os.path.exists(self.virtualenv_path) and
                 os.path.exists(self.py_deps_cache_file)):
-            if args.run_local:
+            if args.local:
                 return
 
             is_config_changed = True
@@ -396,7 +396,7 @@ pip install -r DEPENDENCY.txt \
             os.remove(self.py_deps_cache_file)
 
         elif not os.path.exists(self.py_deps_cache_file):
-            if args.run_local:
+            if args.local:
                 logger.error(
                     "Cannot run in no-update mode without last run Python "
                     "dependencies cache file, try running without "

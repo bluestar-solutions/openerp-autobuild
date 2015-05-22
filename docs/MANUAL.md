@@ -77,14 +77,14 @@ on the same defined version.
     Enable auto-reloading of python files and xml files
     without having to restart the server. Requires
     pyinotify. Available since Odoo version 8.0
-* `-l`, `--local`:
-    Bypass remote updates checks and try to launch with
-    last parameters.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
 
 ### run.test
 
@@ -108,6 +108,9 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
 * `-c`, `--test-commit`:
     Commit test results in DB.
 * `-n`, `--new-install`:
@@ -128,6 +131,9 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
     
 ### project.version
 
@@ -140,6 +146,9 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
 
 ### project.assembly
 
@@ -152,12 +161,15 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
     
 ### module.create
 
 * `-h`, `--help`:
     Prints usage and options for the goal.
-* `-l` [<long-name>], `--long-name`=[<long-name>]:
+* `-L` [<long-name>], `--long-name`=[<long-name>]:
     The module long name.
 * `-c` [<category>], `--category`=[<category>]:
     The module long name.
@@ -166,6 +178,9 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
     
 ### eclipse.init
 
@@ -176,6 +191,9 @@ on the same defined version.
     instead of /etc and /home/user (for development
     purpose). Don't specify <path> to use './devconf' with
     supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
     
 ## FAQ
 

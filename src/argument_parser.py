@@ -62,6 +62,11 @@ Released under GNU AGPLv3.
             "instead of /etc and /home/user (for development purpose). "
             "Don't specify <path> to use './devconf' with supplied files."
         )
+        parser_shared.add_argument(
+            '-l', "--local", action="store_true", dest="local",
+            help="Bypass remote updates checks "
+            "and try to launch with last parameters."
+        )
 
         subparsers = parser.add_subparsers(metavar="<goal>")
 
@@ -79,11 +84,6 @@ Released under GNU AGPLv3.
             const='project-all', default=None,
             help="Modules to update. Don't specify any module to use "
             "the module list of the current project. --database is required."
-        )
-        parser_run_shared.add_argument(
-            '-l', "--local", action="store_true", dest="run_local",
-            help="Bypass remote updates checks "
-            "and try to launch with last parameters."
         )
 
         parser_run = subparsers.add_parser(
@@ -175,7 +175,7 @@ Released under GNU AGPLv3.
             help="The module name."
         )
         parser_create_module.add_argument(
-            '-l', '--long_name', dest="module_create_long_name",
+            '-L', '--long_name', dest="module_create_long_name",
             metavar='<long-name>', default=None,
             required=False, help="The module long name"
         )
