@@ -256,7 +256,7 @@ pip install -r DEPENDENCY.txt \
         tar.add('DEPENDENCY.txt')
 
         if with_oe:
-            tar.add(self.openerp_path, arcname="openerp",
+            tar.add(self.openerp_path, arcname="",
                     exclude=self.exclude_git)
         tar.close()
 
