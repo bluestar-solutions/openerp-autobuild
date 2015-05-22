@@ -210,7 +210,10 @@ class Autobuild():
         dependency_file = open("%s/DEPENDENCY.txt" % (self.target_path), "w")
 
         dependency_file.writelines([
-            '%s\n' % (python_dep['name']) for python_dep in self.python_deps
+            '%s%s\n' % (python_dep['name'],
+                        python_dep['specifier']
+                        if 'specifier' in python_dep else '')
+            for python_dep in self.python_deps
         ])
         dependency_file.close()
 
