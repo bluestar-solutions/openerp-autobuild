@@ -210,7 +210,10 @@ class Autobuild():
         dependency_file = open("%s/DEPENDENCY.txt" % (self.target_path), "w")
 
         dependency_file.writelines([
-            '%s\n' % (python_dep['name']) for python_dep in self.python_deps
+            '%s%s\n' % (python_dep['name'],
+                        python_dep['specifier']
+                        if 'specifier' in python_dep else '')
+            for python_dep in self.python_deps
         ])
         dependency_file.close()
 
@@ -250,9 +253,10 @@ pip install -r DEPENDENCY.txt \
         tar.add('custom-addons', exclude=self.exclude_git)
 
         tar.add('install_deps.sh')
+        tar.add('DEPENDENCY.txt')
 
         if with_oe:
-            tar.add(self.openerp_path, arcname="openerp",
+            tar.add(self.openerp_path, arcname="",
                     exclude=self.exclude_git)
         tar.close()
 
