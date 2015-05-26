@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "OPENERP\-AUTOBUILD" "1" "March 2015" "Bluestar Solutions Sàrl" "OpenERP Autobuild"
+.TH "OPENERP\-AUTOBUILD" "1" "May 2015" "Bluestar Solutions Sàrl" "OpenERP Autobuild"
 .
 .SH "NAME"
 \fBopenerp\-autobuild\fR \- build and run Odoo/OpenERP projects
@@ -107,12 +107,12 @@ Modules to update\. Don\'t specify any module to use the module list of the curr
 Enable auto\-reloading of python files and xml files without having to restart the server\. Requires pyinotify\. Available since Odoo version 8\.0
 .
 .TP
-\fB\-l\fR, \fB\-\-local\fR
-Bypass remote updates checks and try to launch with last parameters\.
-.
-.TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
+.
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
 .
 .SS "run\.test"
 .
@@ -141,6 +141,10 @@ Bypass remote updates checks and try to launch with last parameters\.
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
 .
 .TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
+.
+.TP
 \fB\-c\fR, \fB\-\-test\-commit\fR
 Commit test results in DB\.
 .
@@ -166,6 +170,10 @@ Prints usage and options for the goal\.
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
 .
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
+.
 .SS "project\.version"
 .
 .TP
@@ -179,6 +187,10 @@ The modules new version\.
 .TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
+.
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
 .
 .SS "project\.assembly"
 .
@@ -194,6 +206,10 @@ Include Odoo/OpenERP in target\.
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
 .
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
+.
 .SS "module\.create"
 .
 .TP
@@ -201,7 +217,7 @@ Use an alternate directory to find configuration files instead of /etc and /home
 Prints usage and options for the goal\.
 .
 .TP
-\fB\-l\fR [\fIlong\-name\fR], \fB\-\-long\-name\fR=[\fIlong\-name\fR]
+\fB\-L\fR [\fIlong\-name\fR], \fB\-\-long\-name\fR=[\fIlong\-name\fR]
 The module long name\.
 .
 .TP
@@ -212,6 +228,10 @@ The module long name\.
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
 .
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
+.
 .SS "eclipse\.init"
 .
 .TP
@@ -221,6 +241,10 @@ Prints usage and options for the goal\.
 .TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
 Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
+.
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
 .
 .SH "FAQ"
 .
