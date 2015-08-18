@@ -147,12 +147,12 @@ class UserConfParser():
             outfile.close()
 
             if os.path.exists(
-                user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7(self.params)
+                user_conf_1_7_update.user_oebuild_config_file_1_7(self.params)
             ):
                 conf = self.load_user_config_file()
                 conf_1_7 = self._read_conf(
                     user_conf_1_7_update.
-                    USER_OEBUILD_CONFIG_FILE_1_7(self.params)
+                    user_oebuild_config_file_1_7(self.params)
                 )
                 user_conf_1_7_update.update_from_1_7(conf, conf_1_7,
                                                      self.params)
@@ -165,7 +165,7 @@ class UserConfParser():
 
     def _clean_after_update(self):
         keep = [self.params.USER_CONFIG_FILE,
-                user_conf_1_7_update.USER_OEBUILD_CONFIG_FILE_1_7]
+                user_conf_1_7_update.user_oebuild_config_file_1_7]
 
         for f in [
             f for f in os.listdir(self.params.USER_CONFIG_PATH)

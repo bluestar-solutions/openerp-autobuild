@@ -195,8 +195,8 @@ class OEBuildConfParser():
             orig_content = source_file.read()
             with open(updated_fname, "w+") as updated_file:
                 content = orig_content
-                regs = (self.UPDATE_ALT_FROM[version_from] if alt_schema
-                        else self.UPDATE_FROM[version_from])
+                regs = list(self.UPDATE_ALT_FROM[version_from] if alt_schema
+                            else self.UPDATE_FROM[version_from])
 
                 if not alt_schema and version_from == "1.7":
                     python_deps_file = ('%s/default_python_deps.json' %
@@ -213,12 +213,11 @@ class OEBuildConfParser():
                                  json.dumps(python_deps)))
 
                 for pattern, replace in regs:
-                    old_content = content
                     content = re.sub(pattern, replace, content)
                 updated_file.write(content)
 
         diff = ''.join(difflib.unified_diff(orig_content.splitlines(1),
-                                            old_content.splitlines(1)))
+                                            content.splitlines(1)))
         logger.warning("Changes to apply on file '%s':\n%s", file_name, diff)
         answer = dialogs.ANSWER_NO
         if len(file_name.split('/')) == 1 and not self._analyze:
