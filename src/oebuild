@@ -124,8 +124,8 @@ class Autobuild():
                     "%s file already exists, overwrite it with default one ?" %
                     static_params.OE_CONFIG_FILE, overwrite
                 )
-            if ((not os.path.exists(static_params.OE_CONFIG_FILE))
-                    or overwrite == "yes"):
+            if ((not os.path.exists(static_params.OE_CONFIG_FILE)) or
+                    overwrite == "yes"):
                 shutil.copyfile(static_params.DEFAULT_OE_CONFIG_FILE,
                                 static_params.OE_CONFIG_FILE)
 

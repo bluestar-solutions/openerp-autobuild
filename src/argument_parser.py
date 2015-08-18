@@ -75,14 +75,14 @@ Released under GNU AGPLv3.
             "-u", "--update", dest="run_update",
             nargs='?', metavar='all|<module1>[,<module2>…]',
             const='project-all', default=None,
-            help="Modules to install. Don't specify any module to use "
+            help="Modules to update. Don't specify any module to use "
             "the module list of the current project. --database is required."
         )
         parser_run_shared.add_argument(
             '-i', "--init", dest="run_init",
             nargs='?', metavar='all|<module1>[,<module2>…]',
             const='project-all', default=None,
-            help="Modules to update. Don't specify any module to use "
+            help="Modules to install. Don't specify any module to use "
             "the module list of the current project. --database is required."
         )
 

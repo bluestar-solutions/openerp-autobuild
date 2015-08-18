@@ -24,9 +24,9 @@ from oebuild_logger import logger
 import re
 import json_regex as jre
 
-USER_OEBUILD_CONFIG_FILE_1_7 = lambda params: (
-    '%s/oebuild_config-1.7.json' % params.USER_CONFIG_PATH
-)
+
+def user_oebuild_config_file_1_7(params):
+    return '%s/oebuild_config-1.7.json' % params.USER_CONFIG_PATH
 
 
 def update_from_1_7(conf, conf_1_7, params):
