@@ -136,7 +136,7 @@ Run server and update _mymodule_ and _othermodule_
 
 Run server in test mode on a new database named _my-custom-tests_ for continuous integration with all modules of your project  
 
-	oebuild run.test --db-name my-custom-tests --force-install --analyze -i
+	oebuild run.test --database=my-custom-tests --new-install --analyze -i
 
 Build a fully runnable package  
 
