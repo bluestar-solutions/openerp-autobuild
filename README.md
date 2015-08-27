@@ -72,7 +72,7 @@ if * is defined in your user settings custom-configuration-files list.
 
 To create a new project with a default oebuild.conf, run (in a new project folder) :
 
-	oebuild init
+	oebuild project.init
 
 #### Options
 
@@ -104,18 +104,43 @@ With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located
 
 To create a new project with a default .openerp-dev-default, run (in a project folder) :
 
-	oebuild init
+	oebuild project.init
+	
+### Migration of configuration files
+
+Configuration files for v1.7 projects will be migrated on first launch with v2.1.
+However, as the python dependencies were not automatically installed with v1.7, you can specify default dependencies that will be integrated in every migrated project.
+
+To do so, create a file named "default_python_deps.json" in the configuration directory ("~/.config/openerp-autobuild/") containing the required dependencies.
+You can also add a specifier and some options (refer to ``python-dependencies`` in "Project Settings/Options").
+
+Example :
+
+	[
+	    {"name": "phonenumbers"},
+	    {"name": "six"},
+	    {"name": "python-stdnum"},
+	    {"name": "pyPdf"},
+	    {"name": "BeautifulSoup"},
+	    {"name": "pyth"},
+	    {"name": "qrcode"},
+	    {"name": "Pillow"},
+	    {"name": "pyxb"}
+	]
 
 ### Some examples
 
-Run server and update _mymodule_ and _othermodule_  
-`oebuild run -u mymodule,othermodule`
+Run server and update _mymodule_ and _othermodule_
+
+	oebuild run -u mymodule,othermodule
 
 Run server in test mode on a new database named _my-custom-tests_ for continuous integration with all modules of your project  
-`oebuild run.test --db-name my-custom-tests --force-install --analyze -i`
+
+	oebuild run.test --database=my-custom-tests --new-install --analyze -i
 
 Build a fully runnable package  
-`oebuild projet.assembly --include-odoo`
+
+	oebuild projet.assembly --include-odoo
 
 See docs, man page or help for details
 
