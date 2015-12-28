@@ -657,9 +657,20 @@ pip install -r DEPENDENCY.txt \
             except KeyboardInterrupt:
                 logger.info("OpenERP stopped after keyboard interrupt")
 
-        if args.func == "test" and args.run_test_analyze:
-            if 'ERROR' in openerp_output:
-                sys.exit(1)
+        if args.func == "test":
+            if args.run_test_drop_database:
+                old_isolation_level = conn.isolation_level
+                conn.set_isolation_level(0)
+                logger.info('Drop database %s' % args.run_database)
+                cur.execute('drop database "%s"' % args.run_database)
+                conn.commit()
+                conn.set_isolation_level(old_isolation_level)
+
+            conn.close()
+
+            if args.run_test_analyze:
+                if 'ERROR' in openerp_output:
+                    sys.exit(1)
         sys.exit(0)
 
     def get_deps(self, args, conf):
