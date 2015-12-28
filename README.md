@@ -130,24 +130,24 @@ Example :
 
 ### Some examples
 
-Run server and update _mymodule_ and _othermodule_
+Run server and update _mymodule_ and _othermodule_ in _my_database_ 
 
-	oebuild run -u mymodule,othermodule
+	oebuild run -u mymodule,othermodule --database=my_database
 
-Run server in test mode on a new database named _my-custom-tests_ for continuous integration with all modules of your project  
+Run server in test mode on a new database named my-custom-tests for continuous integration with all modules of your project
 
 	oebuild run.test --database=my-custom-tests --new-install --analyze -i
 
-Build a fully runnable package  
+Build a fully runnable package
 
 	oebuild projet.assembly --include-odoo
 
-See docs, man page or help for details
+See man page or help for details
 
 ## Credits
 
-Bluestar Solutions Sàrl  
-Rue de la Maladière 23  
+Bluestar Solutions Sàrl
+Rue de la Maladière 23
 CH-2000 Neuchâtel
 
 ## Copyright
