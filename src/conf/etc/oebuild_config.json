@@ -98,7 +98,7 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
     },{
         "serie": "6.1",
@@ -134,7 +134,7 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
     },{
         "serie": "7.0",
@@ -170,7 +170,7 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
     },{
         "serie": "8.0",
