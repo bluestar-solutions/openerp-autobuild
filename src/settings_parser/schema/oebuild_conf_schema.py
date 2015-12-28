@@ -164,10 +164,6 @@ OEBUILD_ALT_SCHEMA = {
         DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY
-        },
-        RUN_SCRIPTS: {
-            "type": "array",
-            "items": {"type": "string"}
         }
     },
     "required": [OEBUILD_VERSION, DEPENDENCIES],
