@@ -339,7 +339,7 @@ pip install -r DEPENDENCY.txt \
         ext_path = EM.pydev_pathproperty(
             name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH'
         )
-        ext_path.append(EM.path(self.openerp_path + '/server'))
+        ext_path.append(EM.path(self.openerp_path))
 
         doc = EM.pydev_project(
             EM.pydev_property(
