@@ -452,8 +452,8 @@ pip install -r DEPENDENCY.txt \
         )
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                logger.warning("virtualenv %s: %s" % (self.virtualenv_path,
-                                                      o.rstrip()))
+                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
+                                                   o.rstrip()))
         for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated',
                          e, re.I):
@@ -760,7 +760,7 @@ pip install -r DEPENDENCY.txt \
                     )
                     continue
                 logger.warning(
-                    "Dependency %s%s[%s] overrides %s%s[%s]" % (
+                    "Dependency %s%s%s overrides %s%s%s" % (
                         dep[key_name],
                         dep.get(key_specifier, ''),
                         dep.get(key_options, '') and
