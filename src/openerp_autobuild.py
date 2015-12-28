@@ -53,7 +53,6 @@ import re
 from argument_parser import OEArgumentParser
 import codecs
 from glob import glob
-from numpy.core.defchararray import rstrip
 
 load_plugins()
 
@@ -516,7 +515,7 @@ pip install -r DEPENDENCY.txt \
                 script, log_in=False, log_out=False, log_err=False
             )
             logger.info("Run command: %s\n%s\n%s",
-                        script, rstrip(out), rstrip(err))
+                        script, out.rstrip(), err.rstrip())
             if rc:
                 logger.error('Command %s failed', script)
                 sys.exit(1)
