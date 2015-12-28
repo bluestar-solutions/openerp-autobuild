@@ -53,6 +53,7 @@ import re
 from argument_parser import OEArgumentParser
 import codecs
 from glob import glob
+from numpy.core.defchararray import rstrip
 
 load_plugins()
 
@@ -509,6 +510,16 @@ pip install -r DEPENDENCY.txt \
 
     def run_openerp(self, conf, args):
         self.create_or_update_venv(conf, args)
+
+        for script in conf.get(schema.RUN_SCRIPTS, []):
+            rc, out, err = self.call_command(
+                script, log_in=False, log_out=False, log_err=False
+            )
+            logger.info("Run command: %s\n%s\n%s",
+                        script, rstrip(out), rstrip(err))
+            if rc:
+                logger.error('Command %s failed', script)
+                sys.exit(1)
 
         if not os.path.exists(static_params.OE_CONFIG_FILE):
             logger.error('The OpenERP configuration does not exist : '

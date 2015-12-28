@@ -27,6 +27,7 @@ OPENERP = "openerp"
 SERIE = "serie"
 PYTHON_DEPENDENCIES = "python-dependencies"
 DEPENDENCIES = "dependencies"
+RUN_SCRIPTS = "run-scripts"
 SCM = "scm"
 SCM_GIT = "git"
 SCM_BZR = "bzr"
@@ -138,6 +139,10 @@ OEBUILD_SCHEMA = {
         DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY
+        },
+        RUN_SCRIPTS: {
+            "type": "array",
+            "items": {"type": "string"}
         }
     },
     "required": [OEBUILD_VERSION, PROJECT, DEPENDENCIES],
@@ -159,6 +164,10 @@ OEBUILD_ALT_SCHEMA = {
         DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY
+        },
+        RUN_SCRIPTS: {
+            "type": "array",
+            "items": {"type": "string"}
         }
     },
     "required": [OEBUILD_VERSION, DEPENDENCIES],
