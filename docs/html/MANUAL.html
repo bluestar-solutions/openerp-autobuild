@@ -166,8 +166,6 @@ on the same defined version.</p>
 <dt><code>-i</code> [all|<var>module1</var>[,<var>module2</var>...]], <code>--init</code>=[all|<var>module1</var>[,<var>module2</var>...]]</dt><dd>  Modules to update. Don't specify any module to use the
   module list of the current project. <code>--database</code> is
   required.</dd>
-<dt><code>-l</code>, <code>--local</code></dt><dd>  Bypass remote updates checks and try to launch with
-  last parameters.</dd>
 <dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
   instead of /etc and /home/user (for development
   purpose). Don't specify <var>path</var> to use './devconf' with
@@ -180,6 +178,7 @@ on the same defined version.</p>
   test successfully pass, 1 otherwise. Used for
   continuous integration.</dd>
 <dt><code>-C</code>, <code>--continue</code></dt><dd>  Continue running Odoo server when tests are done.</dd>
+<dt><code>-D</code>, <code>--drop-database</code></dt><dd>  Drop used database before exiting.</dd>
 </dl>
 
 
@@ -292,7 +291,7 @@ Released under GNU AGPLv3.</p>
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>Bluestar Solutions Sàrl</li>
-    <li class='tc'>May 2015</li>
+    <li class='tc'>December 2015</li>
     <li class='tr'>openerp-autobuild</li>
   </ol>
 
