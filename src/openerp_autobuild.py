@@ -426,8 +426,10 @@ pip install -r DEPENDENCY.txt \
             "virtualenv %s : Create and install Python dependencies (%s %s)" %
             (self.virtualenv_path, py_deps_string, py_options_string)
         )
-        out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path,
-                                     log_in=False, log_out=False, log_err=True)
+        _, out, err = self.call_command(
+            "virtualenv -q %s" % self.virtualenv_path,
+            log_in=False, log_out=False, log_err=True
+        )
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
                 logger.info("virtualenv %s: %s" % (self.virtualenv_path,
@@ -442,16 +444,16 @@ pip install -r DEPENDENCY.txt \
         if errors:
             sys.exit(1)
 
-        out, err = self.call_command(
-            'LC_ALL=C %s install --egg -q --upgrade %s %s' %
+        rc, out, err = self.call_command(
+            'LC_ALL=C %s install --egg -q --upgrade %s %s '
+            '--log-file .pip-errors.log' %
             (self.virtual_pip, py_options_string, py_deps_string),
             log_in=False, log_out=False, log_err=False
         )
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
-                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
-                                                   o.rstrip()))
-        errors = False
+                logger.warning("virtualenv %s: %s" % (self.virtualenv_path,
+                                                      o.rstrip()))
         for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated',
                          e, re.I):
@@ -466,11 +468,20 @@ pip install -r DEPENDENCY.txt \
                     self.virtualenv_path, e.rstrip())
                 )
             elif len(e) > 0:
-                errors = True
                 logger.error(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
-        if errors:
+        if rc:
+            if args.run_test_analyze and os.path.exists('.pip-errors.log'):
+                with open('.pip-errors.log', 'r') as f:
+                    pip_log = f.read()
+                logger.error("virtualenv %s: Exited with errors:\n%s" % (
+                    self.virtualenv_path, pip_log
+                ))
+            else:
+                logger.error("virtualenv %s: Exited with errors" % (
+                    self.virtualenv_path
+                ))
             sys.exit(1)
 
         with open(self.py_deps_cache_file, 'w+') as f:
@@ -604,7 +615,7 @@ pip install -r DEPENDENCY.txt \
                 cmd += ' --stop-after-init'
             try:
                 logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(
+                _, openerp_output, _ = self.call_command(
                     cmd, parse_log=args.run_test_analyze,
                     register_pid=self.pid_file,
                     log_in=False, parse_tests=True
@@ -637,7 +648,7 @@ pip install -r DEPENDENCY.txt \
                 if update_modules:
                     cmd += ' -u %s' % update_modules
             if args.run_auto_reload:
-                openerp_version, _ = self.call_command(
+                _, openerp_version, _ = self.call_command(
                     '%s/%s --version' % (
                         self.openerp_path, 'openerp-server'
                     ), parse_log=True, log_in=False, log_out=False
@@ -650,7 +661,7 @@ pip install -r DEPENDENCY.txt \
 
             try:
                 logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(
+                _, openerp_output, _ = self.call_command(
                     cmd, parse_log=False,
                     register_pid=self.pid_file, log_in=False
                 )
@@ -953,11 +964,12 @@ pip install -r DEPENDENCY.txt \
 
         if parse_log:
             out, err = process.communicate()
+            rc = process.returncode
             if log_err and err:
                 logger.error(err)
             if log_out and out:
                 logger.info(out)
-            return (out, err)
+            return rc, out, err
         else:
             test_ok = True
             while True:
@@ -979,7 +991,7 @@ pip install -r DEPENDENCY.txt \
                 print '\n' + (COLORIZED('DEBUG', 'OpenERP Test result: ') +
                               (COLORIZED('INFO', 'SUCCESS') if test_ok
                                else COLORIZED('ERROR', 'FAILED')))
-            return (None, None)
+            return None, None, None
 
 
 class OEBuildRemoteProgress(RemoteProgress):
