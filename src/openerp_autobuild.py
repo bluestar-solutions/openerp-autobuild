@@ -697,23 +697,49 @@ pip install -r DEPENDENCY.txt \
             sys.exit(1)
 
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
-        self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
         self.get_ext_deps(args, self.project, conf[schema.DEPENDENCIES])
+        self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
 
     def add_python_deps(self, python_deps):
         existing_names = [idep['name'] for idep in self.python_deps]
+        key_name = oebuild_conf_schema.NAME
+        key_specifier = oebuild_conf_schema.SPECIFIER
+        key_options = oebuild_conf_schema.OPTIONS
         for dep in python_deps:
             if dep['name'] in existing_names:
                 existing_dep = [idep for idep in self.python_deps
                                 if idep['name'] == dep['name']][0]
+                if existing_dep == dep:
+                    continue
+                if (existing_dep.get(key_specifier, '') and
+                        not dep.get(key_specifier, '')):
+                    logger.warning(
+                        "Dependency %s%s%s does not override %s%s%s: "
+                        "version not specified" % (
+                            dep[key_name],
+                            dep.get(key_specifier, ''),
+                            dep.get(key_options, '') and
+                            '[%s]' % dep[key_options] or '',
+                            existing_dep[key_name],
+                            existing_dep.get(key_specifier, ''),
+                            existing_dep.get(key_options, '') and
+                            '[%s]' % existing_dep[key_options] or '',
+                        )
+                    )
+                    continue
                 logger.warning(
-                    "Dependency %s%s is hidden by %s%s and will ignored" %
-                    (dep[oebuild_conf_schema.NAME],
-                     dep.get(oebuild_conf_schema.SPECIFIER, ''),
-                     existing_dep[oebuild_conf_schema.NAME],
-                     existing_dep.get(oebuild_conf_schema.SPECIFIER, ''))
+                    "Dependency %s%s[%s] overrides %s%s[%s]" % (
+                        dep[key_name],
+                        dep.get(key_specifier, ''),
+                        dep.get(key_options, '') and
+                        '[%s]' % dep[key_options] or '',
+                        existing_dep[key_name],
+                        existing_dep.get(key_specifier, ''),
+                        existing_dep.get(key_options, '') and
+                        '[%s]' % existing_dep[key_options] or '',
+                    )
                 )
-                continue
+                self.python_deps.remove(existing_dep)
             self.python_deps.append(dep)
 
     def get_ext_deps(self, args, from_project, deps, deps_mapping=None):
@@ -766,6 +792,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(
                         args, subconf[schema.PROJECT],
                         subconf[schema.DEPENDENCIES], deps_mapping
@@ -788,6 +815,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(args,
                                       subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
@@ -807,6 +835,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(args,
                                       subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
