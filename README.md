@@ -95,7 +95,7 @@ To create a new project with a default oebuild.conf, run (in a new project folde
         * ``url``: The scm url or local path.
         * ``bzr-rev``: The Bazaar revision to used (only if scm=bzr).
         * ``git-branch``: The git branch to used (only if scm=git).
-* ``run-scripts``: List of shell command to run before OpenERP (executed in project folder)
+* ``run-scripts``: List of shell commands to run before OpenERP (executed in project folder)
 
 Only ``oebuild-version``, ``openerp`` and ``dependencies`` options can be overrided in a alternative configuration file.
 
