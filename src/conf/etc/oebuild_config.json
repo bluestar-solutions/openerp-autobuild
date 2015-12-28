@@ -18,44 +18,57 @@
     "openerp": [{
         "serie": "master",
         "source": {
-        	"url": "https://github.com/odoo/odoo.git",
-        	"git-branch": "master"
+            "url": "https://github.com/odoo/odoo.git",
+            "git-branch": "master"
         },
         "python-dependencies": [
-            {"name": "python-dateutil", "specifier": "==1.5"},
+            {"name": "Babel", "specifier": "==1.3"},
+            {"name": "Jinja2", "specifier": "==2.7.3"},
+            {"name": "Mako", "specifier": "==1.0.1"},
+            {"name": "MarkupSafe", "specifier": "==0.23"},
+            {"name": "Pillow", "specifier": "==2.7.0"},
+            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "PyYAML", "specifier": "==3.11"},
+            {"name": "Werkzeug", "specifier": "==0.9.6"},
+            {"name": "argparse", "specifier": "==1.2.1"},
+            {"name": "decorator", "specifier": "==3.4.0"},
+            {"name": "docutils", "specifier": "==0.12"},
             {"name": "feedparser", "specifier": "==5.1.3"},
             {"name": "gdata", "specifier": "==2.0.18"},
-            {"name": "python-ldap", "specifier": "==2.4.10"},
-            {"name": "lxml", "specifier": "==3.3.3"},
-            {"name": "Mako", "specifier": "==0.9.1"},
-            {"name": "python-openid", "specifier": "==2.2.5"},
-            {"name": "psycopg2", "specifier": "==2.4.5"},
-            {"name": "Babel", "specifier": "==1.3"},
-            {"name": "pydot", "specifier": "==1.0.2"},
-            {"name": "pyparsing", "specifier": "==2.0.1"},
-            {"name": "reportlab", "specifier": "==3.0"},
-            {"name": "simplejson", "specifier": "==3.3.1"},
-            {"name": "pytz", "specifier": "==2012c"},
-            {"name": "vatnumber", "specifier": "==1.1"},
-            {"name": "vobject", "specifier": "==0.8.1.c"},
-            {"name": "PyWebDAV", "specifier": "==0.9.8"},
-            {"name": "Werkzeug", "specifier": "==0.9.4"},
-            {"name": "xlwt", "specifier": "==0.7.5"},
-            {"name": "PyYAML", "specifier": "==3.10"},
-            {"name": "docutils", "specifier": "==0.11"},
-            {"name": "psutil", "specifier": "==1.2.1"},
-            {"name": "unittest2", "specifier": "==0.5.1"},
+            {"name": "gevent", "specifier": "==1.0.2"},
+            {"name": "greenlet", "specifier": "==0.4.7"},
+            {"name": "jcconv", "specifier": "==0.2.3"},
+            {"name": "lxml", "specifier": "==3.4.1"},
             {"name": "mock", "specifier": "==1.0.1"},
-            {"name": "Jinja2", "specifier": "==2.7.2"},
-            {"name": "Pillow", "specifier": "==2.3.0"},
-            {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
+            {"name": "ofxparse", "specifier": "==0.14"},
+            {"name": "passlib", "specifier": "==1.6.2"},
+            {"name": "psutil", "specifier": "==2.2.0"},
+            {"name": "psycogreen", "specifier": "==1.0"},
+            {"name": "psycopg2", "specifier": "==2.5.4"},
+            {"name": "pyPdf", "specifier": "==1.13"},
+            {"name": "pydot", "specifier": "==1.0.2"},
+            {"name": "pyparsing", "specifier": "==2.0.3"},
+            {"name": "pyserial", "specifier": "==2.7"},
+            {"name": "python-dateutil", "specifier": "==2.4.0"},
+            {"name": "python-ldap", "specifier": "==2.4.19"},
+            {"name": "python-openid", "specifier": "==2.2.5"},
+            {"name": "pytz", "specifier": "==2014.10"},
+            {"name": "pyusb", "specifier": "==1.0.0b2"},
+            {"name": "qrcode", "specifier": "==5.1"},
+            {"name": "reportlab", "specifier": "==3.1.44"},
+            {"name": "requests", "specifier": "==2.6.0"},
+            {"name": "six", "specifier": "==1.9.0"},
+            {"name": "suds-jurko", "specifier": "==0.6"},
+            {"name": "vatnumber", "specifier": "==1.2"},
+            {"name": "vobject", "specifier": "==0.6.6"},
+            {"name": "wsgiref", "specifier": "==0.1.2"},
+            {"name": "xlwt", "specifier": "==0.7.5"}
         ]
     },{
         "serie": "6.0",
         "source": {
-        	"url": "https://github.com/odoo/odoo.git",
-        	"git-branch": "6.0"
+            "url": "https://github.com/odoo/odoo.git",
+            "git-branch": "6.0"
         },
         "python-dependencies": [
             {"name": "python-dateutil", "specifier": "==1.5"},
@@ -85,13 +98,13 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
     },{
         "serie": "6.1",
         "source": {
-        	"url": "https://github.com/odoo/odoo.git",
-        	"git-branch": "6.1"
+            "url": "https://github.com/odoo/odoo.git",
+            "git-branch": "6.1"
         },
         "python-dependencies": [
             {"name": "python-dateutil", "specifier": "==1.5"},
@@ -121,49 +134,13 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
     },{
         "serie": "7.0",
         "source": {
-        	"url": "https://github.com/odoo/odoo.git",
-        	"git-branch": "7.0"
-        },
-        "python-dependencies": [
-            {"name": "python-dateutil", "specifier": "==1.5"},
-            {"name": "feedparser", "specifier": "==5.1.3"},
-            {"name": "gdata", "specifier": "==2.0.18"},
-            {"name": "python-ldap", "specifier": "==2.4.10"},
-            {"name": "lxml", "specifier": "==3.3.3"},
-            {"name": "Mako", "specifier": "==0.9.1"},
-            {"name": "python-openid", "specifier": "==2.2.5"},
-            {"name": "psycopg2", "specifier": "==2.4.5"},
-            {"name": "Babel", "specifier": "==1.3"},
-            {"name": "pydot", "specifier": "==1.0.28", "options": "--allow-unverified pydot"},
-            {"name": "pyparsing", "specifier": "==2.0.1"},
-            {"name": "reportlab", "specifier": "==3.0"},
-            {"name": "simplejson", "specifier": "==3.3.1"},
-            {"name": "pytz", "specifier": "==2012c"},
-            {"name": "vatnumber", "specifier": "==1.1"},
-            {"name": "vobject", "specifier": "==0.8.1.c"},
-            {"name": "PyWebDAV", "specifier": "==0.9.8"},
-            {"name": "Werkzeug", "specifier": "==0.9.4"},
-            {"name": "xlwt", "specifier": "==0.7.5"},
-            {"name": "PyYAML", "specifier": "==3.10"},
-            {"name": "docutils", "specifier": "==0.11"},
-            {"name": "psutil", "specifier": "==1.2.1"},
-            {"name": "unittest2", "specifier": "==0.5.1"},
-            {"name": "mock", "specifier": "==1.0.1"},
-            {"name": "Jinja2", "specifier": "==2.7.2"},
-            {"name": "Pillow", "specifier": "==2.3.0"},
-            {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
-        ]
-    },{
-        "serie": "8.0",
-        "source": {
-        	"url": "https://github.com/odoo/odoo.git",
-        	"git-branch": "8.0"
+            "url": "https://github.com/odoo/odoo.git",
+            "git-branch": "7.0"
         },
         "python-dependencies": [
             {"name": "python-dateutil", "specifier": "==1.5"},
@@ -193,14 +170,108 @@
             {"name": "Jinja2", "specifier": "==2.7.2"},
             {"name": "Pillow", "specifier": "==2.3.0"},
             {"name": "httplib2", "specifier": "==0.8"},
-            {"name": "decorator", "specifier": "==3.4.0"},
-            {"name": "requests", "specifier": "==2.2.1"},
-            {"name": "passlib", "specifier": "==1.5.3"},
-            {"name": "pyPdf", "specifier": "==1.13"},
-            {"name": "bzr+http://download.gna.org/pychart/bzr-archive#egg=pychart", "specifier": "==1.39"}
+            {"name": "Python-Chart", "specifier": "==1.39"}
         ]
+    },{
+        "serie": "8.0",
+        "source": {
+            "url": "https://github.com/odoo/odoo.git",
+            "git-branch": "8.0"
+        },
+        "python-dependencies": [
+            {"name": "Babel", "specifier": "==1.3"},
+            {"name": "Jinja2", "specifier": "==2.7.3"},
+            {"name": "Mako", "specifier": "==1.0.0"},
+            {"name": "MarkupSafe", "specifier": "==0.23"},
+            {"name": "Pillow", "specifier": "==2.5.1"},
+            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "PyYAML", "specifier": "==3.11"},
+            {"name": "Werkzeug", "specifier": "==0.9.6"},
+            {"name": "argparse", "specifier": "==1.2.1"},
+            {"name": "decorator", "specifier": "==3.4.0"},
+            {"name": "docutils", "specifier": "==0.12"},
+            {"name": "feedparser", "specifier": "==5.1.3"},
+            {"name": "gdata", "specifier": "==2.0.18"},
+            {"name": "gevent", "specifier": "==1.0.2"},
+            {"name": "greenlet", "specifier": "==0.4.7"},
+            {"name": "jcconv", "specifier": "==0.2.3"},
+            {"name": "lxml", "specifier": "==3.3.5"},
+            {"name": "mock", "specifier": "==1.0.1"},
+            {"name": "passlib", "specifier": "==1.6.2"},
+            {"name": "psutil", "specifier": "==2.1.1"},
+            {"name": "psycogreen", "specifier": "==1.0"},
+            {"name": "psycopg2", "specifier": "==2.5.3"},
+            {"name": "pyPdf", "specifier": "==1.13"},
+            {"name": "pydot", "specifier": "==1.0.2"},
+            {"name": "pyparsing", "specifier": "==1.5.7"},
+            {"name": "pyserial", "specifier": "==2.7"},
+            {"name": "python-dateutil", "specifier": "==1.5"},
+            {"name": "python-ldap", "specifier": "==2.4.15"},
+            {"name": "python-openid", "specifier": "==2.2.5"},
+            {"name": "pytz", "specifier": "==2014.4"},
+            {"name": "pyusb", "specifier": "==1.0.0b1"},
+            {"name": "qrcode", "specifier": "==5.0.1"},
+            {"name": "reportlab", "specifier": "==3.1.44"},
+            {"name": "requests", "specifier": "==2.6.0"},
+            {"name": "simplejson", "specifier": "==3.5.3"},
+            {"name": "six", "specifier": "==1.7.3"},
+            {"name": "unittest2", "specifier": "==0.5.1"},
+            {"name": "vatnumber", "specifier": "==1.2"},
+            {"name": "vobject", "specifier": "==0.6.6"},
+            {"name": "wsgiref", "specifier": "==0.1.2"},
+            {"name": "xlwt", "specifier": "==0.7.5"}
+        ]
+    },{
+        "serie": "9.0",
+        "source": {
+                "url": "https://github.com/odoo/odoo.git",
+                "git-branch": "9.0"
+        },
+        "python-dependencies": [
+            {"name": "Babel", "specifier": "==1.3"},
+            {"name": "Jinja2", "specifier": "==2.7.3"},
+            {"name": "Mako", "specifier": "==1.0.1"},
+            {"name": "MarkupSafe", "specifier": "==0.23"},
+            {"name": "Pillow", "specifier": "==2.7.0"},
+            {"name": "Python-Chart", "specifier": "==1.39"},
+            {"name": "PyYAML", "specifier": "==3.11"},
+            {"name": "Werkzeug", "specifier": "==0.9.6"},
+            {"name": "argparse", "specifier": "==1.2.1"},
+            {"name": "decorator", "specifier": "==3.4.0"},
+            {"name": "docutils", "specifier": "==0.12"},
+            {"name": "feedparser", "specifier": "==5.1.3"},
+            {"name": "gdata", "specifier": "==2.0.18"},
+            {"name": "gevent", "specifier": "==1.0.2"},
+            {"name": "greenlet", "specifier": "==0.4.7"},
+            {"name": "jcconv", "specifier": "==0.2.3"},
+            {"name": "lxml", "specifier": "==3.4.1"},
+            {"name": "mock", "specifier": "==1.0.1"},
+            {"name": "ofxparse", "specifier": "==0.14"},
+            {"name": "passlib", "specifier": "==1.6.2"},
+            {"name": "psutil", "specifier": "==2.2.0"},
+            {"name": "psycogreen", "specifier": "==1.0"},
+            {"name": "psycopg2", "specifier": "==2.5.4"},
+            {"name": "pyPdf", "specifier": "==1.13"},
+            {"name": "pydot", "specifier": "==1.0.2"},
+            {"name": "pyparsing", "specifier": "==2.0.3"},
+            {"name": "pyserial", "specifier": "==2.7"},
+            {"name": "python-dateutil", "specifier": "==2.4.0"},
+            {"name": "python-ldap", "specifier": "==2.4.19"},
+            {"name": "python-openid", "specifier": "==2.2.5"},
+            {"name": "pytz", "specifier": "==2014.10"},
+            {"name": "pyusb", "specifier": "==1.0.0b2"},
+            {"name": "qrcode", "specifier": "==5.1"},
+            {"name": "reportlab", "specifier": "==3.1.44"},
+            {"name": "requests", "specifier": "==2.6.0"},
+            {"name": "six", "specifier": "==1.9.0"},
+            {"name": "suds-jurko", "specifier": "==0.6"},
+            {"name": "vatnumber", "specifier": "==1.2"},
+            {"name": "vobject", "specifier": "==0.6.6"},
+            {"name": "wsgiref", "specifier": "==0.1.2"},
+            {"name": "xlwt", "specifier": "==0.7.5"}
+       ]
     }],
-    "default-serie": "8.0",
+    "default-serie": "9.0",
     "database": {
         "host": "localhost",
         "port": "5432",
