@@ -100,9 +100,6 @@ on the same defined version.
     Modules to update. Don't specify any module to use the
     module list of the current project. `--database` is
     required.
-* `-l`, `--local`:
-    Bypass remote updates checks and try to launch with
-    last parameters.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
@@ -121,6 +118,8 @@ on the same defined version.
     continuous integration.
 * `-C`, `--continue`:
     Continue running Odoo server when tests are done.
+* `-D`, `--drop-database`:
+    Drop used database before exiting.
 
 ### project.init
 

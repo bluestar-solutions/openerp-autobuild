@@ -126,6 +126,11 @@ Released under GNU AGPLv3.
             "it exists."
         )
         parser_test.add_argument(
+            '-D', "--drop-database", action="store_true",
+            dest="run_test_drop_database",
+            help="Drop used database before exiting."
+        )
+        parser_test.add_argument(
             '-a', "--analyze", action="store_true", dest="run_test_analyze",
             help="Analyze log and stop OpenERP, exit with status 0 if all "
             "test successfully pass, 1 otherwise. Used for "

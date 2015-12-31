@@ -339,7 +339,7 @@ pip install -r DEPENDENCY.txt \
         ext_path = EM.pydev_pathproperty(
             name='org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH'
         )
-        ext_path.append(EM.path(self.openerp_path + '/server'))
+        ext_path.append(EM.path(self.openerp_path))
 
         doc = EM.pydev_project(
             EM.pydev_property(
@@ -426,8 +426,10 @@ pip install -r DEPENDENCY.txt \
             "virtualenv %s : Create and install Python dependencies (%s %s)" %
             (self.virtualenv_path, py_deps_string, py_options_string)
         )
-        out, err = self.call_command("virtualenv -q %s" % self.virtualenv_path,
-                                     log_in=False, log_out=False, log_err=True)
+        _, out, err = self.call_command(
+            "virtualenv -q %s" % self.virtualenv_path,
+            log_in=False, log_out=False, log_err=True
+        )
         for o in re.split('\n(?=\S)', out):
             if len(o) > 0:
                 logger.info("virtualenv %s: %s" % (self.virtualenv_path,
@@ -442,8 +444,9 @@ pip install -r DEPENDENCY.txt \
         if errors:
             sys.exit(1)
 
-        out, err = self.call_command(
-            'LC_ALL=C %s install --egg -q --upgrade %s %s' %
+        rc, out, err = self.call_command(
+            'LC_ALL=C %s install --egg -q --upgrade %s %s '
+            '--log-file .pip-errors.log' %
             (self.virtual_pip, py_options_string, py_deps_string),
             log_in=False, log_out=False, log_err=False
         )
@@ -451,7 +454,6 @@ pip install -r DEPENDENCY.txt \
             if len(o) > 0:
                 logger.info("virtualenv %s: %s" % (self.virtualenv_path,
                                                    o.rstrip()))
-        errors = False
         for e in re.split('\n(?=\S)', err):
             if re.search(r'Format RepositoryFormat6\(\) .* is deprecated',
                          e, re.I):
@@ -466,11 +468,20 @@ pip install -r DEPENDENCY.txt \
                     self.virtualenv_path, e.rstrip())
                 )
             elif len(e) > 0:
-                errors = True
                 logger.error(u'virtualenv %s: %s' % (
                     self.virtualenv_path, e.rstrip())
                 )
-        if errors:
+        if rc:
+            if args.run_test_analyze and os.path.exists('.pip-errors.log'):
+                with open('.pip-errors.log', 'r') as f:
+                    pip_log = f.read()
+                logger.error("virtualenv %s: Exited with errors:\n%s" % (
+                    self.virtualenv_path, pip_log
+                ))
+            else:
+                logger.error("virtualenv %s: Exited with errors" % (
+                    self.virtualenv_path
+                ))
             sys.exit(1)
 
         with open(self.py_deps_cache_file, 'w+') as f:
@@ -498,6 +509,16 @@ pip install -r DEPENDENCY.txt \
 
     def run_openerp(self, conf, args):
         self.create_or_update_venv(conf, args)
+
+        for script in conf.get(schema.RUN_SCRIPTS, []):
+            rc, out, err = self.call_command(
+                script, log_in=False, log_out=False, log_err=False
+            )
+            logger.info("Run command: %s\n%s\n%s",
+                        script, out.rstrip(), err.rstrip())
+            if rc:
+                logger.error('Command %s failed', script)
+                sys.exit(1)
 
         if not os.path.exists(static_params.OE_CONFIG_FILE):
             logger.error('The OpenERP configuration does not exist : '
@@ -604,7 +625,7 @@ pip install -r DEPENDENCY.txt \
                 cmd += ' --stop-after-init'
             try:
                 logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(
+                _, openerp_output, _ = self.call_command(
                     cmd, parse_log=args.run_test_analyze,
                     register_pid=self.pid_file,
                     log_in=False, parse_tests=True
@@ -637,7 +658,7 @@ pip install -r DEPENDENCY.txt \
                 if update_modules:
                     cmd += ' -u %s' % update_modules
             if args.run_auto_reload:
-                openerp_version, _ = self.call_command(
+                _, openerp_version, _ = self.call_command(
                     '%s/%s --version' % (
                         self.openerp_path, 'openerp-server'
                     ), parse_log=True, log_in=False, log_out=False
@@ -650,16 +671,27 @@ pip install -r DEPENDENCY.txt \
 
             try:
                 logger.info('Start OpenERP ...')
-                openerp_output, _ = self.call_command(
+                _, openerp_output, _ = self.call_command(
                     cmd, parse_log=False,
                     register_pid=self.pid_file, log_in=False
                 )
             except KeyboardInterrupt:
                 logger.info("OpenERP stopped after keyboard interrupt")
 
-        if args.func == "test" and args.run_test_analyze:
-            if 'ERROR' in openerp_output:
-                sys.exit(1)
+        if args.func == "test":
+            if args.run_test_drop_database:
+                old_isolation_level = conn.isolation_level
+                conn.set_isolation_level(0)
+                logger.info('Drop database %s' % args.run_database)
+                cur.execute('drop database "%s"' % args.run_database)
+                conn.commit()
+                conn.set_isolation_level(old_isolation_level)
+
+            conn.close()
+
+            if args.run_test_analyze:
+                if 'ERROR' in openerp_output:
+                    sys.exit(1)
         sys.exit(0)
 
     def get_deps(self, args, conf):
@@ -697,23 +729,49 @@ pip install -r DEPENDENCY.txt \
             sys.exit(1)
 
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
-        self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
         self.get_ext_deps(args, self.project, conf[schema.DEPENDENCIES])
+        self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
 
     def add_python_deps(self, python_deps):
         existing_names = [idep['name'] for idep in self.python_deps]
+        key_name = oebuild_conf_schema.NAME
+        key_specifier = oebuild_conf_schema.SPECIFIER
+        key_options = oebuild_conf_schema.OPTIONS
         for dep in python_deps:
             if dep['name'] in existing_names:
                 existing_dep = [idep for idep in self.python_deps
                                 if idep['name'] == dep['name']][0]
+                if existing_dep == dep:
+                    continue
+                if (existing_dep.get(key_specifier, '') and
+                        not dep.get(key_specifier, '')):
+                    logger.warning(
+                        "Dependency %s%s%s does not override %s%s%s: "
+                        "version not specified" % (
+                            dep[key_name],
+                            dep.get(key_specifier, ''),
+                            dep.get(key_options, '') and
+                            '[%s]' % dep[key_options] or '',
+                            existing_dep[key_name],
+                            existing_dep.get(key_specifier, ''),
+                            existing_dep.get(key_options, '') and
+                            '[%s]' % existing_dep[key_options] or '',
+                        )
+                    )
+                    continue
                 logger.warning(
-                    "Dependency %s%s is hidden by %s%s and will ignored" %
-                    (dep[oebuild_conf_schema.NAME],
-                     dep.get(oebuild_conf_schema.SPECIFIER, ''),
-                     existing_dep[oebuild_conf_schema.NAME],
-                     existing_dep.get(oebuild_conf_schema.SPECIFIER, ''))
+                    "Dependency %s%s%s overrides %s%s%s" % (
+                        dep[key_name],
+                        dep.get(key_specifier, ''),
+                        dep.get(key_options, '') and
+                        '[%s]' % dep[key_options] or '',
+                        existing_dep[key_name],
+                        existing_dep.get(key_specifier, ''),
+                        existing_dep.get(key_options, '') and
+                        '[%s]' % existing_dep[key_options] or '',
+                    )
                 )
-                continue
+                self.python_deps.remove(existing_dep)
             self.python_deps.append(dep)
 
     def get_ext_deps(self, args, from_project, deps, deps_mapping=None):
@@ -766,6 +824,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(
                         args, subconf[schema.PROJECT],
                         subconf[schema.DEPENDENCIES], deps_mapping
@@ -788,6 +847,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(args,
                                       subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
@@ -807,6 +867,7 @@ pip install -r DEPENDENCY.txt \
                             destination.rstrip('/'),
                             self.user_conf[user_conf_schema.CONF_FILES]
                         )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
                     self.get_ext_deps(args,
                                       subconf[schema.PROJECT],
                                       subconf[schema.DEPENDENCIES],
@@ -942,11 +1003,12 @@ pip install -r DEPENDENCY.txt \
 
         if parse_log:
             out, err = process.communicate()
+            rc = process.returncode
             if log_err and err:
                 logger.error(err)
             if log_out and out:
                 logger.info(out)
-            return (out, err)
+            return rc, out, err
         else:
             test_ok = True
             while True:
@@ -968,7 +1030,7 @@ pip install -r DEPENDENCY.txt \
                 print '\n' + (COLORIZED('DEBUG', 'OpenERP Test result: ') +
                               (COLORIZED('INFO', 'SUCCESS') if test_ok
                                else COLORIZED('ERROR', 'FAILED')))
-            return (None, None)
+            return None, None, None
 
 
 class OEBuildRemoteProgress(RemoteProgress):
