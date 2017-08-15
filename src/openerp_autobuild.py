@@ -636,7 +636,6 @@ pip install -r DEPENDENCY.txt \
                     sys.exit(1)
         else:
             cmd = '%s %s/%s -c .openerp-dev-default' % (
-                # 'openerp-server'
                 self.virtual_python, self.openerp_path, self.get_binary(conf)
             )
             cmd += ' --addons-path=%s' % addons_path
