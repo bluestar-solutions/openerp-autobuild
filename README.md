@@ -8,16 +8,16 @@ Autobuild for OpenERP is an utility script designed to simply configure, debug, 
 
 #### Stable
 
-	sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild
-	sudo apt-get update
-	sudo apt-get install openerp-autobuild
-	
+    sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild
+    sudo apt-get update
+    sudo apt-get install openerp-autobuild
+
 #### Release Candidate
 
-	sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild-rc
-	sudo apt-get update
-	sudo apt-get install openerp-autobuild
-	
+    sudo add-apt-repository ppa:bluestar-dev-team/openerp-autobuild-rc
+    sudo apt-get update
+    sudo apt-get install openerp-autobuild
+
 ### Download From GitHub
 
 https://github.com/bluestar-solutions/openerp-autobuild
@@ -44,16 +44,16 @@ used to override default settings defined in "/etc/oebuild_config.json".
 
 * ``oebuild-version``: Specify the version of openerp-autobuild targeted by the configuration file.
 * ``workspace``: If set, override the default directory used to store builded virtual environment (with OpenERP and dependencies) for each project.
-* ``custom-configuration-files``: A list of alternative project configuration names. For instance, if you specify ``["mycompany", "me"]``, 
+* ``custom-configuration-files``: A list of alternative project configuration names. For instance, if you specify ``["mycompany", "me"]``,
   oebuild.conf will be read and overrided firstly by oebuild-mycompany.conf (if file exists), and then by oebuild-me.conf (if file exists).
 * ``module_author``: Specify the author to set for module.create goal.
 * ``website``: Specify the author website to set for module.create goal.
 * ``openerp``: List of configured OpenERP series. You can override settings of a default serie or add a custom one.
     * ``serie``: The serie name. If the name is defined in default configuration file, the following options will override the default.
     * ``source``: Git settings for the OpenERP repository.
-    	* ``url``: Git URL for the OpenERP repository.
-    	* ``git-branch``: Branch name for the OpenERP repository.
-    	* ``git-commit``: Commit SHA-1 to use (override git-branch if defined).
+        * ``url``: Git URL for the OpenERP repository.
+        * ``git-branch``: Branch name for the OpenERP repository.
+        * ``git-commit``: Commit SHA-1 to use (override git-branch if defined).
     * ``python-dependencies``: List of Python dependencies for this serie (will be downloaded and installed in virtualenv by pip).
         * ``name``: The pip name of the Python library.
         * ``specifier``: The pip version constraint specifier.
@@ -67,12 +67,12 @@ used to override default settings defined in "/etc/oebuild_config.json".
 
 ### Project Settings
 
-The default project settings are in oebuild.conf, located at the root of the concerned project. This file can be overridden by every oebuild-*.conf, 
+The default project settings are in oebuild.conf, located at the root of the concerned project. This file can be overridden by every oebuild-*.conf,
 if * is defined in your user settings custom-configuration-files list.
 
 To create a new project with a default oebuild.conf, run (in a new project folder) :
 
-	oebuild project.init
+    oebuild project.init
 
 #### Options
 
@@ -82,7 +82,7 @@ To create a new project with a default oebuild.conf, run (in a new project folde
     * ``serie``: The serie name. This name have to be defined in default configuration file or in user configuration file.
         * ``source``: Git settings for the OpenERP repository. Used to override serie default settings.
             * ``url``: Git url for the OpenERP repository.
-            * ``git-branch``: Branch name to use.        
+            * ``git-branch``: Branch name to use.
             * ``git-commit``: Commit SHA-1 to use (override git-branch if defined).
 * ``python-dependencies``: List of Python dependencies for this project (will be downloaded and installed in virtualenv by pip).
     * ``name``: The pip name of the Python library.
@@ -105,8 +105,8 @@ With OpenERP Autobuild, OpenERP will use the file ".openerp-dev-default" located
 
 To create a new project with a default .openerp-dev-default, run (in a project folder) :
 
-	oebuild project.init
-	
+    oebuild project.init
+
 ### Migration of configuration files
 
 Configuration files for v1.7 projects will be migrated on first launch with v2.1.
@@ -117,33 +117,52 @@ You can also add a specifier and some options (refer to ``python-dependencies`` 
 
 Example :
 
-	[
-	    {"name": "phonenumbers"},
-	    {"name": "six"},
-	    {"name": "python-stdnum"},
-	    {"name": "pyPdf"},
-	    {"name": "BeautifulSoup"},
-	    {"name": "pyth"},
-	    {"name": "qrcode"},
-	    {"name": "Pillow"},
-	    {"name": "pyxb"}
-	]
+    [
+        {"name": "phonenumbers"},
+        {"name": "six"},
+        {"name": "python-stdnum"},
+        {"name": "pyPdf"},
+        {"name": "BeautifulSoup"},
+        {"name": "pyth"},
+        {"name": "qrcode"},
+        {"name": "Pillow"},
+        {"name": "pyxb"}
+    ]
 
 ### Some examples
 
-Run server and update _mymodule_ and _othermodule_ in _my_database_ 
+Run server and update _mymodule_ and _othermodule_ in _my_database_
 
-	oebuild run -u mymodule,othermodule --database=my_database
+    oebuild run -u mymodule,othermodule --database=my_database
 
 Run server in test mode on a new database named my-custom-tests for continuous integration with all modules of your project
 
-	oebuild run.test --database=my-custom-tests --new-install --analyze -i
+    oebuild run.test --database=my-custom-tests --new-install --analyze -i
 
 Build a fully runnable package
 
-	oebuild projet.assembly --include-odoo
+    oebuild projet.assembly --include-odoo
 
 See man page or help for details
+
+### Developer mode
+
+You can run a local git clone directly without a full installation, even
+if you have another version installed.
+
+First it is a good idea to define an alias for your development version in you .bash_aliases file:
+
+    alias oebuild-dev='/{YOUR_DEVELOPMENT_FOLDER}/openerp-autobuild/src/openerp_autobuild.py'
+
+Then you can launch:
+
+    oebuild2 run -A -u all -d my_database
+
+You can specify an alternate folder to use custom configuration (/devconf in openerp-autobuild will be use by default):
+
+    oebuild2 run -A /my/config/folder -u all -d my_database
+
+The folder need an "etc" and a "home" folder to provide alternate files for files available in /etc et user configuration folder in a full installed version.
 
 ## Credits
 

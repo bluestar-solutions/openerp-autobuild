@@ -29,6 +29,7 @@ URL = "url"
 BZR_REV = "bzr-rev"
 OPENERP = "openerp"
 SERIE = "serie"
+BIN = "bin"
 USER = "user"
 MODULE_AUTHOR = "module_author"
 WEBSITE = "website"
@@ -69,6 +70,7 @@ OPENERP_CONF_TYPE = lambda default = True: {
     "type": "object",
     "properties": {
         SERIE: {"type": "string"},
+        BIN: {"type": "string"},
         SOURCE: OPENERP_TYPE,
         PYTHON_DEPENDENCIES: {
             "type": "array",
