@@ -445,7 +445,7 @@ pip install -r DEPENDENCY.txt \
             sys.exit(1)
 
         rc, out, err = self.call_command(
-            'LC_ALL=C %s install --egg -q --upgrade %s %s '
+            'LC_ALL=C %s install -q --upgrade %s %s '
             '--log-file .pip-errors.log' %
             (self.virtual_pip, py_options_string, py_deps_string),
             log_in=False, log_out=False, log_err=False
