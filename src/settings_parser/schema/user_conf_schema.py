@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
