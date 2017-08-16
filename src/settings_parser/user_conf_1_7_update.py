@@ -43,7 +43,7 @@ def update_from_1_7(conf, conf_1_7, params):
                                        user_conf_schema.CONF_FILES)
             content = re.sub(reg[0], reg[1], content)
             logger.warning("Your workspace is %s, but the recommended "
-                           "value for version 2.1 is %s, check your "
+                           "value is %s, check your "
                            "configuration file: %s",
                            conf_1_7[user_conf_schema.WORKSPACE],
                            user_conf_schema.WORKSPACE,

@@ -243,16 +243,18 @@ class OEBuildConfParser():
             return json.load(updated_file)
 
     UPDATE_FROM = {
-        "1.7": [jre.update_version("1.7", "2.1"),
+        "1.7": [jre.update_version("1.7", "2.2"),
                 jre.remove_param_array('server'),
                 jre.remove_param_array('addons'),
-                jre.remove_param_array('web')]
+                jre.remove_param_array('web')],
+        "2.1": [jre.update_version("2.1", "2.2")],
     }
 
     UPDATE_ALT_FROM = {
-        "1.7": [jre.update_version("1.7", "2.1"),
+        "1.7": [jre.update_version("1.7", "2.2"),
                 jre.remove_param("project"),
-                jre.remove_param("serie")]
+                jre.remove_param("serie")],
+        "2.1": [jre.update_version("2.1", "2.2")],
     }
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

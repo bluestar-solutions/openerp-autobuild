@@ -53,6 +53,7 @@ import re
 from argument_parser import OEArgumentParser
 import codecs
 from glob import glob
+from distutils.version import StrictVersion
 
 load_plugins()
 
@@ -66,6 +67,7 @@ class Autobuild():
     workspace_path = None
     project_path = None
     openerp_path = None
+    openerp_version = None
     deps_path = None
     target_path = None
     target_addons_path = None
@@ -507,6 +509,18 @@ pip install -r DEPENDENCY.txt \
                 modules = "%s,%s" % (module, modules)
         return modules.rstrip(",")
 
+    def get_openerp_version(self, conf):
+        if not self.openerp_version:
+            _, openerp_version, _ = self.call_command(
+                '%s %s/%s --version' % (
+                    self.virtual_python, self.openerp_path,
+                    self.get_binary(conf)
+                ), parse_log=True, log_in=False, log_out=False
+            )
+            self.openerp_version = static_params.OE_VERSION[
+                openerp_version.rstrip()]
+        return self.openerp_version
+
     def run_openerp(self, conf, args):
         self.create_or_update_venv(conf, args)
 
@@ -658,16 +672,20 @@ pip install -r DEPENDENCY.txt \
                 if update_modules:
                     cmd += ' -u %s' % update_modules
             if args.run_auto_reload:
-                _, openerp_version, _ = self.call_command(
-                    '%s/%s --version' % (
-                        self.openerp_path, self.get_binary(conf)
-                    ), parse_log=True, log_in=False, log_out=False
-                )
-                if static_params.OE_VERSION[openerp_version.rstrip()] < '8.0':
-                    logger.error("--auto-reload is not available for %s" %
-                                 openerp_version)
+                version = self.get_openerp_version(conf)
+                if StrictVersion(version) != StrictVersion('8.0'):
+                    logger.error("--auto-reload/-a is not available for "
+                                 "Odoo %s" % version)
                     sys.exit(1)
                 cmd += ' --auto-reload'
+            if args.run_dev:
+                version = self.get_openerp_version(conf)
+                print "%s / %s" % (StrictVersion(version), StrictVersion('10.0'))
+                if StrictVersion(version) < StrictVersion('10.0'):
+                    logger.error("--dev/-D is not available for Odoo %s" %
+                                 version)
+                    sys.exit(1)
+                cmd += ' --dev=%s' % args.run_dev
 
             try:
                 logger.info('Start OpenERP ...')
