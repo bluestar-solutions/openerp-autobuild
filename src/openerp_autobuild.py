@@ -680,7 +680,6 @@ pip install -r DEPENDENCY.txt \
                 cmd += ' --auto-reload'
             if args.run_dev:
                 version = self.get_openerp_version(conf)
-                print "%s / %s" % (StrictVersion(version), StrictVersion('10.0'))
                 if StrictVersion(version) < StrictVersion('10.0'):
                     logger.error("--dev/-D is not available for Odoo %s" %
                                  version)
