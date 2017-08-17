@@ -28,7 +28,7 @@ https://github.com/bluestar-solutions/openerp-autobuild
 #### Requirements
 
 * **Source headers**: Python 2.7 (python), OpenLDAP (libldap2), libsasl2, libxml2, libxslt
-* **Softwares**: pip, Git (Git), Bazaar (bzr), PostgreSQL version information tool (pg_config), virtualenv
+* **Softwares**: pip, Git (Git), PostgreSQL version information tool (pg_config), virtualenv
 * **Python libraries**: jsonschema, psycopg2, GitPython, argcomplete
 
 The Python libraries can be installed with pip.
@@ -91,9 +91,8 @@ To create a new project with a default oebuild.conf, run (in a new project folde
 * ``dependencies``: List of other OpenERP addons project dependency.
     * ``name``: The addons project name.
     * ``source``: The addons project source location.
-        * ``scm``: The protocol used to get the project (git, bzr, local).
+        * ``scm``: The protocol used to get the project (git, local).
         * ``url``: The scm url or local path.
-        * ``bzr-rev``: The Bazaar revision to used (only if scm=bzr).
         * ``git-branch``: The git branch to used (only if scm=git).
 * ``run-scripts``: List of shell commands to run before OpenERP (executed in project folder)
 

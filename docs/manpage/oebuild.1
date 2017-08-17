@@ -1,22 +1,13 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "OPENERP\-AUTOBUILD" "1" "December 2015" "Bluestar Solutions Sàrl" "OpenERP Autobuild"
+.TH "OPENERP\-AUTOBUILD" "1" "2017-08-17" "Bluestar Solutions Sàrl" "OpenERP Autobuild"
 .
 .SH "NAME"
 \fBopenerp\-autobuild\fR \- build and run Odoo/OpenERP projects
 .
 .SH "SYNOPSIS"
-\fBopenerp\-autobuild\fR [\-\-version] [\-\-help]
-.
-.br
-\fBoebuild\fR [\-\-version] [\-\-help]
-.
-.br
-\fBopenerp\-autobuild\fR \fIgoal\fR [\-\-help] \.\.\.
-.
-.br
-\fBoebuild\fR \fIgoal\fR [\-\-help] \.\.\.
+\fBopenerp\-autobuild\fR [\-\-version] [\-\-help] \fBoebuild\fR [\-\-version] [\-\-help] \fBopenerp\-autobuild\fR \fIgoal\fR [\-\-help] \.\.\. \fBoebuild\fR \fIgoal\fR [\-\-help] \.\.\.
 .
 .SH "DESCRIPTION"
 A tool to build and run Odoo/OpenERP projects\.
@@ -26,9 +17,6 @@ The main goals of OpenERP Autobuild are:
 .
 .IP "\(bu" 4
 Improve the collaboration in development teams\.
-.
-.IP "\(bu" 4
-Permit the use of various VCS (currently git and bazaar)\.
 .
 .IP "\(bu" 4
 Enable the use of continuous integration solutions\.
@@ -81,10 +69,7 @@ Initialize an Eclipse PyDev project\.
 .SH "GOALS OPTIONS"
 .
 .SS "run"
-\fBopenerp\-autobuild\fR run [\-h] [\-A [\fIpath\fR]] [\-u [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-i [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-l] [\-d \fIdatabase\fR] [\-a]
-.
-.br
-\fBoebuild\fR run [\-h] [\-A [\fIpath\fR]] [\-u [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-i [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-l] [\-d \fIdatabase\fR] [\-a]
+\fBopenerp\-autobuild\fR run [\-h] [\-A [\fIpath\fR]] [\-u [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-i [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-l] [\-d \fIdatabase\fR] [\-a] \fBoebuild\fR run [\-h] [\-A [\fIpath\fR]] [\-u [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-i [all|\fImodule1\fR[,\fImodule2\fR…]]] [\-l] [\-d \fIdatabase\fR] [\-a]
 .
 .TP
 \fB\-h\fR, \fB\-\-help\fR
