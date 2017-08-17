@@ -71,6 +71,10 @@ Set the version of all project modules\.
 Prepare all files to deploy in target folder\.
 .
 .TP
+\fBproject\.i18n\.export\fR
+Export i18n templates files for addons specified in project configuration file\.
+.
+.TP
 \fBmodule\.create\fR
 Create a new module\.
 .
@@ -104,7 +108,11 @@ Modules to update\. Don\'t specify any module to use the module list of the curr
 .
 .TP
 \fB\-a\fR, \fB\-\-auto\-reload\fR
-Enable auto\-reloading of python files and xml files without having to restart the server\. Requires pyinotify\. Available since Odoo version 8\.0
+Enable auto\-reloading of python files and xml files without having to restart the server\. Requires pyinotify\. Available only for Odoo version 8\.0\.
+.
+.TP
+\fB\-D\fR \fIDEV_MODE\fR, \fB\-\-dev\fR=\fIDEV_MODE\fR
+Enable developer mode\. Param: List of options separated by comma\. Options : all, [pudb|wdb|ipdb|pdb], reload, qweb, werkzeug, xml\.Available since Odoo version 10\.0\.
 .
 .TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
@@ -201,6 +209,32 @@ Prints usage and options for the goal\.
 .TP
 \fB\-i\fR, \fB\-\-include\-odoo\fR
 Include Odoo/OpenERP in target\.
+.
+.TP
+\fB\-t\fR, \fB\-\-only\-translations\fR
+Include only project addons translations in target\.
+.
+.TP
+\fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]
+Use an alternate directory to find configuration files instead of /etc and /home/user (for development purpose)\. Don\'t specify \fIpath\fR to use \'\./devconf\' with supplied files\.
+.
+.TP
+\fB\-l\fR, \fB\-\-local\fR
+Bypass remote updates checks and try to launch with last parameters\.
+.
+.SS "project\.i18n\.export"
+.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints usage and options for the goal\.
+.
+.TP
+\fB\-d\fR \fIdatabase\fR, \fB\-\-database\fR=\fIdatabase\fR
+Database name for tests\.Use autobuild_{PROJECT_NAME} if not specified\.
+.
+.TP
+\fB\-D\fR, \fB\-\-drop\-database\fR
+Drop used database before exiting\.
 .
 .TP
 \fB\-A\fR [\fIpath\fR], \fB\-\-alternate\-config\fR=[\fIpath\fR]

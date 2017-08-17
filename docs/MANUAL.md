@@ -46,6 +46,9 @@ on the same defined version.
     Set the version of all project modules.
 * `project.assembly`:
     Prepare all files to deploy in target folder.
+* `project.i18n.export`:
+    Export i18n templates files for addons specified in
+    project configuration file.
 * `module.create`:
     Create a new module.
 * `eclipse.init`:
@@ -76,7 +79,12 @@ on the same defined version.
 * `-a`, `--auto-reload`:
     Enable auto-reloading of python files and xml files
     without having to restart the server. Requires
-    pyinotify. Available since Odoo version 8.0
+    pyinotify. Available only for Odoo version 8.0.
+* `-D` <DEV_MODE>, `--dev`=<DEV_MODE>:
+    Enable developer mode. Param: List of options
+    separated by comma. Options : all,
+    [pudb|wdb|ipdb|pdb], reload, qweb, werkzeug,
+    xml.Available since Odoo version 10.0.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
@@ -155,6 +163,25 @@ on the same defined version.
     Prints usage and options for the goal.
 * `-i`, `--include-odoo`:
     Include Odoo/OpenERP in target.
+* `-t`, `--only-translations`:
+    Include only project addons translations in target.
+* `-A` [<path>], `--alternate-config`=[<path>]:
+    Use an alternate directory to find configuration files
+    instead of /etc and /home/user (for development
+    purpose). Don't specify <path> to use './devconf' with
+    supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
+
+### project.i18n.export
+
+* `-h`, `--help`:
+    Prints usage and options for the goal.
+* `-d` <database>, `--database`=<database>:
+    Database name for tests.Use autobuild_{PROJECT_NAME} if not specified.
+* `-D`, `--drop-database`:
+    Drop used database before exiting.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
