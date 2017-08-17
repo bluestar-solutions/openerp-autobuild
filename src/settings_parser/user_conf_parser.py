@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -27,6 +27,7 @@ import jsonschema
 from oebuild_logger import _ex, logger
 from settings_parser.schema import user_conf_schema
 import user_conf_1_7_update
+import user_conf_2_1_update
 import shutil
 import static_params
 
@@ -122,6 +123,11 @@ class UserConfParser():
 
         return merged_conf
 
+    def _get_current_user_conf_version(self):
+        with open(self.params.USER_CONFIG_FILE, "r") as f:
+            data = json.load(f)
+        return data['oebuild-version']
+
     def _verify(self):
         user_login = getpass.getuser()
         user_name = user_login
@@ -158,14 +164,14 @@ class UserConfParser():
                                                      self.params)
                 self._clean_after_update()
 
-            user_conf = self._load_conf(self.params.USER_CONFIG_FILE, False)
-            if (user_conf[user_conf_schema.OEBUILD_VERSION] !=
-                    static_params.VERSION):
-                self._update(user_conf[user_conf_schema.OEBUILD_VERSION])
+        current_version = self._get_current_user_conf_version()
+        if (current_version != static_params.VERSION):
+            self._update(current_version)
 
     def _clean_after_update(self):
-        keep = [self.params.USER_CONFIG_FILE,
-                user_conf_1_7_update.user_oebuild_config_file_1_7]
+        keep = [user_conf_1_7_update.user_oebuild_config_file_1_7,
+                self.params.USER_CONFIG_FILE,
+                self.params.USER_CONFIG_FILE + ".old"]
 
         for f in [
             f for f in os.listdir(self.params.USER_CONFIG_PATH)
@@ -178,9 +184,8 @@ class UserConfParser():
                 os.remove(path)
 
     def _update(self, version_from):
-        #
-        # Manage future version update here...
-        #
+        if version_from == "2.1":
+            user_conf_2_1_update.update_from_2_1(self.params)
         self._clean_after_update()
 
 UPDATE_FROM = {}
