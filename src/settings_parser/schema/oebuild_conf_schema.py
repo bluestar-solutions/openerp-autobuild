@@ -43,6 +43,7 @@ NAME = "name"
 SOURCE = "source"
 SPECIFIER = "specifier"
 OPTIONS = "options"
+I18N_ADDONS = "i18n-addons"
 
 OPENERP_TYPE = {
     "type": "object",
@@ -143,6 +144,10 @@ OEBUILD_SCHEMA = {
             "items": DEPENDENCY
         },
         RUN_SCRIPTS: {
+            "type": "array",
+            "items": {"type": "string"}
+        },
+        I18N_ADDONS: {
             "type": "array",
             "items": {"type": "string"}
         }
