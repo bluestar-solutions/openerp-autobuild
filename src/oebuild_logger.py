@@ -39,9 +39,9 @@ COLORS = {
     'TEST': BLUE,
 }
 
-COLORIZED = lambda levelname, expression: (
-    COLOR_SEQ % (30 + COLORS[levelname]) + expression + RESET_SEQ
-)
+
+def COLORIZED(levelname, expression):
+    return COLOR_SEQ % (30 + COLORS[levelname]) + expression + RESET_SEQ
 
 LOG_PARSER = re.compile(
     r'(^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \d*) (%s) (.*$)' %
@@ -57,6 +57,7 @@ def _ex(message, e):
 
 
 class SingleLevelFilter(logging.Filter):
+
     def __init__(self, passlevel, reject):
         self.passlevel = passlevel
         self.reject = reject
@@ -69,6 +70,7 @@ class SingleLevelFilter(logging.Filter):
 
 
 class ColoredFormatter(logging.Formatter):
+
     def __init__(self, msg, use_color=True):
         logging.Formatter.__init__(self, msg)
         self.use_color = use_color
@@ -82,6 +84,7 @@ class ColoredFormatter(logging.Formatter):
 
 
 class ColoredLogger(logging.Logger):
+
     def __init__(self, name):
         logging.Logger.__init__(self, name)
 
@@ -104,7 +107,6 @@ class ColoredLogger(logging.Logger):
         # Set the logger for external libraries
         h_ext = logging.StreamHandler(sys.stderr)
         h_ext.setFormatter(fmt)
-        logging.getLogger('bzr').addHandler(h_ext)
         logging.getLogger('git.cmd').addHandler(h_ext)
 
 logging.setLoggerClass(ColoredLogger)

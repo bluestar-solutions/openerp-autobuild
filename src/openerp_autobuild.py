@@ -24,9 +24,6 @@
 import os
 import sys
 import subprocess
-from bzrlib.plugin import load_plugins
-from bzrlib.bzrdir import BzrDir
-from bzrlib.errors import NotBranchError
 from git import Repo
 from git import RemoteProgress
 import shutil
@@ -55,8 +52,6 @@ import codecs
 from glob import glob
 from distutils.version import StrictVersion
 
-load_plugins()
-
 
 class Autobuild():
 
@@ -84,6 +79,8 @@ class Autobuild():
     params = None
 
     def __init__(self, arg_parser):
+        self.enterprise_addons_path = None
+
         self._arg_parser = arg_parser
         args = self._arg_parser.args
         if args.alternate_config and args.alternate_config[:2] == './':
@@ -142,16 +139,19 @@ class Autobuild():
             self.project = conf[schema.PROJECT]
             self.project_path = '%s/%s' % (self.workspace_path, self.project)
             self.openerp_path = '%s/%s' % (self.project_path, 'openerp')
+            self.enterprise_path = '%s/%s' % (self.project_path, 'enterprise')
             self.deps_path = '%s/%s' % (self.project_path, 'deps')
             self.target_path = '%s/%s' % (self.project_path, 'target')
-            self.target_addons_path = '%s/%s' % (self.target_path,
-                                                 'custom-addons')
+            self.target_addons_path = '%s/%s' % (
+                self.target_path, 'custom-addons')
+            self.target_enterprise_path = '%s/%s' % (
+                self.target_path, 'enterprise')
             self.deps_cache_file = '%s/%s' % (self.project_path, 'deps.cache')
-            self.py_deps_cache_file = '%s/%s' % (self.project_path,
-                                                 'python-deps.cache')
+            self.py_deps_cache_file = '%s/%s' % (
+                self.project_path, 'python-deps.cache')
             self.virtualenv_path = '%s/%s' % (self.project_path, 'venv')
-            self.virtual_python = '%s/%s' % (self.virtualenv_path,
-                                             'bin/python')
+            self.virtual_python = '%s/%s' % (
+                self.virtualenv_path, 'bin/python')
             self.virtual_pip = '%s/%s' % (self.virtualenv_path, 'bin/pip')
             self.pid_file = '%s/%s' % ('/tmp', '%s.pid' % self.project)
 
@@ -279,6 +279,18 @@ pip install -r DEPENDENCY.txt \
                     exclude=self.exclude_git)
         tar.close()
 
+    def get_addons_path(self):
+        addons_path = ''
+        if self.enterprise_addons_path:
+            addons_path = '%s,' % self.enterprise_addons_path
+        addons_path += '%s/%s' % (self.openerp_path, 'addons')
+        for path in self.deps_addons_path:
+            addons_path = "%s,%s" % (addons_path, '%s/%s' %
+                                     (self.deps_path, path))
+        if glob('*/__openerp__.py'):
+            addons_path = "%s%s" % (addons_path, ',.')
+        return addons_path
+
     def export_i18n(self, conf, args):
         addons = conf.get(schema.I18N_ADDONS)
         if not addons:
@@ -299,13 +311,6 @@ pip install -r DEPENDENCY.txt \
             os.makedirs(self.workspace_path)
 
         logger.info('Modules to export: %s' % ",".join(addons))
-
-        addons_path = '%s/%s' % (self.openerp_path, 'addons')
-        for path in self.deps_addons_path:
-            addons_path = "%s,%s" % (addons_path, '%s/%s' %
-                                     (self.deps_path, path))
-        if glob('*/__openerp__.py'):
-            addons_path = "%s%s" % (addons_path, ',.')
 
         db_conf = self.user_conf[user_conf_schema.DATABASE]
         try:
@@ -345,6 +350,8 @@ pip install -r DEPENDENCY.txt \
         conn.commit()
 
         conn.set_isolation_level(old_isolation_level)
+
+        addons_path = self.get_addons_path()
 
         cmd = '%s %s/%s' % (self.virtual_python,
                             self.openerp_path, self.get_binary(conf))
@@ -724,12 +731,7 @@ pip install -r DEPENDENCY.txt \
         logger.info('Modules to install: %s' % (init_modules or '(None)'))
         logger.info('Modules to update: %s' % (update_modules or '(None)'))
 
-        addons_path = '%s/%s' % (self.openerp_path, 'addons')
-        for path in self.deps_addons_path:
-            addons_path = "%s,%s" % (addons_path, '%s/%s' %
-                                     (self.deps_path, path))
-        if glob('*/__openerp__.py'):
-            addons_path = "%s%s" % (addons_path, ',.')
+        addons_path = self.get_addons_path()
 
         db_conf = self.user_conf[user_conf_schema.DATABASE]
         if args.func == "test":
@@ -889,6 +891,7 @@ pip install -r DEPENDENCY.txt \
 
     def get_deps(self, args, conf):
         oe_conf = conf[schema.OPENERP]
+        enterprise_conf = oe_conf.get(schema.ENTERPRISE_SOURCE)
         serie = self.get_serie(conf)
 
         try:
@@ -905,6 +908,18 @@ pip install -r DEPENDENCY.txt \
             )
             self.git_checkout(args, url, self.openerp_path,
                               git_branch, git_commit)
+
+            if enterprise_conf and enterprise_conf.get(schema.URL):
+                url = enterprise_conf[schema.URL]
+                git_branch = enterprise_conf.get(
+                    schema.GIT_BRANCH,
+                    serie_source[schema.GIT_BRANCH]
+                )
+                git_commit = enterprise_conf.get(schema.GIT_COMMIT)
+                self.git_checkout(args, url, self.enterprise_path,
+                                  git_branch, git_commit)
+                self.enterprise_addons_path = self.enterprise_path
+
         except Exception, e:
             logger.error(
                 _ex('Cannot checkout from %s' % url, e),
@@ -971,9 +986,6 @@ pip install -r DEPENDENCY.txt \
                     reason = 'SCM'
                 elif src_new[schema.URL] != src_top[schema.URL]:
                     reason = 'URL'
-                elif (src_new[schema.SCM] == schema.SCM_BZR and
-                      src_new[schema.BZR_REV] != src_top[schema.BZR_REV]):
-                    reason = 'bazaar revision'
                 elif (
                     src_new[schema.SCM] == schema.SCM_GIT and
                     src_new.get(schema.GIT_BRANCH) != src_top.get(
@@ -995,28 +1007,7 @@ pip install -r DEPENDENCY.txt \
                                      dep.get(schema.DESTINATION,
                                              dep[schema.NAME]))
 
-            if source[schema.SCM] == schema.SCM_BZR:
-                try:
-                    self.bzr_checkout(source[schema.URL], destination,
-                                      source.get(schema.BZR_REV, None))
-                except Exception, e:
-                    logger.error(_ex('Cannot checkout from %s' %
-                                     source[schema.URL], e))
-                    sys.exit(1)
-                try:
-                    subconf = self.oebuild_conf_parser.\
-                        load_transitive_oebuild_config_file(
-                            destination.rstrip('/'),
-                            self.user_conf[user_conf_schema.CONF_FILES]
-                        )
-                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
-                    self.get_ext_deps(
-                        args, subconf[schema.PROJECT],
-                        subconf[schema.DEPENDENCIES], deps_mapping
-                    )
-                except IgnoreSubConf:
-                    pass
-            elif source[schema.SCM] == schema.SCM_GIT:
+            if source[schema.SCM] == schema.SCM_GIT:
                 try:
                     self.git_checkout(args,
                                       source[schema.URL], destination,
@@ -1064,38 +1055,6 @@ pip install -r DEPENDENCY.txt \
                 addons_path = '%s/%s' % (addons_path,
                                          dep[schema.ADDONS_PATH].rstrip('/'))
             self.deps_addons_path.append(addons_path)
-
-    def bzr_checkout(self, source, destination, revno=None):
-        accelerator_tree, remote = BzrDir.open_tree_or_branch(source)
-
-        if revno:
-            revno = int(revno)
-        else:
-            revno = remote.revno()
-
-        if os.path.exists(destination) and os.path.isdir(destination):
-            try:
-                local_tree, local = BzrDir.open_tree_or_branch(destination)
-                local_revno = local.revision_id_to_revno(
-                    local_tree.last_revision()
-                )
-                if revno == local_revno:
-                    logger.info('%s : Up-to-date from %s (revno : %s)' %
-                                (destination, source, local_revno))
-                    return
-                else:
-                    shutil.rmtree(destination)
-            except NotBranchError:
-                shutil.rmtree(destination)
-
-        if not os.path.exists(destination):
-            os.makedirs(destination)
-
-        logger.info('%s : Checkout from %s (revno : %s)...' % (
-            destination, source, revno)
-        )
-        remote.create_checkout(destination, remote.get_rev_id(revno),
-                               True, accelerator_tree)
 
     def is_git_uptodate(self, source, destination, branch, commit):
         try:

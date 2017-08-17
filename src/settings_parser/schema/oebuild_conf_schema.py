@@ -30,16 +30,15 @@ DEPENDENCIES = "dependencies"
 RUN_SCRIPTS = "run-scripts"
 SCM = "scm"
 SCM_GIT = "git"
-SCM_BZR = "bzr"
 SCM_LOCAL = "local"
 URL = "url"
-BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
 GIT_COMMIT = "git-commit"
 DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
 SOURCE = "source"
+ENTERPRISE_SOURCE = "enterprise-source"
 SPECIFIER = "specifier"
 OPTIONS = "options"
 I18N_ADDONS = "i18n-addons"
@@ -73,7 +72,6 @@ DEPENDENCY = {
             "type": "object",
             "oneOf": [
                 {"$ref": "#/definitions/gitDependency"},
-                {"$ref": "#/definitions/bzrDependency"},
                 {"$ref": "#/definitions/localDependency"}
             ],
         },
@@ -98,16 +96,6 @@ DEPENCENCY_DEFINITIONS = {
         },
         "additionalProperties": False
     },
-    "bzrDependency": {
-        "type": "object",
-        "properties": {
-            SCM: {"type": "string", "pattern": SCM_BZR},
-            URL: {"type": "string", "format": "uri"},
-            BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
-        },
-        "required": [SCM, URL],
-        "additionalProperties": False
-    },
     "localDependency": {
         "type": "object",
         "properties": {
@@ -128,7 +116,8 @@ OEBUILD_SCHEMA = {
             "type": "object",
             "properties": {
                 SERIE: {"type": "string"},
-                SOURCE: OPENERP_TYPE
+                SOURCE: OPENERP_TYPE,
+                ENTERPRISE_SOURCE: OPENERP_TYPE,
             },
             "required": [SERIE],
             "additionalProperties": False
