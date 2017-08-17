@@ -23,6 +23,7 @@ import static_params
 
 OEBUILD_VERSION = "oebuild-version"
 PROJECT = "project"
+PIP_URL = "pip-url"
 OPENERP = "openerp"
 SERIE = "serie"
 PYTHON_DEPENDENCIES = "python-dependencies"
@@ -137,6 +138,7 @@ OEBUILD_SCHEMA = {
             "type": "array",
             "items": PYTHON_DEPENDENCY
         },
+        PIP_URL: {"type": "string", "format": "uri"},
         DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY

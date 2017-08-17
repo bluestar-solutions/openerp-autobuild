@@ -76,6 +76,7 @@ class Autobuild():
     virtualenv_path = None
     virtual_python = None
     virtual_pip = None
+    pip_url = None
     src_path = os.path.curdir
     oebuild_conf_parser = None
 
@@ -243,10 +244,10 @@ if [ "$(/usr/bin/id -u)" != "0" ]; then
    exit 1
 fi
 
-pip install -r DEPENDENCY.txt \
+pip install%s -r DEPENDENCY.txt \
     && echo "Successfully installed all dependencies" || echo \
     "An error occured. Please review the log above to find what went wrong."
-""")
+""" % (self.pip_url and ' -i %s' % self.pip_url or ''))
         shell_file.close()
 
         full_path = self.src_path
@@ -583,8 +584,10 @@ pip install -r DEPENDENCY.txt \
             for dep in self.python_deps if dep.get(oebuild_conf_schema.OPTIONS)
         ])
         logger.info(
-            "virtualenv %s : Create and install Python dependencies (%s %s)" %
-            (self.virtualenv_path, py_deps_string, py_options_string)
+            ("virtualenv %s : "
+             "Create and install Python dependencies (%s %s)%s") %
+            (self.virtualenv_path, py_deps_string, py_options_string.strip(),
+             self.pip_url and ' from %s' % self.pip_url or '')
         )
         _, out, err = self.call_command(
             "virtualenv -q %s" % self.virtualenv_path,
@@ -605,9 +608,10 @@ pip install -r DEPENDENCY.txt \
             sys.exit(1)
 
         rc, out, err = self.call_command(
-            'LC_ALL=C %s install -q --upgrade %s %s '
+            'LC_ALL=C %s install%s -q --upgrade %s %s '
             '--log-file .pip-errors.log' %
-            (self.virtual_pip, py_options_string, py_deps_string),
+            (self.virtual_pip, self.pip_url and ' -i %s' % self.pip_url or '',
+             py_options_string, py_deps_string),
             log_in=False, log_out=False, log_err=False
         )
         for o in re.split('\n(?=\S)', out):
@@ -912,6 +916,7 @@ pip install -r DEPENDENCY.txt \
             )
             sys.exit(1)
 
+        self.pip_url = conf.get(schema.PIP_URL)
         self.add_python_deps(serie[user_conf_schema.PYTHON_DEPENDENCIES])
         self.get_ext_deps(args, self.project, conf[schema.DEPENDENCIES])
         self.add_python_deps(conf[schema.PYTHON_DEPENDENCIES])
