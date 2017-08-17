@@ -3,7 +3,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2013 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2013-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -35,13 +35,13 @@ PROJECT_CONFIG_FILE = 'oebuild.conf'
 PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
 
 DEPRECATED_FILES = ('.project-dependencies',)
-VERSION = '2.1'
+VERSION = '2.2'
 
 OE_VERSION = {
-    "OpenERP Server 6.0": '6.0',
-    "OpenERP Server 6.1": '6.1',
     "OpenERP Server 7.0": '7.0',
     "Odoo Server 8.0": '8.0',
+    "Odoo Server 9.0": '9.0',
+    "Odoo Server 10.0": '10.0',
 }
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

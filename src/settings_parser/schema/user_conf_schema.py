@@ -26,7 +26,6 @@ from settings_parser.schema.oebuild_conf_schema import (
 OEBUILD_VERSION = "oebuild-version"
 OEBUILD_LOG_LEVEL = "oebuild-log-level"
 URL = "url"
-BZR_REV = "bzr-rev"
 OPENERP = "openerp"
 SERIE = "serie"
 USER = "user"

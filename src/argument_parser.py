@@ -3,7 +3,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -99,7 +99,15 @@ Released under GNU AGPLv3.
             "-a", "--auto-reload", action="store_true", dest="run_auto_reload",
             help="Enable auto-reloading of python files and xml files "
             "without having to restart the server. Requires pyinotify. "
-            "Available since Odoo version 8.0"
+            "Available only for Odoo version 8.0."
+        )
+        parser_run.add_argument(
+            "-D", "--dev", dest="run_dev",
+            metavar='<DEV_MODE>', default=None,
+            help="Enable developer mode. Param: List of options "
+            "separated by comma. Options : all, "
+            "[pudb|wdb|ipdb|pdb], reload, qweb, werkzeug, xml."
+            "Available since Odoo version 10.0."
         )
         parser_run.set_defaults(func="run")
 

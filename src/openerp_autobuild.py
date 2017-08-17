@@ -4,7 +4,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -53,6 +53,7 @@ import re
 from argument_parser import OEArgumentParser
 import codecs
 from glob import glob
+from distutils.version import StrictVersion
 
 load_plugins()
 
@@ -66,6 +67,7 @@ class Autobuild():
     workspace_path = None
     project_path = None
     openerp_path = None
+    openerp_version = None
     deps_path = None
     target_path = None
     target_addons_path = None
@@ -448,7 +450,7 @@ pip install%s -r DEPENDENCY.txt \
             sys.exit(1)
 
         rc, out, err = self.call_command(
-            'LC_ALL=C %s install%s --egg -q --upgrade %s %s '
+            'LC_ALL=C %s install%s -q --upgrade %s %s '
             '--log-file .pip-errors.log' %
             (self.virtual_pip, self.pip_url and ' -i %s' % self.pip_url or '',
              py_options_string, py_deps_string),
@@ -510,6 +512,18 @@ pip install%s -r DEPENDENCY.txt \
             if os.path.isdir(module) and not module.startswith('.'):
                 modules = "%s,%s" % (module, modules)
         return modules.rstrip(",")
+
+    def get_openerp_version(self, conf):
+        if not self.openerp_version:
+            _, openerp_version, _ = self.call_command(
+                '%s %s/%s --version' % (
+                    self.virtual_python, self.openerp_path,
+                    self.get_binary(conf)
+                ), parse_log=True, log_in=False, log_out=False
+            )
+            self.openerp_version = static_params.OE_VERSION[
+                openerp_version.rstrip()]
+        return self.openerp_version
 
     def run_openerp(self, conf, args):
         self.create_or_update_venv(conf, args)
@@ -607,7 +621,7 @@ pip install%s -r DEPENDENCY.txt \
                 conn.set_isolation_level(old_isolation_level)
 
             cmd = '%s %s/%s' % (self.virtual_python,
-                                self.openerp_path, 'openerp-server')
+                                self.openerp_path, self.get_binary(conf))
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' -d %s' % args.run_database
             cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER,
@@ -640,7 +654,7 @@ pip install%s -r DEPENDENCY.txt \
                     sys.exit(1)
         else:
             cmd = '%s %s/%s -c .openerp-dev-default' % (
-                self.virtual_python, self.openerp_path, 'openerp-server'
+                self.virtual_python, self.openerp_path, self.get_binary(conf)
             )
             cmd += ' --addons-path=%s' % addons_path
             cmd += ' --db_user=%s' % db_conf.get(
@@ -662,16 +676,19 @@ pip install%s -r DEPENDENCY.txt \
                 if update_modules:
                     cmd += ' -u %s' % update_modules
             if args.run_auto_reload:
-                _, openerp_version, _ = self.call_command(
-                    '%s/%s --version' % (
-                        self.openerp_path, 'openerp-server'
-                    ), parse_log=True, log_in=False, log_out=False
-                )
-                if static_params.OE_VERSION[openerp_version.rstrip()] < '8.0':
-                    logger.error("--auto-reload is not available for %s" %
-                                 openerp_version)
+                version = self.get_openerp_version(conf)
+                if StrictVersion(version) != StrictVersion('8.0'):
+                    logger.error("--auto-reload/-a is not available for "
+                                 "Odoo %s" % version)
                     sys.exit(1)
                 cmd += ' --auto-reload'
+            if args.run_dev:
+                version = self.get_openerp_version(conf)
+                if StrictVersion(version) < StrictVersion('10.0'):
+                    logger.error("--dev/-D is not available for Odoo %s" %
+                                 version)
+                    sys.exit(1)
+                cmd += ' --dev=%s' % args.run_dev
 
             try:
                 logger.info('Start OpenERP ...')
@@ -698,7 +715,7 @@ pip install%s -r DEPENDENCY.txt \
                     sys.exit(1)
         sys.exit(0)
 
-    def get_deps(self, args, conf):
+    def get_serie(self, conf):
         oe_conf = conf[schema.OPENERP]
         serie_name = oe_conf[schema.SERIE]
 
@@ -710,6 +727,15 @@ pip install%s -r DEPENDENCY.txt \
         if not serie:
             logger.error('The serie "%s" does not exists' % (serie_name))
             sys.exit(1)
+        return serie
+
+    def get_binary(self, conf):
+        serie = self.get_serie(conf)
+        return serie[user_conf_schema.BIN]
+
+    def get_deps(self, args, conf):
+        oe_conf = conf[schema.OPENERP]
+        serie = self.get_serie(conf)
 
         try:
             user_source = oe_conf.get(schema.SOURCE, {})
@@ -797,7 +823,8 @@ pip install%s -r DEPENDENCY.txt \
                     reason = 'bazaar revision'
                 elif (
                     src_new[schema.SCM] == schema.SCM_GIT and
-                    src_new[schema.GIT_BRANCH] != src_top[schema.GIT_BRANCH]
+                    src_new.get(schema.GIT_BRANCH) != src_top.get(
+                        schema.GIT_BRANCH)
                 ):
                     reason = 'git branch'
                 if reason:
@@ -978,7 +1005,7 @@ pip install%s -r DEPENDENCY.txt \
 
     def local_copy(self, source, destination):
         logger.info('%s : Copy from %s...' % (destination, source))
-        shutil.rmtree(destination)
+        shutil.rmtree(destination, ignore_errors=True)
         os.mkdir(destination)
         for module in [m for m in os.listdir(source) if (
             os.path.isdir(os.path.join(source, m)) and m[:1] != '.'
@@ -1040,36 +1067,31 @@ pip install%s -r DEPENDENCY.txt \
 
 class OEBuildRemoteProgress(RemoteProgress):
 
-    _re_parse = re.compile(r'(.*):\s*[0-9]*.*')
-
     def __init__(self, analyze=False):
         super(OEBuildRemoteProgress, self).__init__()
         self._analyze = analyze
 
     def _parse_progress_line(self, line):
-        if (not self._analyze) and self._line_up:
-            sys.stdout.write("\033[F")
-        else:
-            self._line_up = True
+        if len(line.strip()) == 0:
+            return
 
-        line_out = ('> %s' % line).encode('utf-8')
-        line_out_len = len(line_out)
-        if line_out_len < self._last_line_len:
-            line_out += ' ' * (self._last_line_len - line_out_len)
-        print line_out
-        self._last_line_len = line_out_len
+        if (not self._analyze) and not self.first:
+            sys.stdout.write("\033[F")
+        print ('> %s\n' % line).encode('utf-8')
+
+        if self.first:
+            self.first = False
 
         sys.stdout.flush()
 
     def __enter__(self):
-        self._msg_type = None
-        self._line_up = False
-        self._last_line_len = 0
+        self.first = True
         return self
 
     def __exit__(self, *_):
-        if (not self._analyze) and self._line_up:
+        if (not self._analyze) and not self.first:
             sys.stdout.write("\033[F")
+        return
 
 
 if __name__ == "__main__":
