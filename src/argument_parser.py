@@ -25,6 +25,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import argcomplete
 from bzrlib.plugin import load_plugins
 import static_params
+import re
 
 load_plugins()
 
@@ -125,7 +126,8 @@ Released under GNU AGPLv3.
             metavar='<database>',
             help="Database name for tests."
             "Use autobuild_{PROJECT_NAME} if not specified.",
-            default='autobuild_%s' % os.getcwd().split('/')[-1]
+            default='autobuild_%s' % re.sub(
+                '[^0-9a-zA-Z_]+', '_', os.getcwd().split('/')[-1])
         )
         parser_test.add_argument(
             '-n', "--new-install", action="store_true",
@@ -177,7 +179,33 @@ Released under GNU AGPLv3.
             dest="project_assembly_include_odoo",
             help="Include OpenERP in target."
         )
+        parser_assembly.add_argument(
+            '-t', "--only-translations", action="store_true",
+            dest="project_assembly_only_i18n",
+            help="Include only project addons translations in target."
+        )
         parser_assembly.set_defaults(func="assembly")
+
+        parser_i18n_export = subparsers.add_parser(
+            'project.i18n.export',
+            help="Export i18n templates files for addons specified "
+            "in project configuration file.",
+            parents=[parser_shared]
+        )
+        parser_i18n_export.add_argument(
+            '-d', "--database", dest="run_database",
+            metavar='<database>',
+            help="Database name for i18n export."
+            "Use autobuild_{PROJECT_NAME} if not specified.",
+            default='autobuild_%s' % re.sub(
+                '[^0-9a-zA-Z_]+', '_', os.getcwd().split('/')[-1])
+        )
+        parser_i18n_export.add_argument(
+            '-D', "--drop-database", action="store_true",
+            dest="run_test_drop_database",
+            help="Drop used database before exiting."
+        )
+        parser_i18n_export.set_defaults(func="i18n-export")
 
         parser_create_module = subparsers.add_parser(
             'module.create', help="Create a new module.",

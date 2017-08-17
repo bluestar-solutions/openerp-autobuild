@@ -174,7 +174,10 @@ class Autobuild():
             if args.func == "init-eclipse":
                 self.init_eclipse(conf)
             elif args.func == "assembly":
-                self.assembly(conf, args.project_assembly_include_odoo)
+                self.assembly(conf, args.project_assembly_include_odoo,
+                              args.project_assembly_only_i18n)
+            elif args.func == "i18n-export":
+                self.export_i18n(conf, args)
             else:
                 self.kill_old_openerp(conf)
                 self.run_openerp(conf, args)
@@ -203,10 +206,24 @@ class Autobuild():
                     with open(filepath, 'w') as f:
                         f.write(new_content)
 
-    def assembly(self, conf, with_oe=False):
+    def assembly(self, conf, with_oe=False, only_i18n=False):
         if os.path.exists(self.target_path):
             shutil.rmtree(self.target_path)
         os.mkdir(self.target_path)
+
+        if only_i18n:
+            fn = "%s/%s_i18n.tar.gz" % (self.target_path, re.sub(
+                '[^0-9a-zA-Z_]+', '_', os.getcwd().split('/')[-1]))
+            if os.path.exists(fn):
+                os.remove(fn)
+            cmd = ("find * -name '*.po' -o -name '*.pot' | "
+                   "tar -cf %s -T -" % fn)
+            logger.info('Assembly i18n files ...')
+            _, _, _ = self.call_command(
+                cmd, parse_log=False, log_in=False
+            )
+            return
+
         os.mkdir(self.target_addons_path)
 
         dependency_file = open("%s/DEPENDENCY.txt" % (self.target_path), "w")
@@ -261,6 +278,147 @@ pip install -r DEPENDENCY.txt \
             tar.add(self.openerp_path, arcname="",
                     exclude=self.exclude_git)
         tar.close()
+
+    def export_i18n(self, conf, args):
+        addons = conf.get(schema.I18N_ADDONS)
+        if not addons:
+            logger.info("No i18n addons defined, exited with no action.")
+            return
+
+        self.create_or_update_venv(conf, args)
+
+        if not os.path.exists(static_params.OE_CONFIG_FILE):
+            logger.error('The OpenERP configuration does not exist : '
+                         '%s, use openerp-autobuild init to create it.' %
+                         static_params.OE_CONFIG_FILE)
+            sys.exit(1)
+
+        if not os.path.exists(self.workspace_path):
+            logger.info('Creating nonexistent openerp-autobuild '
+                        'workspace : %s', self.workspace_path)
+            os.makedirs(self.workspace_path)
+
+        logger.info('Modules to export: %s' % ",".join(addons))
+
+        addons_path = '%s/%s' % (self.openerp_path, 'addons')
+        for path in self.deps_addons_path:
+            addons_path = "%s,%s" % (addons_path, '%s/%s' %
+                                     (self.deps_path, path))
+        if glob('*/__openerp__.py'):
+            addons_path = "%s%s" % (addons_path, ',.')
+
+        db_conf = self.user_conf[user_conf_schema.DATABASE]
+        try:
+            conn = psycopg2.connect(
+                host=db_conf.get(user_conf_schema.HOST, 'localhost'),
+                port=db_conf.get(user_conf_schema.PORT, '5432'),
+                user=db_conf.get(user_conf_schema.USER, 'openerp'),
+                password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
+                database='postgres'
+            )
+        except:
+            logger.error("Unable to connect to the database.")
+            sys.exit(1)
+
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("select * from pg_database where datname = '%s'" %
+                    args.run_database)
+        db_exists = cur.fetchall() or False
+        if db_exists:
+            logger.info('Database %s exists' %
+                        args.run_database)
+        else:
+            logger.info('Database %s does not exist' %
+                        args.run_database)
+
+        old_isolation_level = conn.isolation_level
+        conn.set_isolation_level(0)
+        if db_exists:
+            logger.info('Drop database %s' % args.run_database)
+            cur.execute('drop database "%s"' % args.run_database)
+            conn.commit()
+        logger.info('Create database %s' % args.run_database)
+        cur.execute('create database "%s" owner "%s" '
+                    'encoding \'unicode\'' %
+                    (args.run_database,
+                     db_conf[user_conf_schema.USER]))
+        conn.commit()
+
+        conn.set_isolation_level(old_isolation_level)
+
+        cmd = '%s %s/%s' % (self.virtual_python,
+                            self.openerp_path, self.get_binary(conf))
+        cmd += ' --addons-path=%s' % addons_path
+        cmd += ' -d %s' % args.run_database
+        cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER,
+                                             'openerp')
+        cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD,
+                                                 'openerp')
+        cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST,
+                                             'localhost')
+        cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT,
+                                             '5432')
+        cmd += ' -i %s' % ','.join(addons)
+        cmd += ' --without-demo=all'
+        cmd += ' --stop-after-init'
+        try:
+            logger.info('Start OpenERP ...')
+            _, _, _ = self.call_command(
+                cmd, parse_log=False,
+                register_pid=self.pid_file, log_in=False
+            )
+        except KeyboardInterrupt:
+            logger.info("OpenERP stopped from command line")
+            if args.func == "test" and args.run_test_analyze:
+                sys.exit(1)
+
+        for addon in addons:
+            if not os.path.exists('./%s' % addon):
+                logger.warn(("Addon %s does not exists in this project and "
+                             "you can only export i18n for your project "
+                             "addons. This addon will be skiped.") % addon)
+                continue
+            addon_folder = './%s/i18n' % addon
+            i18n_file = '%s/%s.po' % (addon_folder, addon)
+            if not os.path.exists(addon_folder):
+                os.makedirs(addon_folder)
+            cmd = '%s %s/%s' % (self.virtual_python,
+                                self.openerp_path, self.get_binary(conf))
+            cmd += ' --addons-path=%s' % addons_path
+            cmd += ' -d %s' % args.run_database
+            cmd += ' --db_user=%s' % db_conf.get(user_conf_schema.USER,
+                                                 'openerp')
+            cmd += ' --db_password=%s' % db_conf.get(user_conf_schema.PASSWORD,
+                                                     'openerp')
+            cmd += ' --db_host=%s' % db_conf.get(user_conf_schema.HOST,
+                                                 'localhost')
+            cmd += ' --db_port=%s' % db_conf.get(user_conf_schema.PORT,
+                                                 '5432')
+            cmd += ' --modules=%s' % addon
+            cmd += ' --i18n-export=%s' % i18n_file
+            try:
+                logger.info('Start OpenERP ...')
+                _, _, _ = self.call_command(
+                    cmd, parse_log=False,
+                    register_pid=self.pid_file, log_in=False
+                )
+            except KeyboardInterrupt:
+                logger.info("OpenERP stopped from command line")
+                if args.func == "test" and args.run_test_analyze:
+                    sys.exit(1)
+            if os.path.exists(i18n_file):
+                shutil.move(i18n_file, i18n_file.replace('.po', '.pot'))
+
+        if args.run_test_drop_database:
+            old_isolation_level = conn.isolation_level
+            conn.set_isolation_level(0)
+            logger.info('Drop database %s' % args.run_database)
+            cur.execute('drop database "%s"' % args.run_database)
+            conn.commit()
+            conn.set_isolation_level(old_isolation_level)
+        conn.close()
+
+        sys.exit(0)
 
     def create_module(self, conf, args):
         module_path = '%s/%s' % (self.src_path, args.module_create_name)
