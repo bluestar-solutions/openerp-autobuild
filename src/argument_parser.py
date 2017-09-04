@@ -83,6 +83,13 @@ Released under GNU AGPLv3.
             help="Modules to install. Don't specify any module to use "
             "the module list of the current project. --database is required."
         )
+        parser_run_shared.add_argument(
+            '-w', "--without-demo", dest="without_demo",
+            nargs='?', metavar='all|none|<module1>[,<module2>…]',
+            const='project-all', default='all',
+            help="Disable loading demo data for specific module list. "
+            "Default is all."
+        )
 
         parser_run = subparsers.add_parser(
             'run', help="Run Odoo server normally.",
