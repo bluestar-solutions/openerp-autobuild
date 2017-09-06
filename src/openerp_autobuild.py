@@ -716,6 +716,7 @@ pip install%s -r DEPENDENCY.txt \
 
         init_modules = None
         update_modules = None
+        without_demo_modules = None
         if args.run_init or args.run_update:
             if not args.run_database:
                 logger.error('--database is mandatory if you want to '
@@ -731,9 +732,13 @@ pip install%s -r DEPENDENCY.txt \
                     update_modules = self.get_project_modules()
                 else:
                     update_modules = args.run_update
+            if args.without_demo != "none":
+                without_demo_modules = args.without_demo
 
         logger.info('Modules to install: %s' % (init_modules or '(None)'))
         logger.info('Modules to update: %s' % (update_modules or '(None)'))
+        logger.info('Modules to disabling demo data loading: %s' %
+                    (without_demo_modules or '(None)'))
 
         addons_path = self.get_addons_path()
 
@@ -796,6 +801,8 @@ pip install%s -r DEPENDENCY.txt \
                 cmd += ' -i %s' % init_modules
             if update_modules:
                 cmd += ' -u %s' % update_modules
+            if without_demo_modules:
+                cmd += ' --without-demo=%s' % without_demo_modules
             cmd += ' --log-level=test --test-enable'
             if args.run_test_commit:
                 cmd += ' --test-commit'
@@ -803,6 +810,7 @@ pip install%s -r DEPENDENCY.txt \
                 cmd += ' --stop-after-init'
             try:
                 logger.info('Start OpenERP ...')
+                logger.info(cmd)
                 _, openerp_output, _ = self.call_command(
                     cmd, parse_log=args.run_test_analyze,
                     register_pid=self.pid_file,
@@ -835,6 +843,8 @@ pip install%s -r DEPENDENCY.txt \
                     cmd += ' -i %s' % init_modules
                 if update_modules:
                     cmd += ' -u %s' % update_modules
+                if without_demo_modules:
+                    cmd += ' --without-demo=%s' % without_demo_modules
             if args.run_auto_reload:
                 version = self.get_openerp_version(conf)
                 if StrictVersion(version) != StrictVersion('8.0'):
@@ -852,6 +862,7 @@ pip install%s -r DEPENDENCY.txt \
 
             try:
                 logger.info('Start OpenERP ...')
+                logger.info(cmd)
                 _, openerp_output, _ = self.call_command(
                     cmd, parse_log=False,
                     register_pid=self.pid_file, log_in=False
