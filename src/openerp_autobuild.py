@@ -1095,11 +1095,11 @@ pip install%s -r DEPENDENCY.txt \
             destination, commit and 'commit' or 'branch',
             commit or branch or 'master'
         ))
-
         try:
+            local.git.checkout(commit or branch or 'master')
+            origin.pull(commit or branch or 'master')
             local.git.reset('--hard')
             local.git.clean('-xdf')  # Remove untracked files, including .pyc
-            origin.pull()
         except:
             logger.warning('%s : Checkout %s %s failed!' % (
                 destination, commit and 'commit' or 'branch',
@@ -1107,7 +1107,6 @@ pip install%s -r DEPENDENCY.txt \
             ))
             return False
 
-        local.git.checkout(commit or branch or 'master')
         return True
 
     def git_checkout(self, args, source, destination,
