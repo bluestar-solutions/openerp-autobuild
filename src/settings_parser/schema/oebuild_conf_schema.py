@@ -31,10 +31,12 @@ DEPENDENCIES = "dependencies"
 RUN_SCRIPTS = "run-scripts"
 SCM = "scm"
 SCM_GIT = "git"
+SCM_BZR = "bzr"
 SCM_LOCAL = "local"
 URL = "url"
 GIT_BRANCH = "git-branch"
 GIT_COMMIT = "git-commit"
+BZR_REV = "bzr-rev"
 DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
@@ -73,7 +75,8 @@ DEPENDENCY = {
             "type": "object",
             "oneOf": [
                 {"$ref": "#/definitions/gitDependency"},
-                {"$ref": "#/definitions/localDependency"}
+                {"$ref": "#/definitions/localDependency"},
+                {"$ref": "#/definitions/bzrDependency"},
             ],
         },
     },
@@ -105,7 +108,17 @@ DEPENCENCY_DEFINITIONS = {
         },
         "required": [SCM, URL],
         "additionalProperties": False
-    }
+    },
+    "bzrDependency": {
+        "type": "object",
+        "properties": {
+            SCM: {"type": "string", "pattern": SCM_BZR},
+            URL: {"type": "string", "format": "uri"},
+            BZR_REV: {"type": "string", "pattern": "^[0-9]+$"},
+        },
+        "required": [SCM, URL],
+        "additionalProperties": False
+    },
 }
 OEBUILD_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
