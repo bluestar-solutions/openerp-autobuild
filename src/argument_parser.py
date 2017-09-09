@@ -23,8 +23,11 @@
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import argcomplete
+from bzrlib.plugin import load_plugins
 import static_params
 import re
+
+load_plugins()
 
 
 class OEArgumentParser():
