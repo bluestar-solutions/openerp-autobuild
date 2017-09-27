@@ -21,6 +21,7 @@
 #
 ##############################################################################
 
+import static_lib
 import os
 import sys
 import subprocess
@@ -44,27 +45,23 @@ from bzrlib.plugin import load_plugins
 from bzrlib.bzrdir import BzrDir
 from bzrlib.errors import NotBranchError
 
-import pip
-pip.main(["install", "--upgrade", "GitPython>=2.1.3", "--user"])
-pip.main(["install", "--upgrade", "virtualenv==15.0.1", "--user"])
-
-from git import Repo  # nopep8
-from git import RemoteProgress  # nopep8
-from oebuild_logger import _ex, logging, logger, LOG_PARSER, COLORIZED  # nopep8
+from git import Repo  # @UnresolvedImport
+from git import RemoteProgress  # @UnresolvedImport
 from settings_parser.schema import (
     user_conf_schema, oebuild_conf_schema as schema,
     oebuild_conf_schema
-)  # nopep8
-from settings_parser.user_conf_parser import UserConfParser  # nopep8
+)
+from settings_parser.user_conf_parser import UserConfParser
 from settings_parser.oebuild_conf_parser import (
     OEBuildConfParser, IgnoreSubConf
-)  # nopep8
+)
+from oebuild_logger import _ex, logging, logger, LOG_PARSER, COLORIZED
+import virtualenv  # @UnresolvedImport
 
 load_plugins()
 
 
 class Autobuild():
-
     _arg_parser = None
 
     user_conf = None
@@ -118,6 +115,8 @@ class Autobuild():
             )
         )
 
+        logger.debug("Use static site-package: %s" %
+                     static_lib.static_python_path)
         logger.info('Entering %s mode' % args.func)
 
         if args.func == "create-module":
@@ -125,7 +124,6 @@ class Autobuild():
                 self.user_conf[user_conf_schema.CONF_FILES]
             )
             self.create_module(conf, args)
-
         elif args.func == "init-new":
             overwrite = "no"
             if os.path.exists(static_params.OE_CONFIG_FILE):
@@ -332,7 +330,7 @@ pip install%s -r DEPENDENCY.txt \
                 password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
                 database='postgres'
             )
-        except:
+        except BaseException:
             logger.error("Unable to connect to the database.")
             sys.exit(1)
 
@@ -606,23 +604,7 @@ pip install%s -r DEPENDENCY.txt \
             (self.virtualenv_path, py_deps_string, py_options_string.strip(),
              self.pip_url and ' from %s' % self.pip_url or '')
         )
-        _, out, err = self.call_command(
-            "python -m virtualenv -q %s" % self.virtualenv_path,
-            log_in=False, log_out=False, log_err=True
-        )
-        for o in re.split('\n(?=\S)', out):
-            if len(o) > 0:
-                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
-                                                   o.rstrip()))
-        errors = False
-        for e in re.split('\n(?=\S)', err):
-            if len(e) > 0:
-                errors = True
-                logger.error(u'virtualenv %s: %s' % (
-                    self.virtualenv_path, e.rstrip())
-                )
-        if errors:
-            sys.exit(1)
+        virtualenv.create_environment(self.virtualenv_path)
 
         rc, out, err = self.call_command(
             'LC_ALL=C %s install%s -q --upgrade %s %s '
@@ -676,7 +658,7 @@ pip install%s -r DEPENDENCY.txt \
             if pid != 0:
                 try:
                     os.kill(pid, 9)
-                except:
+                except BaseException:
                     pass
                 with open(self.pid_file, "w") as f:
                     f.write("%d" % 0)
@@ -762,7 +744,7 @@ pip install%s -r DEPENDENCY.txt \
                     password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
                     database='postgres'
                 )
-            except:
+            except BaseException:
                 logger.error("Unable to connect to the database.")
                 sys.exit(1)
 
@@ -1104,7 +1086,7 @@ pip install%s -r DEPENDENCY.txt \
             self.deps_addons_path.append(addons_path)
 
     def bzr_checkout(self, source, destination, revno=None):
-        logger.error(
+        logger.warning(
             "DEPRECATED! Bazaar checkout will be removed in next version!")
         accelerator_tree, remote = BzrDir.open_tree_or_branch(source)
 
@@ -1141,7 +1123,7 @@ pip install%s -r DEPENDENCY.txt \
         try:
             local = Repo(destination)
             origin = local.remotes.origin
-        except:
+        except BaseException:
             logger.warning('%s : Invalid git repository!' % (
                 destination
             ))
@@ -1165,7 +1147,7 @@ pip install%s -r DEPENDENCY.txt \
             origin.pull(commit or branch or 'master')
             local.git.reset('--hard')
             local.git.clean('-xdf')  # Remove untracked files, including .pyc
-        except:
+        except BaseException:
             logger.warning('%s : Checkout %s %s failed!' % (
                 destination, commit and 'commit' or 'branch',
                 commit or branch or 'master'
