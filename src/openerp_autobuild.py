@@ -21,20 +21,11 @@
 #
 ##############################################################################
 
+import static_lib
 import os
 import sys
 import subprocess
-from git import Repo
-from git import RemoteProgress
 import shutil
-from settings_parser.schema import (
-    user_conf_schema, oebuild_conf_schema as schema,
-    oebuild_conf_schema
-)
-from settings_parser.user_conf_parser import UserConfParser
-from settings_parser.oebuild_conf_parser import (
-    OEBuildConfParser, IgnoreSubConf
-)
 import tarfile
 import lxml.etree
 import lxml.builder
@@ -45,16 +36,32 @@ import dialogs
 import json
 from params import Params
 import static_params
-from oebuild_logger import _ex, logging, logger, LOG_PARSER, COLORIZED
 import re
 from argument_parser import OEArgumentParser
 import codecs
 from glob import glob
 from distutils.version import StrictVersion
+from bzrlib.plugin import load_plugins
+from bzrlib.bzrdir import BzrDir
+from bzrlib.errors import NotBranchError
+
+from git import Repo  # @UnresolvedImport
+from git import RemoteProgress  # @UnresolvedImport
+from settings_parser.schema import (
+    user_conf_schema, oebuild_conf_schema as schema,
+    oebuild_conf_schema
+)
+from settings_parser.user_conf_parser import UserConfParser
+from settings_parser.oebuild_conf_parser import (
+    OEBuildConfParser, IgnoreSubConf
+)
+from oebuild_logger import _ex, logging, logger, LOG_PARSER, COLORIZED
+import virtualenv  # @UnresolvedImport
+
+load_plugins()
 
 
 class Autobuild():
-
     _arg_parser = None
 
     user_conf = None
@@ -108,6 +115,8 @@ class Autobuild():
             )
         )
 
+        logger.debug("Use static site-package: %s" %
+                     static_lib.static_python_path)
         logger.info('Entering %s mode' % args.func)
 
         if args.func == "create-module":
@@ -115,7 +124,6 @@ class Autobuild():
                 self.user_conf[user_conf_schema.CONF_FILES]
             )
             self.create_module(conf, args)
-
         elif args.func == "init-new":
             overwrite = "no"
             if os.path.exists(static_params.OE_CONFIG_FILE):
@@ -322,7 +330,7 @@ pip install%s -r DEPENDENCY.txt \
                 password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
                 database='postgres'
             )
-        except:
+        except BaseException:
             logger.error("Unable to connect to the database.")
             sys.exit(1)
 
@@ -596,23 +604,7 @@ pip install%s -r DEPENDENCY.txt \
             (self.virtualenv_path, py_deps_string, py_options_string.strip(),
              self.pip_url and ' from %s' % self.pip_url or '')
         )
-        _, out, err = self.call_command(
-            "virtualenv -q %s" % self.virtualenv_path,
-            log_in=False, log_out=False, log_err=True
-        )
-        for o in re.split('\n(?=\S)', out):
-            if len(o) > 0:
-                logger.info("virtualenv %s: %s" % (self.virtualenv_path,
-                                                   o.rstrip()))
-        errors = False
-        for e in re.split('\n(?=\S)', err):
-            if len(e) > 0:
-                errors = True
-                logger.error(u'virtualenv %s: %s' % (
-                    self.virtualenv_path, e.rstrip())
-                )
-        if errors:
-            sys.exit(1)
+        virtualenv.create_environment(self.virtualenv_path)
 
         rc, out, err = self.call_command(
             'LC_ALL=C %s install%s -q --upgrade %s %s '
@@ -666,7 +658,7 @@ pip install%s -r DEPENDENCY.txt \
             if pid != 0:
                 try:
                     os.kill(pid, 9)
-                except:
+                except BaseException:
                     pass
                 with open(self.pid_file, "w") as f:
                     f.write("%d" % 0)
@@ -752,7 +744,7 @@ pip install%s -r DEPENDENCY.txt \
                     password=db_conf.get(user_conf_schema.PASSWORD, 'openerp'),
                     database='postgres'
                 )
-            except:
+            except BaseException:
                 logger.error("Unable to connect to the database.")
                 sys.exit(1)
 
@@ -1023,7 +1015,28 @@ pip install%s -r DEPENDENCY.txt \
                                      dep.get(schema.DESTINATION,
                                              dep[schema.NAME]))
 
-            if source[schema.SCM] == schema.SCM_GIT:
+            if source[schema.SCM] == schema.SCM_BZR:
+                try:
+                    self.bzr_checkout(source[schema.URL], destination,
+                                      source.get(schema.BZR_REV, None))
+                except Exception, e:
+                    logger.error(_ex('Cannot checkout from %s' %
+                                     source[schema.URL], e))
+                    sys.exit(1)
+                try:
+                    subconf = self.oebuild_conf_parser.\
+                        load_transitive_oebuild_config_file(
+                            destination.rstrip('/'),
+                            self.user_conf[user_conf_schema.CONF_FILES]
+                        )
+                    self.add_python_deps(subconf[schema.PYTHON_DEPENDENCIES])
+                    self.get_ext_deps(
+                        args, subconf[schema.PROJECT],
+                        subconf[schema.DEPENDENCIES], deps_mapping
+                    )
+                except IgnoreSubConf:
+                    pass
+            elif source[schema.SCM] == schema.SCM_GIT:
                 try:
                     self.git_checkout(args,
                                       source[schema.URL], destination,
@@ -1072,11 +1085,45 @@ pip install%s -r DEPENDENCY.txt \
                                          dep[schema.ADDONS_PATH].rstrip('/'))
             self.deps_addons_path.append(addons_path)
 
+    def bzr_checkout(self, source, destination, revno=None):
+        logger.warning(
+            "DEPRECATED! Bazaar checkout will be removed in next version!")
+        accelerator_tree, remote = BzrDir.open_tree_or_branch(source)
+
+        if revno:
+            revno = int(revno)
+        else:
+            revno = remote.revno()
+
+        if os.path.exists(destination) and os.path.isdir(destination):
+            try:
+                local_tree, local = BzrDir.open_tree_or_branch(destination)
+                local_revno = local.revision_id_to_revno(
+                    local_tree.last_revision()
+                )
+                if revno == local_revno:
+                    logger.info('%s : Up-to-date from %s (revno : %s)' %
+                                (destination, source, local_revno))
+                    return
+                else:
+                    shutil.rmtree(destination)
+            except NotBranchError:
+                shutil.rmtree(destination)
+
+        if not os.path.exists(destination):
+            os.makedirs(destination)
+
+        logger.info('%s : Checkout from %s (revno : %s)...' % (
+            destination, source, revno)
+        )
+        remote.create_checkout(destination, remote.get_rev_id(revno),
+                               True, accelerator_tree)
+
     def is_git_uptodate(self, source, destination, branch, commit):
         try:
             local = Repo(destination)
             origin = local.remotes.origin
-        except:
+        except BaseException:
             logger.warning('%s : Invalid git repository!' % (
                 destination
             ))
@@ -1100,7 +1147,7 @@ pip install%s -r DEPENDENCY.txt \
             origin.pull(commit or branch or 'master')
             local.git.reset('--hard')
             local.git.clean('-xdf')  # Remove untracked files, including .pyc
-        except:
+        except BaseException:
             logger.warning('%s : Checkout %s %s failed!' % (
                 destination, commit and 'commit' or 'branch',
                 commit or branch or 'master'
