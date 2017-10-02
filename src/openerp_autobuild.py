@@ -1242,31 +1242,37 @@ pip install%s -r DEPENDENCY.txt \
 
 class OEBuildRemoteProgress(RemoteProgress):
 
-    def __init__(self, analyze=False):
-        super(OEBuildRemoteProgress, self).__init__()
-        self._analyze = analyze
+    def line_dropped(self, line):
+        print line
 
-    def _parse_progress_line(self, line):
-        if len(line.strip()) == 0:
-            return
+    def update(self, *args):
+        print self._cur_line
 
-        if (not self._analyze) and not self.first:
-            sys.stdout.write("\033[F")
-        print ('> %s\n' % line).encode('utf-8')
-
-        if self.first:
-            self.first = False
-
-        sys.stdout.flush()
-
-    def __enter__(self):
-        self.first = True
-        return self
-
-    def __exit__(self, *_):
-        if (not self._analyze) and not self.first:
-            sys.stdout.write("\033[F")
-        return
+#     def __init__(self, analyze=False):
+#         super(OEBuildRemoteProgress, self).__init__()
+#         self._analyze = analyze
+#
+#     def _parse_progress_line(self, line):
+#         if len(line.strip()) == 0:
+#             return
+#
+#         if (not self._analyze) and not self.first:
+#             sys.stdout.write("\033[F")
+#         print ('> %s\n' % line).encode('utf-8')
+#
+#         if self.first:
+#             self.first = False
+#
+#         sys.stdout.flush()
+#
+#     def __enter__(self):
+#         self.first = True
+#         return self
+#
+#     def __exit__(self, *_):
+#         if (not self._analyze) and not self.first:
+#             sys.stdout.write("\033[F")
+#         return
 
 
 if __name__ == "__main__":

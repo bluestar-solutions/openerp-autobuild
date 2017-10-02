@@ -31,7 +31,7 @@ if [ ! -d "$VENV" ]; then
 elif [ ! -f "$VERSION" ]; then
     # VERSION is not a file
     rebuild_venv
-elif [ ! $(cat $VERSION) = "$CURRENT_VERSION" ]; then
+elif [ "$(cat $VERSION)" != "$CURRENT_VERSION" ]; then
     # VERSION is not the expected one, this is to force venv rebuild
     # when oebuild version change.
     rebuild_venv
