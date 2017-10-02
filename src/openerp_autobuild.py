@@ -202,7 +202,7 @@ class Autobuild():
         version_result = r"\g<1>%s\g<3>" % new_version
         for root, _, filenames in os.walk('.'):
             for filename in filenames:
-                if filename == '__openerp__.py':
+                if filename in ('__openerp__.py', '__manifest__.py'):
                     filepath = os.path.join(root, filename)
                     logger.info(
                         'Change version to %s in %s' % (new_version, filepath)
@@ -296,7 +296,7 @@ pip install%s -r DEPENDENCY.txt \
         for path in self.deps_addons_path:
             addons_path = "%s,%s" % (addons_path, '%s/%s' %
                                      (self.deps_path, path))
-        if glob('*/__openerp__.py'):
+        if glob('*/__openerp__.py') or glob('*/__manifest__.py'):
             addons_path = "%s%s" % (addons_path, ',.')
         return addons_path
 
@@ -480,7 +480,8 @@ pip install%s -r DEPENDENCY.txt \
         with codecs.open("%s/__init__.py" % module_path, 'w+', 'utf8') as f:
             f.write(initpy)
 
-        with codecs.open("%s/__openerp__.py" % module_path, 'w+', 'utf8') as f:
+        with codecs.open("%s/__manifest__.py" % module_path,
+                         'w+', 'utf8') as f:
             f.write(openerppy)
 
     def init_eclipse(self, conf):
