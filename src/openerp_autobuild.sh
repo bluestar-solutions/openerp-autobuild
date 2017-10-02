@@ -1,10 +1,11 @@
 #!/bin/bash
+# PYTHON_ARGCOMPLETE_OK
 
 CURRENT_VERSION="2.2"
 
 # Set a temp workdir if oebuild is run in dev mode (-A in args)
 if [[ "${@#-A}" = "$@" ]]; then
-    WORKDIR="~/.config/openerp-autobuild"
+    WORKDIR="$HOME/.config/openerp-autobuild"
 else
     WORKDIR="/tmp/oebuild"
 fi
@@ -13,12 +14,14 @@ VENV="$WORKDIR/venv"
 VERSION="$WORKDIR/venv_version"
 PIP="$VENV/bin/pip"
 PYTHON="$VENV/bin/python"
+SCRIPT_PATH=`realpath "$0"`
+OEBUILD_PATH=`dirname $SCRIPT_PATH`
 echo "Use virtualenv : $VENV"
 
 function rebuild_venv {
     rm -Rf $VENV
     python -m virtualenv "$VENV"
-    $PIP install -r `dirname "$0"`/requirements.txt
+    $PIP install -r $OEBUILD_PATH/requirements.txt
     echo "$CURRENT_VERSION" >> $VERSION
 }
 
@@ -34,4 +37,4 @@ elif [ ! $(cat $VERSION) = "$CURRENT_VERSION" ]; then
     rebuild_venv
 fi
 
-$PYTHON `dirname "$0"`/openerp_autobuild.py $@
+$PYTHON $OEBUILD_PATH/openerp_autobuild.py $@
