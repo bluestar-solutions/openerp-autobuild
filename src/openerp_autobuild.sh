@@ -22,7 +22,7 @@ function rebuild_venv {
     rm -Rf $VENV
     python -m virtualenv "$VENV"
     $PIP install -r $OEBUILD_PATH/requirements.txt
-    echo "$CURRENT_VERSION" >> $VERSION
+    echo "$CURRENT_VERSION" > $VERSION
 }
 
 if [ ! -d "$VENV" ]; then

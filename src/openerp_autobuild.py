@@ -1168,13 +1168,19 @@ pip install%s -r DEPENDENCY.txt \
 
         logger.info('%s : Clone from %s,%s...' %
                     (destination, source, commit or branch or 'master'))
-        local = Repo.clone_from(source, destination,
-                                progress=OERemoteProgress())
+        proc = subprocess.Popen(
+            ['git', 'clone', '--progress', source, destination], shell=False)
+        proc.communicate()
+        # Use subprocess because GitPython progress does not work correctly
+        # at this time.
+        # local = Repo.clone_from(source, destination,
+        #                         progress=OERemoteProgress())
 
         logger.info('%s : Checkout %s %s...' % (
             destination, commit and 'commit' or 'branch',
             commit or branch or 'master'
         ))
+        local = Repo(destination)
         local.git.checkout(commit or branch or 'master')
 
     def local_copy(self, source, destination):
