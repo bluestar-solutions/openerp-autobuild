@@ -3,7 +3,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import argcomplete
 from bzrlib.plugin import load_plugins
 import static_params
+import re
 
 load_plugins()
 
@@ -85,6 +86,13 @@ Released under GNU AGPLv3.
             help="Modules to install. Don't specify any module to use "
             "the module list of the current project. --database is required."
         )
+        parser_run_shared.add_argument(
+            '-w', "--without-demo", dest="without_demo",
+            nargs='?', metavar='all|none|<module1>[,<module2>…]',
+            const='project-all', default='all',
+            help="Disable loading demo data for specific module list. "
+            "Default is all."
+        )
 
         parser_run = subparsers.add_parser(
             'run', help="Run Odoo server normally.",
@@ -99,7 +107,15 @@ Released under GNU AGPLv3.
             "-a", "--auto-reload", action="store_true", dest="run_auto_reload",
             help="Enable auto-reloading of python files and xml files "
             "without having to restart the server. Requires pyinotify. "
-            "Available since Odoo version 8.0"
+            "Available only for Odoo version 8.0."
+        )
+        parser_run.add_argument(
+            "-D", "--dev", dest="run_dev",
+            metavar='<DEV_MODE>', default=None,
+            help="Enable developer mode. Param: List of options "
+            "separated by comma. Options : all, "
+            "[pudb|wdb|ipdb|pdb], reload, qweb, werkzeug, xml."
+            "Available since Odoo version 10.0."
         )
         parser_run.set_defaults(func="run")
 
@@ -117,7 +133,8 @@ Released under GNU AGPLv3.
             metavar='<database>',
             help="Database name for tests."
             "Use autobuild_{PROJECT_NAME} if not specified.",
-            default='autobuild_%s' % os.getcwd().split('/')[-1]
+            default='autobuild_%s' % re.sub(
+                '[^0-9a-zA-Z_]+', '_', os.getcwd().split('/')[-1])
         )
         parser_test.add_argument(
             '-n', "--new-install", action="store_true",
@@ -169,7 +186,33 @@ Released under GNU AGPLv3.
             dest="project_assembly_include_odoo",
             help="Include OpenERP in target."
         )
+        parser_assembly.add_argument(
+            '-t', "--only-translations", action="store_true",
+            dest="project_assembly_only_i18n",
+            help="Include only project addons translations in target."
+        )
         parser_assembly.set_defaults(func="assembly")
+
+        parser_i18n_export = subparsers.add_parser(
+            'project.i18n.export',
+            help="Export i18n templates files for addons specified "
+            "in project configuration file.",
+            parents=[parser_shared]
+        )
+        parser_i18n_export.add_argument(
+            '-d', "--database", dest="run_database",
+            metavar='<database>',
+            help="Database name for i18n export."
+            "Use autobuild_{PROJECT_NAME} if not specified.",
+            default='autobuild_%s' % re.sub(
+                '[^0-9a-zA-Z_]+', '_', os.getcwd().split('/')[-1])
+        )
+        parser_i18n_export.add_argument(
+            '-D', "--drop-database", action="store_true",
+            dest="run_test_drop_database",
+            help="Drop used database before exiting."
+        )
+        parser_i18n_export.set_defaults(func="i18n-export")
 
         parser_create_module = subparsers.add_parser(
             'module.create', help="Create a new module.",

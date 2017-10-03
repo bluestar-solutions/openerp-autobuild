@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2012-2015 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2012-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -26,9 +26,9 @@ from settings_parser.schema.oebuild_conf_schema import (
 OEBUILD_VERSION = "oebuild-version"
 OEBUILD_LOG_LEVEL = "oebuild-log-level"
 URL = "url"
-BZR_REV = "bzr-rev"
 OPENERP = "openerp"
 SERIE = "serie"
+BIN = "bin"
 USER = "user"
 MODULE_AUTHOR = "module_author"
 WEBSITE = "website"
@@ -65,52 +65,61 @@ PYTHON_DEPENDENCY = {
     "required": [NAME],
     "additionalProperties": False
 }
-OPENERP_CONF_TYPE = lambda default = True: {
-    "type": "object",
-    "properties": {
-        SERIE: {"type": "string"},
-        SOURCE: OPENERP_TYPE,
-        PYTHON_DEPENDENCIES: {
-            "type": "array",
-            "items": PYTHON_DEPENDENCY
-        },
-    },
-    "required": [SERIE, SOURCE, PYTHON_DEPENDENCIES] if default else [SERIE],
-    "additionalProperties": False
-}
-USER_CONFIG_SCHEMA = lambda default = True: {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "type": "object",
-    "properties": {
-        COMMENT: {"type": "array", "items": {"type": "string"}},
-        MODULE_AUTHOR: {"type": "string"},
-        WEBSITE: {"type": "string", "format": "url"},
-        OEBUILD_VERSION: {"type": "string", "pattern": static_params.VERSION},
-        OEBUILD_LOG_LEVEL: {"enum": ["DEBUG", "INFO", "WARNING", "ERROR"]},
-        WORKSPACE: {"type": "string", "format": "uri"},
-        CONF_FILES: {
-            "type": "array",
-            "items": {"type": "string", "format": "uri"},
-        },
-        OPENERP: {
-            "type": "array",
-            "items": OPENERP_CONF_TYPE(default),
-        },
-        DEFAULT_SERIE: {"type": "string"},
-        DATABASE: {
-            "type": "object",
-            "properties": {
-                HOST: {"type": "string"},
-                PORT: {"type": "string"},
-                USER: {"type": "string"},
-                PASSWORD: {"type": "string"},
+
+
+def OPENERP_CONF_TYPE(default=True):
+    return {
+        "type": "object",
+        "properties": {
+            SERIE: {"type": "string"},
+            BIN: {"type": "string"},
+            SOURCE: OPENERP_TYPE,
+            PYTHON_DEPENDENCIES: {
+                "type": "array",
+                "items": PYTHON_DEPENDENCY
             },
-            "additionalProperties": False
-        }
-    },
-    "required": ([WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE, DATABASE]
-                 if default else [CONF_FILES, OPENERP, DATABASE]),
-    "additionalProperties": False
-}
+        },
+        "required": [SERIE, SOURCE,
+                     PYTHON_DEPENDENCIES] if default else [SERIE],
+        "additionalProperties": False
+    }
+
+
+def USER_CONFIG_SCHEMA(default=True):
+    return {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+            COMMENT: {"type": "array", "items": {"type": "string"}},
+            MODULE_AUTHOR: {"type": "string"},
+            WEBSITE: {"type": "string", "format": "url"},
+            OEBUILD_VERSION: {"type": "string", "pattern":
+                              static_params.VERSION},
+            OEBUILD_LOG_LEVEL: {"enum": ["DEBUG", "INFO", "WARNING", "ERROR"]},
+            WORKSPACE: {"type": "string", "format": "uri"},
+            CONF_FILES: {
+                "type": "array",
+                "items": {"type": "string", "format": "uri"},
+            },
+            OPENERP: {
+                "type": "array",
+                "items": OPENERP_CONF_TYPE(default),
+            },
+            DEFAULT_SERIE: {"type": "string"},
+            DATABASE: {
+                "type": "object",
+                "properties": {
+                    HOST: {"type": "string"},
+                    PORT: {"type": "string"},
+                    USER: {"type": "string"},
+                    PASSWORD: {"type": "string"},
+                },
+                "additionalProperties": False
+            }
+        },
+        "required": ([WORKSPACE, CONF_FILES, OPENERP, DEFAULT_SERIE, DATABASE]
+                     if default else [CONF_FILES, OPENERP, DATABASE]),
+        "additionalProperties": False
+    }
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv='content-type' value='text/html;charset=utf8'>
   <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
-  <title>build and run Odoo/OpenERP projects </title>
+  <title>build and run Odoo/OpenERP projects</title>
   <style type='text/css' media='all'>
   /* style: man */
   body#manpage {margin:0}
@@ -72,14 +72,14 @@
 
   <h2 id="NAME">NAME</h2>
 <p class="man-name">
-  <code>openerp-autobuild</code> - <span class="man-whatis">build and run Odoo/OpenERP projects </span>
+  <code>openerp-autobuild</code> - <span class="man-whatis">build and run Odoo/OpenERP projects</span>
 </p>
 
 <h2 id="SYNOPSIS">SYNOPSIS</h2>
 
-<p><code>openerp-autobuild</code> [--version] [--help]<br />
-<code>oebuild</code> [--version] [--help]<br />
-<code>openerp-autobuild</code> <var>goal</var> [--help]  ...<br />
+<p><code>openerp-autobuild</code> [--version] [--help]
+<code>oebuild</code> [--version] [--help]
+<code>openerp-autobuild</code> <var>goal</var> [--help]  ...
 <code>oebuild</code> <var>goal</var> [--help]  ...</p>
 
 <h2 id="DESCRIPTION">DESCRIPTION</h2>
@@ -90,7 +90,6 @@
 
 <ul>
 <li>Improve the collaboration in development teams.</li>
-<li>Permit the use of various VCS (currently git and bazaar).</li>
 <li>Enable the use of continuous integration solutions.</li>
 </ul>
 
@@ -120,6 +119,8 @@ on the same defined version.</p>
 <dt><code>project.init</code></dt><dd>  Initialize an empty Odoo project.</dd>
 <dt><code>project.version</code></dt><dd>  Set the version of all project modules.</dd>
 <dt><code>project.assembly</code></dt><dd>  Prepare all files to deploy in target folder.</dd>
+<dt><code>project.i18n.export</code></dt><dd>  Export i18n templates files for addons specified in
+  project configuration file.</dd>
 <dt><code>module.create</code></dt><dd>  Create a new module.</dd>
 <dt><code>eclipse.init</code></dt><dd>  Initialize an Eclipse PyDev project.</dd>
 </dl>
@@ -130,7 +131,7 @@ on the same defined version.</p>
 <h3 id="run">run</h3>
 
 <p><code>openerp-autobuild</code> run [-h] [-A [<var>path</var>]] [-u [all|<var>module1</var>[,<var>module2</var>…]]]
-[-i [all|<var>module1</var>[,<var>module2</var>…]]] [-l] [-d <var>database</var>] [-a]<br />
+[-i [all|<var>module1</var>[,<var>module2</var>…]]] [-l] [-d <var>database</var>] [-a]
 <code>oebuild</code> run [-h] [-A [<var>path</var>]] [-u [all|<var>module1</var>[,<var>module2</var>…]]]
 [-i [all|<var>module1</var>[,<var>module2</var>…]]] [-l] [-d <var>database</var>] [-a]</p>
 
@@ -145,7 +146,11 @@ on the same defined version.</p>
   required.</dd>
 <dt><code>-a</code>, <code>--auto-reload</code></dt><dd>  Enable auto-reloading of python files and xml files
   without having to restart the server. Requires
-  pyinotify. Available since Odoo version 8.0</dd>
+  pyinotify. Available only for Odoo version 8.0.</dd>
+<dt><code>-D</code> <var>DEV_MODE</var>, <code>--dev</code>=<var>DEV_MODE</var></dt><dd>  Enable developer mode. Param: List of options
+  separated by comma. Options : all,
+  [pudb|wdb|ipdb|pdb], reload, qweb, werkzeug,
+  xml.Available since Odoo version 10.0.</dd>
 <dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
   instead of /etc and /home/user (for development
   purpose). Don't specify <var>path</var> to use './devconf' with
@@ -214,6 +219,22 @@ on the same defined version.</p>
 <dl>
 <dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
 <dt><code>-i</code>, <code>--include-odoo</code></dt><dd>  Include Odoo/OpenERP in target.</dd>
+<dt><code>-t</code>, <code>--only-translations</code></dt><dd>  Include only project addons translations in target.</dd>
+<dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
+  instead of /etc and /home/user (for development
+  purpose). Don't specify <var>path</var> to use './devconf' with
+  supplied files.</dd>
+<dt><code>-l</code>, <code>--local</code></dt><dd>  Bypass remote updates checks and try to launch with
+  last parameters.</dd>
+</dl>
+
+
+<h3 id="project-i18n-export">project.i18n.export</h3>
+
+<dl>
+<dt><code>-h</code>, <code>--help</code></dt><dd>  Prints usage and options for the goal.</dd>
+<dt><code>-d</code> <var>database</var>, <code>--database</code>=<var>database</var></dt><dd>  Database name for tests.Use autobuild_{PROJECT_NAME} if not specified.</dd>
+<dt><code>-D</code>, <code>--drop-database</code></dt><dd>  Drop used database before exiting.</dd>
 <dt><code>-A</code> [<var>path</var>], <code>--alternate-config</code>=[<var>path</var>]</dt><dd>  Use an alternate directory to find configuration files
   instead of /etc and /home/user (for development
   purpose). Don't specify <var>path</var> to use './devconf' with
@@ -291,7 +312,7 @@ Released under GNU AGPLv3.</p>
 
   <ol class='man-decor man-foot man foot'>
     <li class='tl'>Bluestar Solutions Sàrl</li>
-    <li class='tc'>December 2015</li>
+    <li class='tc'>2017-09-09</li>
     <li class='tr'>openerp-autobuild</li>
   </ol>
 

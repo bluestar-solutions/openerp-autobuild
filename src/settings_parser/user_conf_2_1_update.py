@@ -1,9 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    OpenERP Autobuild
-#    Copyright (C) 2013-2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
+#    Copyright (C) 2017 Bluestar Solutions Sàrl (<http://www.blues2.ch>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,28 +19,19 @@
 #
 ##############################################################################
 
-import os
+import json
+from shutil import copyfile
 
-OE_HOME_PATH = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_CONF_PATH = '%s/conf' % OE_HOME_PATH
-DEFAULT_OE_CONFIG_FILE = '%s/default_openerp_config' % DEFAULT_CONF_PATH
-DEFAULT_PROJECT_CONFIG_FILE = ('%s/default_project_config.json' %
-                               DEFAULT_CONF_PATH)
-DEFAULT_USER_CONFIG_FILE = '%s/default_user_config.json' % DEFAULT_CONF_PATH
 
-OE_CONFIG_FILE = '.openerp-dev-default'
+def update_from_2_1(params):
+    copyfile(params.USER_CONFIG_FILE, params.USER_CONFIG_FILE + '.old')
 
-PROJECT_CONFIG_FILE = 'oebuild.conf'
-PROJECT_ALT_CONFIF_FILE_PATTERN = 'oebuild-%s.conf'
+    with open(params.USER_CONFIG_FILE, "r") as f:
+        data = json.load(f)
 
-DEPRECATED_FILES = ('.project-dependencies',)
-VERSION = '2.2'
+    data['oebuild-version'] = "2.2"
 
-OE_VERSION = {
-    "OpenERP Server 7.0": '7.0',
-    "Odoo Server 8.0": '8.0',
-    "Odoo Server 9.0": '9.0',
-    "Odoo Server 10.0": '10.0',
-}
+    with open(params.USER_CONFIG_FILE, "w+") as f:
+        f.write(json.dumps(data, indent=4))
 
 # vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

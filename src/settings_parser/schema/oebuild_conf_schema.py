@@ -23,6 +23,7 @@ import static_params
 
 OEBUILD_VERSION = "oebuild-version"
 PROJECT = "project"
+PIP_URL = "pip-url"
 OPENERP = "openerp"
 SERIE = "serie"
 PYTHON_DEPENDENCIES = "python-dependencies"
@@ -33,15 +34,17 @@ SCM_GIT = "git"
 SCM_BZR = "bzr"
 SCM_LOCAL = "local"
 URL = "url"
-BZR_REV = "bzr-rev"
 GIT_BRANCH = "git-branch"
 GIT_COMMIT = "git-commit"
+BZR_REV = "bzr-rev"
 DESTINATION = "destination"
 ADDONS_PATH = "addons-path"
 NAME = "name"
 SOURCE = "source"
+ENTERPRISE_SOURCE = "enterprise-source"
 SPECIFIER = "specifier"
 OPTIONS = "options"
+I18N_ADDONS = "i18n-addons"
 
 OPENERP_TYPE = {
     "type": "object",
@@ -72,8 +75,8 @@ DEPENDENCY = {
             "type": "object",
             "oneOf": [
                 {"$ref": "#/definitions/gitDependency"},
+                {"$ref": "#/definitions/localDependency"},
                 {"$ref": "#/definitions/bzrDependency"},
-                {"$ref": "#/definitions/localDependency"}
             ],
         },
     },
@@ -97,6 +100,15 @@ DEPENCENCY_DEFINITIONS = {
         },
         "additionalProperties": False
     },
+    "localDependency": {
+        "type": "object",
+        "properties": {
+            SCM: {"type": "string", "pattern": SCM_LOCAL},
+            URL: {"type": "string", "format": "uri"},
+        },
+        "required": [SCM, URL],
+        "additionalProperties": False
+    },
     "bzrDependency": {
         "type": "object",
         "properties": {
@@ -107,15 +119,6 @@ DEPENCENCY_DEFINITIONS = {
         "required": [SCM, URL],
         "additionalProperties": False
     },
-    "localDependency": {
-        "type": "object",
-        "properties": {
-            SCM: {"type": "string", "pattern": SCM_LOCAL},
-            URL: {"type": "string", "format": "uri"},
-        },
-        "required": [SCM, URL],
-        "additionalProperties": False
-    }
 }
 OEBUILD_SCHEMA = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -127,7 +130,8 @@ OEBUILD_SCHEMA = {
             "type": "object",
             "properties": {
                 SERIE: {"type": "string"},
-                SOURCE: OPENERP_TYPE
+                SOURCE: OPENERP_TYPE,
+                ENTERPRISE_SOURCE: OPENERP_TYPE,
             },
             "required": [SERIE],
             "additionalProperties": False
@@ -136,11 +140,16 @@ OEBUILD_SCHEMA = {
             "type": "array",
             "items": PYTHON_DEPENDENCY
         },
+        PIP_URL: {"type": "string", "format": "uri"},
         DEPENDENCIES: {
             "type": "array",
             "items": DEPENDENCY
         },
         RUN_SCRIPTS: {
+            "type": "array",
+            "items": {"type": "string"}
+        },
+        I18N_ADDONS: {
             "type": "array",
             "items": {"type": "string"}
         }

@@ -1,11 +1,11 @@
-openerp-autobuild -- build and run Odoo/OpenERP projects 
+openerp-autobuild -- build and run Odoo/OpenERP projects
 ========================================================
 
 ## SYNOPSIS
 
-`openerp-autobuild` [--version] [--help]  
-`oebuild` [--version] [--help]  
-`openerp-autobuild` <goal> [--help]  ...  
+`openerp-autobuild` [--version] [--help]
+`oebuild` [--version] [--help]
+`openerp-autobuild` <goal> [--help]  ...
 `oebuild` <goal> [--help]  ...
 
 ## DESCRIPTION
@@ -15,7 +15,6 @@ A tool to build and run Odoo/OpenERP projects.
 The main goals of OpenERP Autobuild are:
 
 * Improve the collaboration in development teams.
-* Permit the use of various VCS (currently git and bazaar).
 * Enable the use of continuous integration solutions.
 
 Inspired by solutions like composer (http://getcomposer.org) this tool is made
@@ -34,7 +33,7 @@ on the same defined version.
     Prints the synopsis and the list of goals.
 
 ## GOALS
-    
+
 * `run`:
     Run Odoo server normally.
 * `run.test`:
@@ -46,6 +45,9 @@ on the same defined version.
     Set the version of all project modules.
 * `project.assembly`:
     Prepare all files to deploy in target folder.
+* `project.i18n.export`:
+    Export i18n templates files for addons specified in
+    project configuration file.
 * `module.create`:
     Create a new module.
 * `eclipse.init`:
@@ -56,7 +58,7 @@ on the same defined version.
 ### run
 
 `openerp-autobuild` run [-h] [-A [<path>]] [-u [all|<module1>[,<module2>…]]]
-[-i [all|<module1>[,<module2>…]]] [-l] [-d <database>] [-a]  
+[-i [all|<module1>[,<module2>…]]] [-l] [-d <database>] [-a]
 `oebuild` run [-h] [-A [<path>]] [-u [all|<module1>[,<module2>…]]]
 [-i [all|<module1>[,<module2>…]]] [-l] [-d <database>] [-a]
 
@@ -76,7 +78,12 @@ on the same defined version.
 * `-a`, `--auto-reload`:
     Enable auto-reloading of python files and xml files
     without having to restart the server. Requires
-    pyinotify. Available since Odoo version 8.0
+    pyinotify. Available only for Odoo version 8.0.
+* `-D` <DEV_MODE>, `--dev`=<DEV_MODE>:
+    Enable developer mode. Param: List of options
+    separated by comma. Options : all,
+    [pudb|wdb|ipdb|pdb], reload, qweb, werkzeug,
+    xml.Available since Odoo version 10.0.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
@@ -133,7 +140,7 @@ on the same defined version.
 * `-l`, `--local`:
     Bypass remote updates checks and try to launch with
     last parameters.
-    
+
 ### project.version
 
 * `-h`, `--help`:
@@ -155,6 +162,8 @@ on the same defined version.
     Prints usage and options for the goal.
 * `-i`, `--include-odoo`:
     Include Odoo/OpenERP in target.
+* `-t`, `--only-translations`:
+    Include only project addons translations in target.
 * `-A` [<path>], `--alternate-config`=[<path>]:
     Use an alternate directory to find configuration files
     instead of /etc and /home/user (for development
@@ -163,7 +172,24 @@ on the same defined version.
 * `-l`, `--local`:
     Bypass remote updates checks and try to launch with
     last parameters.
-    
+
+### project.i18n.export
+
+* `-h`, `--help`:
+    Prints usage and options for the goal.
+* `-d` <database>, `--database`=<database>:
+    Database name for tests.Use autobuild_{PROJECT_NAME} if not specified.
+* `-D`, `--drop-database`:
+    Drop used database before exiting.
+* `-A` [<path>], `--alternate-config`=[<path>]:
+    Use an alternate directory to find configuration files
+    instead of /etc and /home/user (for development
+    purpose). Don't specify <path> to use './devconf' with
+    supplied files.
+* `-l`, `--local`:
+    Bypass remote updates checks and try to launch with
+    last parameters.
+
 ### module.create
 
 * `-h`, `--help`:
@@ -180,7 +206,7 @@ on the same defined version.
 * `-l`, `--local`:
     Bypass remote updates checks and try to launch with
     last parameters.
-    
+
 ### eclipse.init
 
 * `-h`, `--help`:
@@ -193,12 +219,12 @@ on the same defined version.
 * `-l`, `--local`:
     Bypass remote updates checks and try to launch with
     last parameters.
-    
+
 ## FAQ
 
 ### Where Odoo/OpenERP is installed ?
 
-It is located in a workspace outside of the project. 
+It is located in a workspace outside of the project.
 By default /var/oebuild/[your-project-name]/openerp
 
 You can override the default value (~/tec/oebuild_config.json) in your
@@ -206,7 +232,7 @@ user configuration file (~/.config/openerp-autobuild/oebuild_config.json).
 
 ### Where is the code of my project dependencies ?
 
-It is in a workspace outside of the project. 
+It is in a workspace outside of the project.
 By default : /var/oebuild/[your-project-name]/deps
 
 You can override the default value (~/tec/oebuild_config.json) in your
@@ -218,7 +244,7 @@ OpenERP Autobuild configuration files are not compatible with previous version,
 but OpenERP Autobuild will automatically update your project configuration
 files. If dependencies have previous configuration files autobuild will
 update these in the workspace to use it.
-    
+
 ## AUTHORS
 
 OpenERP Autobuild was started an maintained by Bluestar Solutions Sàrl
