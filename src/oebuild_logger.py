@@ -43,6 +43,7 @@ COLORS = {
 def COLORIZED(levelname, expression):
     return COLOR_SEQ % (30 + COLORS[levelname]) + expression + RESET_SEQ
 
+
 LOG_PARSER = re.compile(
     r'(^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \d*) (%s) (.*$)' %
     ('|'.join(COLORS.keys()))
@@ -104,10 +105,11 @@ class ColoredLogger(logging.Logger):
         h2.addFilter(f2)
         self.addHandler(h2)
 
-        # Set the logger for external libraries
-        h_ext = logging.StreamHandler(sys.stderr)
-        h_ext.setFormatter(fmt)
-        logging.getLogger('git.cmd').addHandler(h_ext)
+        # Set the logger for external libraries if necessary (debug)
+        # h_ext = logging.StreamHandler(sys.stderr)
+        # h_ext.setFormatter(fmt)
+        # logging.getLogger('git.cmd').addHandler(h_ext)
+
 
 logging.setLoggerClass(ColoredLogger)
 logger = logging.getLogger('openerp-autobuild')
