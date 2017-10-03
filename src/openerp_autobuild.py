@@ -1166,11 +1166,10 @@ pip install%s -r DEPENDENCY.txt \
 
         os.makedirs(destination)
 
-        logger.info('%s : Clone from %s...' % (destination, source))
-        with OEBuildRemoteProgress(args.func == 'test' and
-                                   args.run_test_analyze) as progress:
-            local = Repo.clone_from(source, destination,
-                                    progress=progress)
+        logger.info('%s : Clone from %s,%s...' %
+                    (destination, source, commit or branch or 'master'))
+        local = Repo.clone_from(source, destination,
+                                progress=OERemoteProgress())
 
         logger.info('%s : Checkout %s %s...' % (
             destination, commit and 'commit' or 'branch',
@@ -1240,39 +1239,24 @@ pip install%s -r DEPENDENCY.txt \
             return None, None, None
 
 
-class OEBuildRemoteProgress(RemoteProgress):
+class OERemoteProgress(RemoteProgress):
+    """There is a bug in in GitPython that block std out during progress.
+
+    We are waiting a fix.
+    """
+
+    def __init__(self):
+        super(OERemoteProgress, self).__init__()
 
     def line_dropped(self, line):
         print line
+        sys.stdout.flush()
 
-    def update(self, *args):
+    def update(self, op_code, *__):
+        if op_code & self.BEGIN >= 0:
+            sys.stdout.write("\033[F")  # line up
         print self._cur_line
-
-#     def __init__(self, analyze=False):
-#         super(OEBuildRemoteProgress, self).__init__()
-#         self._analyze = analyze
-#
-#     def _parse_progress_line(self, line):
-#         if len(line.strip()) == 0:
-#             return
-#
-#         if (not self._analyze) and not self.first:
-#             sys.stdout.write("\033[F")
-#         print ('> %s\n' % line).encode('utf-8')
-#
-#         if self.first:
-#             self.first = False
-#
-#         sys.stdout.flush()
-#
-#     def __enter__(self):
-#         self.first = True
-#         return self
-#
-#     def __exit__(self, *_):
-#         if (not self._analyze) and not self.first:
-#             sys.stdout.write("\033[F")
-#         return
+        sys.stdout.flush()
 
 
 if __name__ == "__main__":
