@@ -278,14 +278,17 @@ pip install%s -r DEPENDENCY.txt \
         tar = tarfile.open('%s.tar.gz' % ('openerp-install'
                                           if with_oe else 'custom-addons'),
                            "w:gz")
-        tar.add('custom-addons', exclude=self.exclude_git)
+        opt_dir = 'openerp'
+        if os.path.isdir('%s/odoo' % self.openerp_path):
+            opt_dir = 'odoo'
+        tar.add('custom-addons', '%s/custom-addons' % opt_dir,
+                exclude=self.exclude_git)
 
-        tar.add('install_deps.sh')
-        tar.add('DEPENDENCY.txt')
+        tar.add('install_deps.sh', '%s/install_deps.sh' % opt_dir)
+        tar.add('DEPENDENCY.txt', '%s/DEPENDENCY.txt' % opt_dir)
 
         if with_oe:
-            tar.add(self.openerp_path, arcname="",
-                    exclude=self.exclude_git)
+            tar.add(self.openerp_path, opt_dir, exclude=self.exclude_git)
         tar.close()
 
     def get_addons_path(self):
